@@ -1,0 +1,37 @@
+digraph G {
+  graph [rankdir=LR];
+  node [shape=box,style="rounded,filled",color="#55bb77",fontname="Arial",fontsize=9];
+  edge [fontname="Arial",fontsize=9];
+
+  groups;
+  users;
+  permissions;
+  collections;
+  roles;
+  samples;
+  user_collections;
+  user_groups;
+  group_permissions;
+  sample_origins;
+  sample_audits;
+  sample_notes;
+  sample_images;
+
+  user_collections->users;
+  user_collections->collections;
+  user_collections->roles;
+  user_groups->users;
+  user_groups->groups;
+  group_permissions->groups;
+  group_permissions->permissions;
+  samples->collections;
+  samples->users;
+  sample_origins->samples;
+  sample_origins->samples;
+  sample_audits->samples;
+  sample_audits->users;
+  sample_notes->samples;
+  sample_notes->users;
+  sample_images->samples;
+  sample_images->users;
+}

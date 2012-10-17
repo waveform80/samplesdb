@@ -9,9 +9,15 @@ from pyramid.paster import (
     setup_logging,
     )
 
-from ..models import (
+from samplesdb.models import (
     DBSession,
-    MyModel,
+    EmailAddress,
+    User,
+    UserLimit,
+    Group,
+    Permission,
+    Collection,
+    Role,
     Base,
     )
 
@@ -31,5 +37,16 @@ def main(argv=sys.argv):
     DBSession.configure(bind=engine)
     Base.metadata.create_all(engine)
     with transaction.manager:
-        model = MyModel(name='one', value=1)
-        DBSession.add(model)
+        # Create admin permission
+        # Create administrators group
+        # Create administrator user
+        # Create administrator email-address
+        # Create administrator default collection
+        # Create "unlimited" limit
+        # Create "academic" limit
+        # Create "commercial" limit
+        # Create "owner" role
+        # Create "editor" role
+        # Create "auditor" role
+        # Create "viewer" role
+        pass

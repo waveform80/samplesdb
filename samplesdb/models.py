@@ -41,8 +41,8 @@ from datetime import datetime, timedelta
 from itertools import izip_longest
 
 from sqlalchemy import Table, ForeignKey, Column
-from sqlalchemy.types import Integer, Unicode, DateTime, String
-from sqlalchemy.orm import scoped_session, sessionmaker, relationship
+from sqlalchemy.types import Integer, Unicode, UnicodeText, DateTime, String
+from sqlalchemy.orm import scoped_session, sessionmaker, relationship, synonym
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.associationproxy import association_proxy
 from zope.sqlalchemy import ZopeTransactionExtension
@@ -67,140 +67,42 @@ def slow_equals(s, t):
     return result == 0
 
 
-group_permission_table = Table(
-    'group_permissions',
-    metadata,
-    Column(
-        'group_id', Unicode(20),
-        ForeignKey('groups.id', ondelete='CASCADE'),
-        primary_key=True),
-    Column(
-        'permission_id', Unicode(20),
-        ForeignKey('permissions.id', ondelete='RESTRICT'),
-        primary_key=True)
-    )
+class EmailAddress(Base):
+    __tablename__ = 'email_addresses'
 
-
-user_group_table = Table(
-    'user_groups',
-    metadata,
-    Column(
-        'user_id', Integer,
-        ForeignKey('users.id', ondelete='CASCADE'),
-        primary_key=True),
-    Column(
-        'group_id', Unicode(20),
-        ForeignKey('groups.id', ondelete='RESTRICT'),
-        primary_key=True)
-    )
-
-
-user_collections_table = Table(
-    'user_collections',
-    metadata,
-    Column(
-        'user_id', Integer,
-        ForeignKey('users.id', ondelete='CASCADE'),
-        primary_key=True),
-    Column(
-        'collection_id', Integer,
-        ForeignKey('collections.id', ondelete='RESTRICT'),
-        primary_key=True)
-    )
-
-
-class Permission(Base):
-    __tablename__ = 'permissions'
-
-    id = Column(Unicode(20), primary_key=True)
-    name = Column(Unicode(100))
-    groups = relationship(
-        'Group', secondary=group_permission_table, backref='permissions')
-
-    def __repr__(self):
-        return ('<Permission: id="%s">' % self.name).encode('utf-8')
-
-    def __str__(self):
-        return unicode(self).encode('utf-8')
-
-    def __unicode__(self):
-        return self.id
-
-    @classmethod
-    def by_id(cls, id):
-        """return the permission object with id ``id``"""
-        return DBSession.query(cls).filter_by(id=id).first()
-
-
-class Group(Base):
-    __tablename__ = 'groups'
-
-    id = Column(Unicode(20), primary_key=True)
-    name = Column(Unicode(100))
-    users = relationship(
-        'User', secondary=user_group_table, backref='groups')
-
-    def __repr__(self):
-        return ('<Group: id="%s">' % self.name).encode('utf-8')
-
-    def __str__(self):
-        return unicode(self).encode('utf-8')
-
-    def __unicode__(self):
-        return self.id
-
-    @classmethod
-    def by_id(cls, id):
-        """return the group object with id ``id``"""
-        return DBSession.query(cls).filter_by(id=id).first()
-
-
-class Collection(Base):
-    __tablename__ = 'collections'
-
-    id = Column(Integer, primary_key=True)
-    name = Column(Unicode(200), nullable=False)
+    email = Column(Unicode(200), primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'))
+    # user defined as backref on Users
     created = Column(DateTime, default=datetime.now(), nullable=False)
-    samples = relationship('Sample', backref='collection')
-    users = relationship(
-        'User', secondary=user_collections_table, backref='collections')
+    validation = Column(String(32))
+    validation_expiry = Column(DateTime)
+    validated = Column(DateTime)
 
     def __repr__(self):
-        return ('<Collection: id=%d>' % self.id).encode('utf-8')
+        return ('<EmailAddress: email="%s">' % self.email).encode('utf-8')
 
     def __str__(self):
         return unicode(self).encode('utf-8')
 
     def __unicode__(self):
-        return self.id
+        return self.email
 
     @classmethod
-    def by_id(cls, id):
-        """return the collection with id ``id``"""
-        return DBSession.query(cls).filter_by(id=id).first()
+    def by_email(cls, email):
+        """return the address with email ``email``"""
+        return DBSession.query(cls).filter_by(email=email).first()
 
+    def generate_validation_code(self):
+        assert self.validated is None
+        self.validation = os.urandom(16).encode('hex')
+        self.validation_expiry = datetime.now() + timedelta(days=1)
 
-class UserLimit(Base):
-    __tablename__ = 'user_limits'
-
-    id = Column(Unicode(20), primary_key=True)
-    collections_limit = Column(Integer, default=10, nullable=False)
-    samples_limit = Column(Integer, default=1000, nullable=False)
-    users = relationship('User', backref='limits')
-
-    def __repr__(self):
-        return ('<UserLimit: id="%s">' % self.id).encode('utf-8')
-
-    def __str__(self):
-        return unicode(self).encode('utf-8')
-
-    def __unicode__(self):
-        return self.id
-
-    @classmethod
-    def by_id(cls, id):
-        """return the user limit with id ``id``"""
-        return DBSession.query(cls).filter_by(id=id).first()
+    def check_validation_code(self, code):
+        if datetime.now() > self.validate_expiry:
+            raise ValueError('Validation code has expired')
+        if code != self.validation:
+            raise ValueError('Invalid validation code for user %d' % self.user_id)
+        self.validated = datetime.datetime.now()
 
 
 class User(Base):
@@ -211,8 +113,14 @@ class User(Base):
     organization = Column(Unicode(200), default='', nullable=False)
     _password = Column('password', String(200), nullable=False)
     created = Column(DateTime, default=datetime.now(), nullable=False)
-    emails = relationship('EmailAddress', backref='user')
-    limits_id = Column(Unicode(20), ForeignKey('UserLimit.id'))
+    emails = relationship(EmailAddress, backref='user')
+    limits_id = Column(
+        Unicode(20), ForeignKey(
+            'user_limits.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+        nullable=False)
+    # limits defined as backref on UserLimit
+    # groups defined as backref on Group
+    # collections defined as backref on Collection
 
     def __repr__(self):
         return ('<User: id=%d>' % self.id).encode('utf-8')
@@ -276,40 +184,276 @@ class User(Base):
             else:
                 raise NotImplementedError
         finally:
+            # XXX Pause for up to a second to ensure all logins take a "long"
+            # time (at least in computational terms)
+            pass
 
 
-class EmailAddress(Base):
-    __tablename__ = 'email_addresses'
+class UserLimit(Base):
+    __tablename__ = 'user_limits'
 
-    email = Column(Unicode(200), primary_key=True)
-    user_id = Column(Integer, ForeignKey('users.id'))
-    created = Column(DateTime, default=datetime.now(), nullable=False)
-    validation = Column(String(32))
-    validation_expiry = Column(DateTime)
-    validated = Column(DateTime)
+    id = Column(Unicode(20), primary_key=True)
+    collections_limit = Column(Integer, default=10, nullable=False)
+    samples_limit = Column(Integer, default=1000, nullable=False)
+    users = relationship(User, backref='limits')
 
     def __repr__(self):
-        return ('<EmailAddress: email="%s">' % self.email).encode('utf-8')
+        return ('<UserLimit: id="%s">' % self.id).encode('utf-8')
 
     def __str__(self):
         return unicode(self).encode('utf-8')
 
     def __unicode__(self):
-        return self.email
+        return self.id
 
     @classmethod
-    def by_email(cls, email):
-        """return the address with email ``email``"""
-        return DBSession.query(cls).filter_by(email=email).first()
+    def by_id(cls, id):
+        """return the user limit with id ``id``"""
+        return DBSession.query(cls).filter_by(id=id).first()
 
-    def generate_validation_code(self):
-        assert self.validated is None
-        self.validation = os.urandom(16).encode('hex')
-        self.validation_expiry = datetime.now() + timedelta(days=1)
 
-    def check_validation_code(self, code):
-        if datetime.now() > self.validate_expiry:
-            raise ValueError('Validation code has expired')
-        if code != self.validation:
-            raise ValueError('Invalid validation code for user %d' % self.user_id)
-        self.validated = datetime.datetime.now()
+class Group(Base):
+    __tablename__ = 'groups'
+
+    id = Column(Unicode(20), primary_key=True)
+    description = Column(Unicode(100))
+    users = relationship(
+        User, secondary=lambda: user_group_table, backref='groups')
+    # permissions defined as backref on Permissions
+
+    def __repr__(self):
+        return ('<Group: id="%s">' % self.id).encode('utf-8')
+
+    def __str__(self):
+        return unicode(self).encode('utf-8')
+
+    def __unicode__(self):
+        return self.id
+
+    @classmethod
+    def by_id(cls, id):
+        """return the group object with id ``id``"""
+        return DBSession.query(cls).filter_by(id=id).first()
+
+
+class Permission(Base):
+    __tablename__ = 'permissions'
+
+    id = Column(Unicode(20), primary_key=True)
+    description = Column(Unicode(100))
+    groups = relationship(
+        Group, secondary=lambda: group_permission_table, backref='permissions')
+
+    def __repr__(self):
+        return ('<Permission: id="%s">' % self.id).encode('utf-8')
+
+    def __str__(self):
+        return unicode(self).encode('utf-8')
+
+    def __unicode__(self):
+        return self.id
+
+    @classmethod
+    def by_id(cls, id):
+        """return the permission object with id ``id``"""
+        return DBSession.query(cls).filter_by(id=id).first()
+
+
+class SampleAudit(Base):
+    __tablename__ = 'sample_audits'
+
+    sample_id = Column(
+        Integer, ForeignKey(
+            'samples.id', onupdate='RESTRICT', ondelete='CASCADE'),
+        primary_key=True)
+    # sample defined as backref on Sample
+    audited = Column(DateTime, default=datetime.now(), primary_key=True)
+    auditor_id = Column(
+        Integer, ForeignKey(
+            'users.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+        nullable=False)
+    auditor = relationship(User)
+
+    def __repr__(self):
+        return ('<SampleAudit: sample_id=%d, audited="%s">' % (
+            self.sample_id, self.audited.isoformat())).encode('utf-8')
+
+    def __str__(self):
+        return unicode(self).encode('utf-8')
+
+    def __unicode__(self):
+        return '%d at %s' % (self.sample_id, self.audited.isoformat())
+
+
+class SampleImage(Base):
+    __tablename__ = 'sample_images'
+
+    sample_id = Column(
+        Integer, ForeignKey(
+            'samples.id', onupdate='RESTRICT', ondelete='CASCADE'),
+        primary_key=True)
+    # sample defined as backref on Sample
+    filename = Column(Unicode(200), primary_key=True)
+    creator_id = Column(
+        Integer, ForeignKey(
+            'users.id', onupdate='RESTRICT', ondelete='SET NULL'))
+    creator = relationship(User)
+    created = Column(DateTime, default=datetime.now())
+
+    def __repr__(self):
+        return ('<SampleImage: sample_id=%d, created_by=%d, created="%s">' % (
+            self.sample_id, self.created_by, self.audited.isoformat())).encode('utf-8')
+
+    def __str__(self):
+        return unicode(self).encode('utf-8')
+
+    def __unicode__(self):
+        return self.content
+
+
+class Sample(Base):
+    __tablename__ = 'samples'
+
+    id = Column(Integer, primary_key=True)
+    description = Column(Unicode(200), nullable=False)
+    created = Column(DateTime)
+    creator_id = Column(Integer, ForeignKey(
+        'users.id', onupdate='RESTRICT', ondelete='SET NULL'))
+    creator = relationship(User)
+    code = Column(Unicode(50), default='', nullable=False)
+    notes = Column(UnicodeText, default='', nullable=False)
+    collection_id = Column(Integer, ForeignKey(
+        'collections.id', onupdate='RESTRICT', ondelete='CASCADE'),
+        nullable=False)
+    # collection defined as backref on Collection
+    parents = relationship(
+        'Sample', secondary=lambda: sample_origins_table,
+        primaryjoin='samples.id = sample_origins.sample_id',
+        secondaryjoin='sample_origins.parent_id = samples.id')
+    children = relationship(
+        'Sample', secondary=lambda: sample_origins_table,
+        primaryjoin='samples.id = sample_origins.parent_id',
+        secondaryjoin='sample_origins.sample_id = samples.id')
+    images = relationship(SampleImage, backref='sample')
+    audits = relationship(SampleAudit, backref='sample')
+
+    def __repr__(self):
+        return ('<Sample: id=%d>' % self.id).encode('utf-8')
+
+    def __str__(self):
+        return unicode(self).encode('utf-8')
+
+    def __unicode__(self):
+        return self.description
+
+    @classmethod
+    def by_id(cls, id):
+        """return the permission object with id ``id``"""
+        return DBSession.query(cls).filter_by(id=id).first()
+
+
+class Collection(Base):
+    __tablename__ = 'collections'
+
+    id = Column(Integer, primary_key=True)
+    name = Column(Unicode(200), nullable=False)
+    created = Column(DateTime, default=datetime.now(), nullable=False)
+    samples = relationship(Sample, backref='collection')
+    users = relationship(
+        User, secondary=lambda: user_collections_table, backref='collections')
+
+    def __repr__(self):
+        return ('<Collection: id=%d>' % self.id).encode('utf-8')
+
+    def __str__(self):
+        return unicode(self).encode('utf-8')
+
+    def __unicode__(self):
+        return self.id
+
+    @classmethod
+    def by_id(cls, id):
+        """return the collection with id ``id``"""
+        return DBSession.query(cls).filter_by(id=id).first()
+
+
+class Role(Base):
+    __tablename__ = 'roles'
+
+    id = Column(Unicode(20), primary_key=True)
+    description = Column(Unicode(100), nullable=False)
+    created = Column(DateTime, default=datetime.now(), nullable=False)
+
+    def __repr__(self):
+        return ('<Role: id="%s">' % self.id).encode('utf-8')
+
+    def __str__(self):
+        return unicode(self).encode('utf-8')
+
+    def __unicode__(self):
+        return self.id
+
+    @classmethod
+    def by_id(cls, id):
+        """return the role object with id ``id``"""
+        return DBSession.query(cls).filter_by(id=id).first()
+
+
+group_permission_table = Table(
+    'group_permissions',
+    Base.metadata,
+    Column(
+        'group_id', Unicode(20),
+        ForeignKey('groups.id', onupdate='RESTRICT', ondelete='CASCADE'),
+        primary_key=True),
+    Column(
+        'permission_id', Unicode(20),
+        ForeignKey('permissions.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+        primary_key=True)
+    )
+
+
+user_group_table = Table(
+    'user_groups',
+    Base.metadata,
+    Column(
+        'user_id', Integer,
+        ForeignKey('users.id', onupdate='RESTRICT', ondelete='CASCADE'),
+        primary_key=True),
+    Column(
+        'group_id', Unicode(20),
+        ForeignKey('groups.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+        primary_key=True)
+    )
+
+
+user_collections_table = Table(
+    'user_collections',
+    Base.metadata,
+    Column(
+        'user_id', Integer,
+        ForeignKey('users.id', onupdate='RESTRICT', ondelete='CASCADE'),
+        primary_key=True),
+    Column(
+        'collection_id', Integer,
+        ForeignKey('collections.id', onupdate='RESTRICT', ondelete='CASCADE'),
+        primary_key=True),
+    Column(
+        'role', Unicode(20),
+        ForeignKey('roles.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+        nullable=False)
+    )
+
+
+sample_origins_table = Table(
+    'sample_origins',
+    Base.metadata,
+    Column(
+        'sample_id', Integer,
+        ForeignKey('samples.id', onupdate='RESTRICT', ondelete='CASCADE'),
+        primary_key=True),
+    Column(
+        'parent_id', Integer,
+        ForeignKey('samples.id', onupdate='RESTRICT', ondelete='CASCADE'),
+        primary_key=True)
+    )
