@@ -11,12 +11,15 @@ digraph G {
   samples;
   user_collections;
   user_groups;
+  user_limits;
   group_permissions;
   sample_origins;
   sample_audits;
   sample_notes;
   sample_images;
+  email_addresses;
 
+  users->user_limits;
   user_collections->users;
   user_collections->collections;
   user_collections->roles;
@@ -24,6 +27,7 @@ digraph G {
   user_groups->groups;
   group_permissions->groups;
   group_permissions->permissions;
+  email_addresses->users;
   samples->collections;
   samples->users;
   sample_origins->samples;
