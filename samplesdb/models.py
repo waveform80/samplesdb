@@ -37,11 +37,11 @@ from __future__ import (
 
 import os
 import hashlib
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from itertools import izip_longest
 
 from sqlalchemy import Table, ForeignKey, Column
-from sqlalchemy.types import Integer, Unicode, UnicodeText, DateTime, String
+from sqlalchemy.types import Integer, Unicode, UnicodeText, Date, DateTime, String
 from sqlalchemy.orm import scoped_session, sessionmaker, relationship, synonym
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.associationproxy import association_proxy
@@ -67,16 +67,60 @@ def slow_equals(s, t):
     return result == 0
 
 
+class EmailValidation(Base):
+    __tablename__ = 'email_validations'
+
+    id = Column(String(32), primary_key=True)
+    created = Column(DateTime, default=datetime.now(), nullable=False)
+    expiry = Column(DateTime, nullable=False)
+    email_ref = Column(
+        Unicode(200), ForeignKey(
+            'email_addresses.email', onupdate='RESTRICT', ondelete='CASCADE'),
+        nullable=False)
+    # email defined as backref on EmailAddress
+
+    def __init__(self, **kwargs):
+        super(EmailValidation, self).__init__(**kwargs)
+        # XXX Ensure a validation hasn't been requested in the last 10 minutes
+        self.expiry = datetime.now() + timedelta(days=1)
+        # XXX Calculate os.urandom length from self.id.len? / 2
+        self.id = os.urandom(16).encode('hex')
+
+    def __repr__(self):
+        return ('<EmailValidation: id="%s">' % self.id).encode('utf-8')
+
+    def __str__(self):
+        return unicode(self).encode('utf-8')
+
+    def __unicode__(self):
+        return self.id
+
+    @classmethod
+    def by_id(cls, id):
+        """return the email validation record with id ``id``"""
+        return DBSession.query(cls).filter_by(id=id).first()
+
+    def validate(self, user):
+        if datetime.now() > self.expiry:
+            raise ValueError('Validation code has expired')
+        if user is not self.email.user:
+            raise ValueError('Invalid user for validation code %s' % self.id)
+        self.email.validated = datetime.now()
+        DBSession.delete(self)
+
+
 class EmailAddress(Base):
     __tablename__ = 'email_addresses'
 
     email = Column(Unicode(200), primary_key=True)
-    user_id = Column(Integer, ForeignKey('users.id'))
+    user_id = Column(
+        Integer, ForeignKey(
+            'users.id', onupdate='RESTRICT', ondelete='CASCADE'),
+        nullable=False)
     # user defined as backref on Users
     created = Column(DateTime, default=datetime.now(), nullable=False)
-    validation = Column(String(32))
-    validation_expiry = Column(DateTime)
     validated = Column(DateTime)
+    validations = relationship(EmailValidation, backref='email')
 
     def __repr__(self):
         return ('<EmailAddress: email="%s">' % self.email).encode('utf-8')
@@ -92,17 +136,47 @@ class EmailAddress(Base):
         """return the address with email ``email``"""
         return DBSession.query(cls).filter_by(email=email).first()
 
-    def generate_validation_code(self):
-        assert self.validated is None
-        self.validation = os.urandom(16).encode('hex')
-        self.validation_expiry = datetime.now() + timedelta(days=1)
 
-    def check_validation_code(self, code):
-        if datetime.now() > self.validate_expiry:
+class PasswordReset(Base):
+    __tablename__ = 'password_resets'
+
+    id = Column(String(32), primary_key=True)
+    created = Column(DateTime, default=datetime.now(), nullable=False)
+    expiry = Column(DateTime, nullable=False)
+    user_id = Column(
+        Integer, ForeignKey(
+            'users.id', onupdate='RESTRICT', ondelete='CASCADE'),
+        nullable=False)
+    # user defined as backref on User
+
+    def __init__(self, **kwargs):
+        super(PasswordReset, self).__init__(**kwargs)
+        # XXX Ensure a reset hasn't been requested in the last 10 minutes
+        self.expiry = datetime.now() + timedelta(days=1)
+        # XXX Calculate os.urandom length from self.id.len? / 2
+        self.id = os.urandom(16).encode('hex')
+
+    def __repr__(self):
+        return ('<PasswordReset: id="%s">' % self.id).encode('utf-8')
+
+    def __str__(self):
+        return unicode(self).encode('utf-8')
+
+    def __unicode__(self):
+        return self.id
+
+    @classmethod
+    def by_id(cls, id):
+        """return the password reset record with id ``id``"""
+        return DBSession.query(cls).filter_by(id=id).first()
+
+    def reset_password(self, user, new_password):
+        if datetime.now() > self.expiry:
             raise ValueError('Validation code has expired')
-        if code != self.validation:
-            raise ValueError('Invalid validation code for user %d' % self.user_id)
-        self.validated = datetime.datetime.now()
+        if user is not self.user:
+            raise ValueError('Invalid user for validation code %s' % self.id)
+        self.user.password = new_password
+        DBSession.delete(self)
 
 
 class User(Base):
@@ -111,7 +185,9 @@ class User(Base):
     id = Column(Integer, primary_key=True)
     name = Column(Unicode(200), nullable=False)
     organization = Column(Unicode(200), default='', nullable=False)
-    _password = Column('password', String(200), nullable=False)
+    _password = Column('password', String(200))
+    password_changed = Column(DateTime)
+    resets = relationship(PasswordReset, backref='user')
     created = Column(DateTime, default=datetime.now(), nullable=False)
     emails = relationship(EmailAddress, backref='user')
     limits_id = Column(
@@ -161,6 +237,7 @@ class User(Base):
     def _set_password(self, password):
         """Store a hashed version of password."""
         self._password = self._hash_password(password)
+        self.password_changed = datetime.now()
 
     def _get_password(self):
         """Return the hashed version of the password."""
@@ -439,7 +516,7 @@ user_collections_table = Table(
         ForeignKey('collections.id', onupdate='RESTRICT', ondelete='CASCADE'),
         primary_key=True),
     Column(
-        'role', Unicode(20),
+        'role_id', Unicode(20),
         ForeignKey('roles.id', onupdate='RESTRICT', ondelete='RESTRICT'),
         nullable=False)
     )
