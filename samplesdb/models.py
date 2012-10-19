@@ -40,7 +40,7 @@ import hashlib
 from datetime import datetime, timedelta, date
 from itertools import izip_longest
 
-from sqlalchemy import Table, ForeignKey, Column
+from sqlalchemy import Table, Column, ForeignKey, CheckConstraint, func
 from sqlalchemy.types import Integer, Unicode, UnicodeText, Date, DateTime, String
 from sqlalchemy.orm import scoped_session, sessionmaker, relationship, synonym
 from sqlalchemy.ext.declarative import declarative_base
@@ -71,7 +71,7 @@ class EmailValidation(Base):
     __tablename__ = 'email_validations'
 
     id = Column(String(32), primary_key=True)
-    created = Column(DateTime, default=datetime.now(), nullable=False)
+    created = Column(DateTime, default=datetime.utcnow, nullable=False)
     expiry = Column(DateTime, nullable=False)
     email_ref = Column(
         Unicode(200), ForeignKey(
@@ -82,7 +82,7 @@ class EmailValidation(Base):
     def __init__(self, **kwargs):
         super(EmailValidation, self).__init__(**kwargs)
         # XXX Ensure a validation hasn't been requested in the last 10 minutes
-        self.expiry = datetime.now() + timedelta(days=1)
+        self.expiry = datetime.utcnow() + timedelta(days=1)
         # XXX Calculate os.urandom length from self.id.len? / 2
         self.id = os.urandom(16).encode('hex')
 
@@ -101,11 +101,11 @@ class EmailValidation(Base):
         return DBSession.query(cls).filter_by(id=id).first()
 
     def validate(self, user):
-        if datetime.now() > self.expiry:
+        if datetime.utcnow() > self.expiry:
             raise ValueError('Validation code has expired')
         if user is not self.email.user:
             raise ValueError('Invalid user for validation code %s' % self.id)
-        self.email.validated = datetime.now()
+        self.email.validated = datetime.utcnow()
         DBSession.delete(self)
 
 
@@ -118,7 +118,7 @@ class EmailAddress(Base):
             'users.id', onupdate='RESTRICT', ondelete='CASCADE'),
         nullable=False)
     # user defined as backref on Users
-    created = Column(DateTime, default=datetime.now(), nullable=False)
+    created = Column(DateTime, default=datetime.utcnow, nullable=False)
     validated = Column(DateTime)
     validations = relationship(EmailValidation, backref='email')
 
@@ -141,7 +141,7 @@ class PasswordReset(Base):
     __tablename__ = 'password_resets'
 
     id = Column(String(32), primary_key=True)
-    created = Column(DateTime, default=datetime.now(), nullable=False)
+    created = Column(DateTime, default=datetime.utcnow, nullable=False)
     expiry = Column(DateTime, nullable=False)
     user_id = Column(
         Integer, ForeignKey(
@@ -152,7 +152,7 @@ class PasswordReset(Base):
     def __init__(self, **kwargs):
         super(PasswordReset, self).__init__(**kwargs)
         # XXX Ensure a reset hasn't been requested in the last 10 minutes
-        self.expiry = datetime.now() + timedelta(days=1)
+        self.expiry = datetime.utcnow() + timedelta(days=1)
         # XXX Calculate os.urandom length from self.id.len? / 2
         self.id = os.urandom(16).encode('hex')
 
@@ -171,7 +171,7 @@ class PasswordReset(Base):
         return DBSession.query(cls).filter_by(id=id).first()
 
     def reset_password(self, user, new_password):
-        if datetime.now() > self.expiry:
+        if datetime.utcnow() > self.expiry:
             raise ValueError('Validation code has expired')
         if user is not self.user:
             raise ValueError('Invalid user for validation code %s' % self.id)
@@ -188,7 +188,7 @@ class User(Base):
     _password = Column('password', String(200))
     password_changed = Column(DateTime)
     resets = relationship(PasswordReset, backref='user')
-    created = Column(DateTime, default=datetime.now(), nullable=False)
+    created = Column(DateTime, default=datetime.utcnow, nullable=False)
     emails = relationship(EmailAddress, backref='user')
     limits_id = Column(
         Unicode(20), ForeignKey(
@@ -237,7 +237,7 @@ class User(Base):
     def _set_password(self, password):
         """Store a hashed version of password."""
         self._password = self._hash_password(password)
-        self.password_changed = datetime.now()
+        self.password_changed = datetime.utcnow()
 
     def _get_password(self):
         """Return the hashed version of the password."""
@@ -247,7 +247,7 @@ class User(Base):
 
     def test_password(self, password):
         """Check the password against existing credentials."""
-        now = datetime.now()
+        utcnow = datetime.utcnow()
         try:
             if self.password.startswith('1:'):
                 ver, salt, our_hash = self.password.split(':')
@@ -344,7 +344,7 @@ class SampleAudit(Base):
             'samples.id', onupdate='RESTRICT', ondelete='CASCADE'),
         primary_key=True)
     # sample defined as backref on Sample
-    audited = Column(DateTime, default=datetime.now(), primary_key=True)
+    audited = Column(DateTime, default=datetime.utcnow, primary_key=True)
     auditor_id = Column(
         Integer, ForeignKey(
             'users.id', onupdate='RESTRICT', ondelete='RESTRICT'),
@@ -375,7 +375,7 @@ class SampleImage(Base):
         Integer, ForeignKey(
             'users.id', onupdate='RESTRICT', ondelete='SET NULL'))
     creator = relationship(User)
-    created = Column(DateTime, default=datetime.now())
+    created = Column(DateTime, default=datetime.utcnow)
 
     def __repr__(self):
         return ('<SampleImage: sample_id=%d, created_by=%d, created="%s">' % (
@@ -394,9 +394,10 @@ class Sample(Base):
     id = Column(Integer, primary_key=True)
     description = Column(Unicode(200), nullable=False)
     created = Column(DateTime)
-    creator_id = Column(Integer, ForeignKey(
+    creator_id = Column(Integer, ForeignKey(/usr/local/turbogears/ratbot/dbfiles/synchro_2_2.png
         'users.id', onupdate='RESTRICT', ondelete='SET NULL'))
     creator = relationship(User)
+    destroyed = Column(DateTime)
     code = Column(Unicode(50), default='', nullable=False)
     notes = Column(UnicodeText, default='', nullable=False)
     collection_id = Column(Integer, ForeignKey(
@@ -434,7 +435,7 @@ class Collection(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(Unicode(200), nullable=False)
-    created = Column(DateTime, default=datetime.now(), nullable=False)
+    created = Column(DateTime, default=datetime.utcnow(), nullable=False)
     samples = relationship(Sample, backref='collection')
     users = relationship(
         User, secondary=lambda: user_collections_table, backref='collections')
@@ -459,7 +460,7 @@ class Role(Base):
 
     id = Column(Unicode(20), primary_key=True)
     description = Column(Unicode(100), nullable=False)
-    created = Column(DateTime, default=datetime.now(), nullable=False)
+    created = Column(DateTime, default=datetime.utcnow(), nullable=False)
 
     def __repr__(self):
         return ('<Role: id="%s">' % self.id).encode('utf-8')
