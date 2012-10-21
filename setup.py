@@ -64,6 +64,7 @@ REQUIRES = [
     'pyramid_debugtoolbar',
     'zope.sqlalchemy',
     'waitress',
+    'pytz',
     'passlib>=1.6',
     ]
 
