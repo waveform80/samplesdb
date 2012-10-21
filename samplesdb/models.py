@@ -36,10 +36,10 @@ from __future__ import (
     )
 
 import os
-import hashlib
 from datetime import datetime, timedelta, date
 from itertools import izip_longest
 
+from passlib.context import CryptContext
 from sqlalchemy import Table, Column, ForeignKey, CheckConstraint, func
 from sqlalchemy.types import Integer, Unicode, UnicodeText, Date, DateTime, String
 from sqlalchemy.orm import scoped_session, sessionmaker, relationship, synonym
@@ -51,20 +51,12 @@ from zope.sqlalchemy import ZopeTransactionExtension
 DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
 Base = declarative_base()
 
-
-def slow_equals(s, t):
-    """
-    Compares two strings for equality slowly.
-
-    This function is used to deliberately compare every single byte/char in
-    two strings (even when we don't need to) in order to ensure password
-    hash checks all take the same time in an attempt to defeat timing attacks
-    against the hash.
-    """
-    result = len(s) ^ len(t)
-    for sc, st in izip_longest(s, t):
-        result |= ord(sc) ^ ord(st)
-    return result == 0
+PasswordContext = CryptContext(
+    # Use PBKDF2 algorithm for password hashing with 10% variance in the rounds
+    schemes = [b'pbkdf2_sha256'],
+    default = b'pbkdf2_sha256',
+    all__vary_rounds = 0.1,
+    )
 
 
 class EmailValidation(Base):
@@ -236,7 +228,7 @@ class User(Base):
 
     def _set_password(self, password):
         """Store a hashed version of password."""
-        self._password = self._hash_password(password)
+        self._password = PasswordContext.encrypt(password)
         self.password_changed = datetime.utcnow()
 
     def _get_password(self):
@@ -247,23 +239,13 @@ class User(Base):
 
     def test_password(self, password):
         """Check the password against existing credentials."""
-        utcnow = datetime.utcnow()
-        try:
-            if self.password.startswith('1:'):
-                ver, salt, our_hash = self.password.split(':')
-                salt = salt.decode('base64')
-                our_hash = our_hash.decode('base64')
-                test_hash = hashlib.sha256()
-                test_hash.update(salt)
-                test_hash.update(password)
-                test_hash = test_hash.digest()
-                return slow_equals(our_hash, test_hash.digest())
-            else:
-                raise NotImplementedError
-        finally:
-            # XXX Pause for up to a second to ensure all logins take a "long"
-            # time (at least in computational terms)
-            pass
+        # We call verify_and_update here in case we've defined any new
+        # (hopefully stronger) algorithms in the context above. If so, this'll
+        # take care of migrating users as they login
+        (result, new_password) = PasswordContext.verify_and_update(password, self.password)
+        if result and new_password:
+            self._password = new_password
+        return result
 
 
 class UserLimit(Base):
@@ -394,7 +376,7 @@ class Sample(Base):
     id = Column(Integer, primary_key=True)
     description = Column(Unicode(200), nullable=False)
     created = Column(DateTime)
-    creator_id = Column(Integer, ForeignKey(/usr/local/turbogears/ratbot/dbfiles/synchro_2_2.png
+    creator_id = Column(Integer, ForeignKey(
         'users.id', onupdate='RESTRICT', ondelete='SET NULL'))
     creator = relationship(User)
     destroyed = Column(DateTime)
