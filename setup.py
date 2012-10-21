@@ -64,6 +64,7 @@ REQUIRES = [
     'pyramid_debugtoolbar',
     'zope.sqlalchemy',
     'waitress',
+    'passlib>=1.6',
     ]
 
 ENTRY_POINTS = """\
