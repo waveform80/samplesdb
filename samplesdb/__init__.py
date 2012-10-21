@@ -35,6 +35,7 @@ ROUTES = {
     'home':                    '/',
     'login':                   '/login',
     'logout':                  '/logout',
+    'sign_up':                 '/signup',
     'admin_home':              '/admin/',
     'admin_users':             '/admin/users/',
     'admin_user_create':       '/admin/users/new',
@@ -53,7 +54,6 @@ ROUTES = {
     'admin_permission_remove': '/admin/permissions/{id}/remove',
     'send_validate_email':     '/send_validation/{email}',
     'send_reset_email':        '/send_reset/{email}',
-    'user_sign_up':            '/sign_up',
     'user_validate_email':     '/validate/{code}',
     'user_reset_password':     '/reset_password/{code}',
     'user_profile':            '/profile',
@@ -76,7 +76,7 @@ def main(global_config, **settings):
     DBSession.configure(bind=engine)
     config = Configurator(settings=settings)
     config.add_static_view('static', 'static', cache_max_age=3600)
-    for name, pattern in ROUTES:
+    for name, pattern in ROUTES.items():
         config.add_route(name, pattern)
     config.scan()
     return config.make_wsgi_app()

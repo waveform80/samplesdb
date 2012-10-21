@@ -1,0 +1,677 @@
+<!doctype html>
+<!-- paulirish.com/2008/conditional-stylesheets-vs-css-hacks-answer-neither/ -->
+<!--[if lt IE 7]> <html class="no-js ie6 oldie" lang="en"> <![endif]-->
+<!--[if IE 7]>    <html class="no-js ie7 oldie" lang="en"> <![endif]-->
+<!--[if IE 8]>    <html class="no-js ie8 oldie" lang="en"> <![endif]-->
+<!--[if IE 9]>    <html class="no-js ie9" lang="en" itemscope itemtype="http://schema.org/Product"> <![endif]-->
+<!-- Consider adding an manifest.appcache: h5bp.com/d/Offline -->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" itemscope itemtype="http://schema.org/Product"> <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+
+  <!-- Use the .htaccess and remove these lines to avoid edge case issues.
+       More info: h5bp.com/b/378 -->
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+  <title>Gumby Framework - A Responsive 960 Grid CSS Framework</title>
+  <meta name="description" content="" />
+  <meta name="keywords" content="" />
+  <meta name="author" content="humans.txt">
+  
+  <link rel="shortcut icon" href="favicon.png" type="image/x-icon" />
+  
+  <!--Facebook Metadata /-->
+  <meta property="fb:page_id" content="" />
+  <meta property="og:image" content="" />
+  <meta property="og:description" content=""/>
+  <meta property="og:title" content=""/>
+  
+  <!--Google+ Metadata /-->
+  <meta itemprop="name" content="">
+  <meta itemprop="description" content="">
+  <meta itemprop="image" content="">
+
+  <!-- Mobile viewport optimized: j.mp/bplateviewport -->
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+
+  <!-- Place favicon.ico and apple-touch-icon.png in the root directory: mathiasbynens.be/notes/touch-icons -->
+
+  <!-- CSS: implied media=all -->
+  <!-- CSS concatenated and minified via ant build script-->
+  <!-- <link rel="stylesheet" href="css/minified.css"> -->
+  
+  <!-- CSS imports non-minified for staging, minify before moving to production-->
+  <link rel="stylesheet" href="css/imports.css">
+  <!-- end CSS-->
+
+  <!-- More ideas for your <head> here: h5bp.com/d/head-Tips -->
+
+  <!-- All JavaScript at the bottom, except for Modernizr / Respond.
+       Modernizr enables HTML5 elements & feature detects; Respond is a polyfill for min/max-width CSS3 Media Queries
+       For optimal performance, use a custom Modernizr build: www.modernizr.com/download/ -->
+  <script src="js/libs/modernizr-2.0.6.min.js"></script>
+
+  <style>
+    .drawertoggle .toggle {
+      display: block;
+      padding: 8px 10px 8px 36px;
+      background: url(img/icon_drawertoggle.png) #5dbb73 13px 15px no-repeat;
+      color: #fff;
+      border: 1px solid #05390a;
+      border-radius: 4px;
+      text-shadow: 0 1px 2px #05390a;
+      -webkit-transition-duration: .2s;  /* Saf3.2+, Chrome */
+      -moz-transition-duration: .2s;  /* FF4+ */
+      -ms-transition-duration: .2s;  /* IE10 */
+      -o-transition-duration: .2s;  /* Opera 10.5+ */
+      transition-duration: .2s;
+      font-weight: bold;
+      width: 100%;
+      -moz-box-sizing: border-box;
+      box-sizing: border-box;
+      text-align: left;
+    }
+    .drawertoggle .toggle:hover {
+      background-color: #72dd8d;
+    }
+    .drawertoggle .toggle.active {
+      background-color: #5dbb73;
+      box-shadow: inset 0 0 5px #05390a;
+      -webkit-transition-duration: .2s;  /* Saf3.2+, Chrome */
+      -moz-transition-duration: .2s;  /* FF4+ */
+      -ms-transition-duration: .2s;  /* IE10 */
+      -o-transition-duration: .2s;  /* Opera 10.5+ */
+      transition-duration: .2s;
+    }
+    .drawer .container {
+    	padding: 20px;
+    }
+    .drawer .row:first-child {
+    	padding-bottom: 20px;
+    }
+    .drawer .row i {
+      text-align: center;
+    }
+    .drawer .row i img {
+    	border-radius: 10px;
+    	overflow: hidden;
+    	border: 1px solid #000;
+    	box-shadow: inset 0 1px 2px #fff;
+    }
+    .left {
+      float: left !important;
+    }
+    @media only screen and (max-width:767px) {
+      .left {
+        float: none !important;
+      }
+    }
+  </style>
+</head>
+
+<body style="background: #ebffef;">
+  <section class="drawer" id="fromtop">
+    <div class="container">
+      <div class="row">
+        <i class="two columns"><img src="img/icon_sample.png" /></i>
+        <i class="two columns"><img src="img/icon_sample.png" /></i>
+        <i class="two columns"><img src="img/icon_sample.png" /></i>
+        <i class="two columns"><img src="img/icon_sample.png" /></i>
+        <i class="two columns"><img src="img/icon_sample.png" /></i>
+        <i class="two columns"><img src="img/icon_sample.png" /></i>
+      </div>
+      <div class="row">
+        <i class="two columns"><img src="img/icon_sample.png" /></i>
+        <i class="two columns"><img src="img/icon_sample.png" /></i>
+        <i class="two columns"><img src="img/icon_sample.png" /></i>
+        <i class="two columns"><img src="img/icon_sample.png" /></i>
+        <i class="two columns"><img src="img/icon_sample.png" /></i>
+        <i class="two columns"><img src="img/icon_sample.png" /></i>
+      </div>
+    </div>
+  </section>
+
+  <div class="row">
+  	<h2>Basic Navigation Bar</h2>
+    <nav class="navbar clearfix" id="basicnav">
+      <a href="#" class="toggle" data-for="#basicnav > ul"><img src="img/icon_nav_toggle.gif" /></a>
+    	<ul>
+    		<li><a href="#">First Item</a></li>
+    		<li><a href="#">Second Item</a>
+    			<div class="dropdown">
+    				<ul>
+    					<li><a href="#">Dropdown item</a></li>
+    					<li><a href="#">Dropdown item</a></li>
+    					<li><a href="#">Dropdown item</a></li>
+    					<li><a href="#">Dropdown item</a></li>
+    					<li><a href="#">Dropdown item</a></li>
+    				</ul>
+    			</div>
+    		</li>
+    		<li><a href="#">Third Item</a>
+    			<div class="dropdown">
+    				<ul>
+    					<li><a href="#">Dropdown item</a></li>
+    					<li><a href="#">Dropdown item</a></li>
+    					<li><a href="#">Dropdown item</a></li>
+    					<li><a href="#">Dropdown item</a></li>
+    					<li><a href="#">Dropdown item</a></li>
+    				</ul>
+    			</div>
+    		</li>
+    		<li><a href="#">Fourth Item</a>
+    			<div class="dropdown">
+    				<ul>
+    					<li><a href="#">Dropdown item</a></li>
+    					<li><a href="#">Dropdown item</a></li>
+    					<li><a href="#">Dropdown item</a></li>
+    					<li><a href="#">Dropdown item</a></li>
+    					<li><a href="#">Dropdown item</a></li>
+    				</ul>
+    			</div>
+    		</li>
+    		<li><a href="#">Fifth Item</a>
+    			<div class="dropdown">
+    				<ul>
+    					<li><a href="#">Dropdown item</a></li>
+    					<li><a href="#">Dropdown item</a></li>
+    					<li><a href="#">Dropdown item</a></li>
+    					<li><a href="#">Dropdown item</a></li>
+    					<li><a href="#">Dropdown item</a></li>
+    				</ul>
+    			</div>
+    		</li>
+    		<li>
+      		<div class="field">
+      			<p class="text search oval"><input type="search" placeholder="Search" /></p>
+      		</div>
+    		</li>
+    	</ul>
+    </nav>
+  </div>
+  <section class="drawer" id="belownav">
+    <div class="container">
+      <div class="row">
+        <i class="two columns"><img src="img/icon_sample.png" /></i>
+        <i class="two columns"><img src="img/icon_sample.png" /></i>
+        <i class="two columns"><img src="img/icon_sample.png" /></i>
+        <i class="two columns"><img src="img/icon_sample.png" /></i>
+        <i class="two columns"><img src="img/icon_sample.png" /></i>
+        <i class="two columns"><img src="img/icon_sample.png" /></i>
+      </div>
+      <div class="row">
+        <i class="two columns"><img src="img/icon_sample.png" /></i>
+        <i class="two columns"><img src="img/icon_sample.png" /></i>
+        <i class="two columns"><img src="img/icon_sample.png" /></i>
+        <i class="two columns"><img src="img/icon_sample.png" /></i>
+        <i class="two columns"><img src="img/icon_sample.png" /></i>
+        <i class="two columns"><img src="img/icon_sample.png" /></i>
+      </div>
+    </div>
+  </section>
+  
+  <div class="row">
+  	<h2>Pretty Navigation Bar</h2>
+  	<nav class="pretty navbar clearfix" id="prettynav">
+  		<h1 class="logo"><a href="#"><img src="img/img_logo.png" alt="Gumby Framework"/></a></h1>
+  		<a href="#" class="toggle" data-for="#prettynav > ul"><img src="img/icon_nav_toggle.gif" /></a>
+  		<ul>
+  			<li><a href="#">First Item</a></li>
+  			<li><a href="#">Second Item</a>
+  				<div class="dropdown">
+  					<ul>
+  						<li><a href="#">Dropdown item</a></li>
+  						<li><a href="#">Dropdown item</a></li>
+  						<li><a href="#">Dropdown item</a></li>
+  						<li><a href="#">Dropdown item</a></li>
+  						<li><a href="#">Dropdown item</a></li>
+  					</ul>
+  				</div>
+  			</li>
+  			<li><a href="#">Third Item</a>
+  				<div class="dropdown">
+  					<ul>
+  						<li><a href="#">Dropdown item</a></li>
+  						<li><a href="#">Dropdown item</a></li>
+  						<li><a href="#">Dropdown item</a></li>
+  						<li><a href="#">Dropdown item</a></li>
+  						<li><a href="#">Dropdown item</a></li>
+  					</ul>
+  				</div>
+  			</li>
+  			<li><a href="#">Fourth Item</a>
+  				<div class="dropdown">
+  					<ul>
+  						<li><a href="#">Dropdown item</a></li>
+  						<li><a href="#">Dropdown item</a></li>
+  						<li><a href="#">Dropdown item</a></li>
+  						<li><a href="#">Dropdown item</a></li>
+  						<li><a href="#">Dropdown item</a></li>
+  					</ul>
+  				</div>
+  			</li>
+  			<li>
+  				<div class="field">
+  					<p class="text search oval"><input type="search" placeholder="Search" /></p>
+  				</div>
+  			</li>
+  		</ul>
+  	</nav>
+  </div>
+  
+  <div class="container">
+    <article class="row drawertoggle">
+      <h2>Drawers</h2>
+  	  <p class="three columns alpha"><a href="#" class="toggle" data-for=".drawer#below">Open Drawer Below</a></p>
+  	  <p class="three columns"><a href="#" class="toggle" data-for=".drawer#belownav">Open Nav Drawer</a></p>
+  	  <p class="three columns left"><a href="#" class="toggle" data-for=".drawer#fromtop">Open Drawer Up Top</a></p>
+  	</article>
+  </div>
+  <section class="drawer" id="below">
+    <div class="container">
+      <div class="row">
+        <i class="two columns"><img src="img/icon_sample.png" /></i>
+        <i class="two columns"><img src="img/icon_sample.png" /></i>
+        <i class="two columns"><img src="img/icon_sample.png" /></i>
+        <i class="two columns"><img src="img/icon_sample.png" /></i>
+        <i class="two columns"><img src="img/icon_sample.png" /></i>
+        <i class="two columns"><img src="img/icon_sample.png" /></i>
+      </div>
+      <div class="row">
+        <i class="two columns"><img src="img/icon_sample.png" /></i>
+        <i class="two columns"><img src="img/icon_sample.png" /></i>
+        <i class="two columns"><img src="img/icon_sample.png" /></i>
+        <i class="two columns"><img src="img/icon_sample.png" /></i>
+        <i class="two columns"><img src="img/icon_sample.png" /></i>
+        <i class="two columns"><img src="img/icon_sample.png" /></i>
+      </div>
+    </div>
+  </section>
+  
+  <div class="container">
+  	<article class="row drawertoggle">
+  	  <h2>Toggles</h2>
+  	  <p class="six columns alpha"><a href="#" class="toggle" data-for=".toggle, .drawer">Click Me To Activate Everything!</a></p>
+  	  <p class="six columns"><a href="#" class="toggle" data-for=".subnav li:first-child, .subnav li:last-child" data-on="hover">Hover Over Me To Activate First Subnav Item</a></p>
+  	</article>
+  </div>
+	
+  <div class="container">
+    <div class="row">
+    	<h2>Sub Nav</h2>
+    	<section class="six columns alpha">
+	    	<ul class="subnav">
+	    		<li class="active"><a href="#">Adam Chambers</a></li>
+	    		<li><a href="#">Craig Keller</a></li>
+	    		<li><a href="#">Adam Chambers</a></li>
+	    		<li><a href="#">Craig Keller</a></li>
+	    	</ul>
+    	</section>
+    	<section class="six columns">
+	    	<dl class="subnav">
+	    		<dt>Filter:</dt>
+	    		<dd class="active"><a href="#">By Awesomeness</a></dd>
+	    		<dd><a href="#">By Handsomeness</a></dd>
+	    		<dd><a href="#">By Manliness</a></dd>
+	    	</dl>
+    	</section>
+    </div>
+    
+		<section class="row">
+		
+			<div class="four columns">
+				<h2>Buttons</h2>
+				<div class="row">
+					<p class="btn primary"><a href="#">Primary Button</a></p>
+				</div>
+				<div class="row">
+					<p class="btn secondary shrink"><a href="#">Secondary Button</a></p>
+				</div>
+				<div class="row">
+					<p class="btn tertiary"><a href="#">Tertiary Button</a></p>
+				</div>
+				<div class="row">
+					<p class="btn"><a href="#">Generic Button</a></p>
+				</div>
+				<div class="row">
+					<p class="btn oval"><a href="#">Oval Button</a></p>
+				</div>
+				<div class="row">
+					<p class="btn small"><a href="#">Small Button</a></p>
+				</div>
+				<div class="row">
+					<p class="btn medium"><a href="#">Medium Button</a></p>
+				</div>
+				<div class="row">
+					<p class="btn large"><a href="#">Large Button</a></p>
+				</div>
+			</div>
+			<div class="five columns">
+				<h2>Forms</h2>
+				<form action="" method="" data-form="validate">
+					<dl class="field row">
+						<dt class="text"><input type="text" placeholder="Text input" required /></dt>
+						<dd class="msg"><span class="caret"></span>You filled this out wrong.</dd>
+					</dl>
+					<dl class="field row">
+						<dt class="text"><input type="email" placeholder="Email input" required /></dt>
+						<dd class="msg"><span class="caret"></span>You filled this out wrong.</dd>
+					</dl>
+					<dl class="field row">
+						<dt class="text"><input type="password" placeholder="Password" required /></dt>
+						<dd class="msg"><span class="caret"></span>Your password is mad weak, yo.</dd>
+					</dl>
+					<ul class="field row">
+						<li class="picker">
+							<select>
+							  <option SELECTED>Your favorite movie of all time</option>
+							  <option>Hitchhiker's Guide To The Galaxy</option>
+							  <option>Star Wars Episode 6</option>
+							  <option>The Princess Bride</option>
+							  <option>Kung Pow</option>
+							  <option>Highlander: End Game</option>
+							  <option>Street Fighter: The Movie</option>
+							</select>
+							<a href="#" class="toggle">Your favorite movie of all time<span class="caret"></span></a>
+							<ul>
+								<li><a href="#">Hitchhiker's Guide To The Galaxy</a></li>
+								<li><a href="#">Star Wars</a></li>
+								<li><a href="#">The Princess Bride</a></li>
+								<li><a href="#">Kung Pow</a></li>
+								<li><a href="#">Highlander: End Game</a></li>
+								<li><a href="#">Terminator 2</a></li>
+								<li><a href="#">Street Fighter: The Movie</a></li>
+							</ul>
+						</li>
+					</ul>
+					<dl class="field row">
+						<dt class="picker">
+							<select>
+							  <option SELECTED>MM</option>
+							  <option>01</option>
+							  <option>02</option>
+							  <option>03</option>
+							  <option>04</option>
+							  <option>05</option>
+							  <option>06</option>
+							</select>
+							<a href="#" class="toggle">MM<span class="caret"></span></a>
+							<ul>
+								<li><a href="#">Option 1</a></li>
+								<li><a href="#">Option 2</a></li>
+								<li><a href="#">Option 3</a></li>
+								<li><a href="#">Option 4</a></li>
+								<li><a href="#">Option 5</a></li>
+								<li><a href="#">Option 6</a></li>
+							</ul>
+						</dt>
+						<dt class="picker">
+							<select>
+							  <option SELECTED>DD</option>
+							  <option>01</option>
+							  <option>02</option>
+							  <option>03</option>
+							  <option>04</option>
+							  <option>05</option>
+							  <option>06</option>
+							</select>
+							<a href="#" class="toggle">DD<span class="caret"></span></a>
+							<ul>
+								<li><a href="#">Option 1</a></li>
+								<li><a href="#">Option 2</a></li>
+								<li><a href="#">Option 3</a></li>
+								<li><a href="#">Option 4</a></li>
+								<li><a href="#">Option 5</a></li>
+								<li><a href="#">Option 6</a></li>
+							</ul>
+						</dt>
+						<dt class="picker">
+							<select>
+							  <option SELECTED>YYYY</option>
+							  <option>1980</option>
+							  <option>1981</option>
+							  <option>1982</option>
+							  <option>1983</option>
+							  <option>1984</option>
+							  <option>1985</option>
+							</select>
+							<a href="#" class="toggle">YYYY<span class="caret"></span></a>
+							<ul>
+								<li><a href="#">1980</a></li>
+								<li><a href="#">1981</a></li>
+								<li><a href="#">1982</a></li>
+								<li><a href="#">1983</a></li>
+								<li><a href="#">1984</a></li>
+								<li><a href="#">1985</a></li>
+							</ul>
+						</dt>
+						<dd class="msg"><span class="caret"></span>You filled this out wrong.</dd>
+						
+					</dl>
+					<dl class="field row">
+						<dt class="textarea"><textarea placeholder="Text Field" required></textarea></dt>
+						<dd class="error msg"><span class="caret"></span>You filled this out wrong.</dd>
+					</dl>
+					<ul class="field row">
+						<li>
+							<label class="radio" for="radio1">
+							  <input name="radio1" type="radio" id="radio1" style="display:none;">
+							  <span></span> Radio Button 1
+							</label>
+						</li>
+						<li>
+							<label class="radio" for="radio2">
+							  <input name="radio1" type="radio" id="radio2" style="display:none;">
+							  <span></span> Radio Button 2
+							</label>
+						</li>
+						<li>
+							<label class="checkbox" for="checkbox1">
+							  <input name="checkbox1" type="checkbox" id="checkbox1" style="display:none;">
+							  <span></span> Checkbox 1
+							</label>
+						</li>
+						<li>
+							<label class="checkbox checked" for="checkbox2">
+							  <input name="checkbox2" type="checkbox" id="checkbox2" style="display:none;">
+							  <span></span> Checkbox 2
+							</label>
+						</li>
+					</ul>
+					<div class="row">
+						<p class="btn submit"><input type="submit" value="Submit"></p>
+					</div>
+				</form>
+			</div>		
+			<div class="three columns">
+				<h2>Code</h2>
+				<pre>h1, h2 {
+  font: bold italic 220px georgia, times new roman, serif;
+  color: #05390a;
+  letter-spacing: -.09em;
+  text-shadow: 0 1px 0 #fff;
+  -webkit-transition-duration: 1s;
+}
+						
+h2  {
+  font-size: 21px;
+  text-shadow: 0 1px 0 #fff;
+  font-weight: normal;
+}
+					
+.head, .head:hover {
+  box-shadow: none;
+  margin-top: 30px;
+}
+				</pre>
+			</div>
+			
+		</section>
+		
+		<section class="row">
+			<div class="six columns">
+				<h2>Basic Tabs</h2>
+				
+				<section class="tabs">
+					<ul>
+						<li><a href="#tab1">Tab 1</a></li>
+						<li class="active"><a href="#tab2">Tab 2</a></li>
+						<li><a href="#tab3">Tab 3</a></li>
+					</ul>
+					<div data-tab="tab1">
+						<p>Proin elit arcu, rutrum commodo, vehicula tempus, commodo a, risus. Curabitur nec arcu. Donec sollicitudin mi sit amet mauris. Nam elementum quam ullamcorper ante. Etiam aliquet massa et lorem. Mauris dapibus lacus auctor risus. Aenean tempor ullamcorper leo. Vivamus sed magna quis ligula eleifend adipiscing. Duis orci. Aliquam sodales tortor vitae ipsum. Aliquam nulla. Duis aliquam molestie erat. Ut et mauris vel pede varius sollicitudin. Sed ut dolor nec orci tincidunt interdum. Phasellus ipsum. Nunc tristique tempus lectus.</p>
+					</div>
+					<div class="active" data-tab="tab2">
+						<p>Morbi tincidunt, dui sit amet facilisis feugiat, odio metus gravida ante, ut pharetra massa metus id nunc. Duis scelerisque molestie turpis. Sed fringilla, massa eget luctus malesuada, metus eros molestie lectus, ut tempus eros massa ut dolor. Aenean aliquet fringilla sem. Suspendisse sed ligula in ligula suscipit aliquam. Praesent in eros vestibulum mi adipiscing adipiscing. Morbi facilisis. Curabitur ornare consequat nunc. Aenean vel metus. Ut posuere viverra nulla. Aliquam erat volutpat. Pellentesque convallis. Maecenas feugiat, tellus pellentesque pretium posuere, felis lorem euismod felis, eu ornare leo nisi vel felis. Mauris consectetur tortor et purus.</p>
+					</div>
+					<div data-tab="tab3">
+						<p>Mauris eleifend est et turpis. Duis id erat. Suspendisse potenti. Aliquam vulputate, pede vel vehicula accumsan, mi neque rutrum erat, eu congue orci lorem eget lorem. Vestibulum non ante. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Fusce sodales. Quisque eu urna vel enim commodo pellentesque. Praesent eu risus hendrerit ligula tempus pretium. Curabitur lorem enim, pretium nec, feugiat nec, luctus a, lacus.</p>
+						<p>Duis cursus. Maecenas ligula eros, blandit nec, pharetra at, semper at, magna. Nullam ac lacus. Nulla facilisi. Praesent viverra justo vitae neque. Praesent blandit adipiscing velit. Suspendisse potenti. Donec mattis, pede vel pharetra blandit, magna ligula faucibus eros, id euismod lacus dolor eget odio.</p>
+					</div>
+				</section>
+			</div>
+			<div class="six columns">
+				<h2>Pretty Tabs</h2>
+				<section class="pretty tabs">
+					<ul>
+						<li class="active"><a href="#tab4">Tab 1</a></li>
+						<li><a href="#tab5">Tab 2</a></li>
+						<li><a href="#tab6">Tab 3</a></li>
+						<li><a href="#tab7">Tab 4</a></li>
+					</ul>
+					<div class="active" data-tab="tab4">
+						<p>Proin elit arcu, rutrum commodo, vehicula tempus, commodo a, risus. Curabitur nec arcu. Donec sollicitudin mi sit amet mauris. Nam elementum quam ullamcorper ante. Etiam aliquet massa et lorem. Mauris dapibus lacus auctor risus. Aenean tempor ullamcorper leo. Vivamus sed magna quis ligula eleifend adipiscing. Duis orci. Aliquam sodales tortor vitae ipsum. Aliquam nulla. Duis aliquam molestie erat. Ut et mauris vel pede varius sollicitudin. Sed ut dolor nec orci tincidunt interdum. Phasellus ipsum. Nunc tristique tempus lectus.</p>
+					</div>
+					<div data-tab="tab5">
+						<p>Morbi tincidunt, dui sit amet facilisis feugiat, odio metus gravida ante, ut pharetra massa metus id nunc. Duis scelerisque molestie turpis. Sed fringilla, massa eget luctus malesuada, metus eros molestie lectus, ut tempus eros massa ut dolor. Aenean aliquet fringilla sem. Suspendisse sed ligula in ligula suscipit aliquam. Praesent in eros vestibulum mi adipiscing adipiscing. Morbi facilisis. Curabitur ornare consequat nunc. Aenean vel metus. Ut posuere viverra nulla. Aliquam erat volutpat. Pellentesque convallis. Maecenas feugiat, tellus pellentesque pretium posuere, felis lorem euismod felis, eu ornare leo nisi vel felis. Mauris consectetur tortor et purus.</p>
+					</div>
+					<div data-tab="tab6">
+						<p>Mauris eleifend est et turpis. Duis id erat. Suspendisse potenti. Aliquam vulputate, pede vel vehicula accumsan, mi neque rutrum erat, eu congue orci lorem eget lorem. Vestibulum non ante. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Fusce sodales. Quisque eu urna vel enim commodo pellentesque. Praesent eu risus hendrerit ligula tempus pretium. Curabitur lorem enim, pretium nec, feugiat nec, luctus a, lacus.</p>
+						<p>Duis cursus. Maecenas ligula eros, blandit nec, pharetra at, semper at, magna. Nullam ac lacus. Nulla facilisi. Praesent viverra justo vitae neque. Praesent blandit adipiscing velit. Suspendisse potenti. Donec mattis, pede vel pharetra blandit, magna ligula faucibus eros, id euismod lacus dolor eget odio. Nam scelerisque. Donec non libero sed nulla mattis commodo. Ut sagittis. Donec nisi lectus, feugiat porttitor, tempor ac, tempor vitae, pede. Aenean vehicula velit eu tellus interdum rutrum. Maecenas commodo. Pellentesque nec elit. Fusce in lacus. Vivamus a libero vitae lectus hendrerit hendrerit.</p>
+					</div>
+					<div data-tab="tab7">
+						<p>Mauris eleifend est et turpis. Duis id erat. Suspendisse potenti. Aliquam vulputate, pede vel vehicula accumsan, mi neque rutrum erat, eu congue orci lorem eget lorem. Vestibulum non ante. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Fusce sodales. Quisque eu urna vel enim commodo pellentesque. Praesent eu risus hendrerit ligula tempus pretium. Curabitur lorem enim, pretium nec, feugiat nec, luctus a, lacus.</p>
+						<p>Duis cursus. Maecenas ligula eros, blandit nec, pharetra at, semper at, magna. Nullam ac lacus. Nulla facilisi. Praesent viverra justo vitae neque. Praesent blandit adipiscing velit. Suspendisse potenti. Donec mattis, pede vel pharetra blandit, magna ligula faucibus eros, id euismod lacus dolor eget odio. Nam scelerisque. Donec non libero sed nulla mattis commodo. Ut sagittis. Donec nisi lectus, feugiat porttitor, tempor ac, tempor vitae, pede. Aenean vehicula velit eu tellus interdum rutrum. Maecenas commodo. Pellentesque nec elit. Fusce in lacus. Vivamus a libero vitae lectus hendrerit hendrerit.</p>
+					</div>
+				</section>
+			</div>
+		</section>
+		
+		<section class="row">
+			<div class="seven columns">
+				<h2>Intrinsic Ratio Video Embed</h2>
+				<article class="youtube video">
+					<iframe width="560" height="315" src="http://www.youtube.com/embed/gye791Yne3E" frameborder="0" allowfullscreen></iframe>
+				</article>
+			</div>
+			<div class="five columns">
+				<h2>Vertical Alignment</h2>
+				<article class="valign row">
+					<div>
+						<img src="img/img1.jpg" width="163" />
+					</div>
+					<div>
+						<p>Gumby Framework is cool.</p>
+						<p style="margin: 0;">And his Pony pal pokey too!</p>
+					</div>
+				</article>
+				<article class="valign row">
+					<div>
+						<img src="img/img2.jpg" width="163" />
+					</div>
+					<div>
+						<p>Gumby Framework is cool.</p>
+						<p style="margin: 0;">And his Pony pal pokey too!</p>
+					</div>
+				</article>
+			</div>
+		</section>
+		
+		<section class="row" style="padding-top: 30px;padding-bottom: 500px;">
+		  <div class="four columns">
+		  	<h2>Skip Links</h2>
+		  	<div data-type="skiplink_1">
+		  	  <h4>First</h4>
+		  	  <p class="skiplink"><a href="#skiplink_2">Skip to second content</a></p>
+		  		<p>Proin elit arcu, rutrum commodo, vehicula tempus, commodo a, risus. Curabitur nec arcu. Donec sollicitudin mi sit amet mauris. Nam elementum quam ullamcorper ante.</p>
+		  	</div>
+		  	<div data-type="skiplink_2">
+		  	  <h4>Second</h4>
+		  	  <p class="skiplink"><a href="#skiplink_3">Skip to third content</a></p>
+		  		<p>Morbi tincidunt, dui sit amet facilisis feugiat, odio metus gravida ante, ut pharetra massa metus id nunc. Duis scelerisque molestie turpis.</p>
+		  	</div>
+		  	<div data-type="skiplink_3">
+		  	  <h4>Third</h4>
+		  	  <p class="skiplink"><a href="#skiplink_1">Go back to first content</a></p>
+		  		<p>Mauris eleifend est et turpis. Duis id erat. Suspendisse potenti. Aliquam vulputate, pede vel vehicula accumsan, mi neque rutrum erat, eu congue orci lorem eget lorem. Vestibulum non ante.</p>
+		  	</div>
+		  </div>
+		  <div class="eight columns">
+		  	<h2>Skip Nav</h2>
+		  	<nav class="skipnav">
+		  	  <ul>
+  		  	  <li><a href="#skipnav_1">Skip to first content</a></li>
+  		  	  <li><a href="#skipnav_2">Skip to second content</a></li>
+  		  	  <li><a href="#skipnav_3">Skip to third content</a></li>
+		  	  </ul>
+		  	</nav>
+		  	<div data-type="skipnav_1">
+		  	  <h4>First</h4>
+		  		<p>Proin elit arcu, rutrum commodo, vehicula tempus, commodo a, risus. Curabitur nec arcu. Donec sollicitudin mi sit amet mauris. <a href="#skipnav_2" class="skip">Nam elementum</a> quam ullamcorper ante. Etiam aliquet massa et lorem. Mauris dapibus lacus auctor risus. Aenean tempor ullamcorper leo.</p>
+		  	</div>
+		  	<div data-type="skipnav_2">
+		  	  <h4>Second</h4>
+		  		<p>Morbi tincidunt, dui sit amet facilisis feugiat, odio metus gravida ante, ut pharetra <a href="#skipnav_3" class="skip">massa metus</a> id nunc. Duis scelerisque molestie turpis. Sed fringilla, massa eget luctus malesuada, metus eros molestie lectus, ut tempus eros massa ut dolor.</p>
+		  	</div>
+		  	<div data-type="skipnav_3">
+		  	  <h4>Third</h4>
+		  		<p>Mauris eleifend est et turpis. Duis id erat. Suspendisse potenti. Aliquam vulputate, pede vel vehicula accumsan, mi neque rutrum erat, eu <a href="#skipnav_1" class="skip">congue orci lorem</a> eget lorem. Vestibulum non ante. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Fusce sodales.</p>
+		  	</div>
+		  </div>
+		</section>
+		
+       
+  </div> <!--! end of #container -->
+
+	
+  <!-- JavaScript at the bottom for fast page loading -->
+
+  <!-- Grab Google CDN's jQuery, with a protocol relative URL; fall back to local if offline -->
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+  <script>window.jQuery || document.write('<script src="js/libs/jquery-1.7.2.min.js"><\/script>')</script>
+
+  <script src="js/libs/gumby.min.js"></script>
+  <script src="js/plugins.js"></script>
+  <script src="js/main.js"></script>
+  <!-- end scripts-->
+
+	
+  <!-- Change UA-XXXXX-X to be your site's ID -->
+  <script>
+    window._gaq = [['_setAccount','UAXXXXXXXX1'],['_trackPageview'],['_trackPageLoadTime']];
+    Modernizr.load({
+      load: ('https:' == location.protocol ? '//ssl' : '//www') + '.google-analytics.com/ga.js'
+    });
+  </script>
+
+
+  <!-- Prompt IE 6 users to install Chrome Frame. Remove this if you want to support IE 6.
+       chromium.org/developers/how-tos/chrome-frame-getting-started -->
+  <!--[if lt IE 7 ]>
+    <script src="//ajax.googleapis.com/ajax/libs/chrome-frame/1.0.3/CFInstall.min.js"></script>
+    <script>window.attachEvent('onload',function(){CFInstall.check({mode:'overlay'})})</script>
+  <![endif]-->
+  
+  <!-- Social Widget Rendering Javascript /-->
+  <script src="http://platform.twitter.com/widgets.js"></script>
+  <script src="http://connect.facebook.net/en_US/all.js#xfbml=1"></script>
+  <script type="text/javascript">
+    (function() {
+      var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
+      po.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
+    })();
+  </script>
+  <!-- End Social Widget Rendering Javascript /-->
+</body>
+</html>
