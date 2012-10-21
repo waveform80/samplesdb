@@ -100,6 +100,7 @@
   <script src="${request.static_url('samplesdb:static/gumby/js/libs/gumby.min.js')}"></script>
   <script src="${request.static_url('samplesdb:static/gumby/js/plugins.js')}"></script>
   <script src="${request.static_url('samplesdb:static/gumby/js/main.js')}"></script>
+  <script src="${request.statuc_url('samplesdb:static/webforms2/webforms2-p.js')}"></script>
   <!-- end scripts-->
 
 
