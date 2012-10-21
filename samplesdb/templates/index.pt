@@ -47,20 +47,19 @@
     <div id="login" class="five columns">
       <form method="POST" action="${request.route_url('login')}" data-form="validate">
         <dl class="field row">
-          <dt class="text"><input type="email" placeholder="E-mail address" data-form="required" /></dt>
+          <dt class="text"><input type="email" name="email" placeholder="E-mail address" autofocus="autofocus" data-form="required" /></dt>
           <dd class="msg"><span class="caret"></span>You must provide your e-mail address to login.</dd>
         </dl>
         <dl class="field row">
-          <dt class="text"><input type="password" placeholder="Password" data-form="required" /></dt>
+          <dt class="text"><input type="password" name="password" placeholder="Password" data-form="required" /></dt>
           <dd class="msg"><span class="caret"></span>You must provide your password to login.</dd>
         </dl>
         <p class="btn"><a onclick="javascript:document.forms[0].submit()">Login</a></p>
+        <p>
+          <a href="${request.route_url('sign_up')}">New user</a> |
+          <a href="${request.route_url('send_reset_email')}">Forgotten password</a>
+        </p>
       </form>
-      <p><a href="${request.route_url('sign_up')}">Sign up if you're a new
-        user</a>. If you've forgotten your password, fill out your e-mail
-      address above and <a
-        href="${request.route_url('send_reset_email')}">request a password
-        reset</a>.</p>
     </div>
     <div id="divider" class="one columns"></div>
     <div id="info" class="six columns">
