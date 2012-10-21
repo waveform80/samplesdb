@@ -6,32 +6,10 @@
  
  ========================================================================*/
  
- 	
+p { text-align: justify; }
 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
+ul li { list-style-type: disc; margin-left: 2em; }
+
  
  /* ==|== media queries ======================================================
     PLACEHOLDER Media Queries for Responsive Design.
