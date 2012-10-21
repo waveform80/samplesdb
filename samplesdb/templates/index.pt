@@ -40,7 +40,7 @@
   <div class="container">
     <section class="row">
     <div id="header" class="twelve columns">
-      <img src="${request.static_url('samplesdb:static/logo.svg')}" />
+      <img src="${request.static_url('samplesdb:static/logo_large_optimized.svg')}" />
     </div>
     </section>
     <section class="row">
@@ -56,10 +56,28 @@
         </dl>
         <p class="btn"><a onclick="javascript:document.forms[0].submit()">Login</a></p>
       </form>
-      <p>Or <a href="${request.route_url('sign_up')}">sign up if you're a new user</a></p>
+      <p><a href="${request.route_url('sign_up')}">Sign up if you're a new
+        user</a>. If you've forgotten your password, fill out your e-mail
+      address above and <a
+        href="${request.route_url('send_reset_email')}">request a password
+        reset</a>.</p>
     </div>
     <div id="info" class="six columns">
-      Welcome to the ${project} project.
+      <p>Welcome to the <strong>${project}</strong> project. This is an
+      open-source project designed to provide a flexible web-based database to
+      lab technicians wishing to keep track of their samples. Features of the
+      system include:</p>
+
+      <ul>
+        <li>Multiple sample collections per user, including multiple images per
+        sample</li>
+        <li>Provenance of samples &ndash; visual history of splits and
+        combinations</li>
+        <li>Auditing of samples (optional) including e-mailed reminders</li>
+        <li>Downloadable copies of your collections in multiple formats (PDFs
+        for labelling, Excel files for offline copies of your database,
+        etc.)</li>
+      </ul>
     </div>
     </section>
     <section class="row">

@@ -7,40 +7,16 @@
    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
    xmlns:svg="http://www.w3.org/2000/svg"
    xmlns="http://www.w3.org/2000/svg"
-   xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    width="960"
-   height="300"
+   height="200"
    id="svg2"
    version="1.1"
    inkscape:version="0.48.3.1 r9886"
    sodipodi:docname="logo.svg">
   <defs
-     id="defs4">
-    <linearGradient
-       inkscape:collect="always"
-       id="linearGradient3777">
-      <stop
-         style="stop-color:#407a40;stop-opacity:1;"
-         offset="0"
-         id="stop3779" />
-      <stop
-         style="stop-color:#213050;stop-opacity:1"
-         offset="1"
-         id="stop3781" />
-    </linearGradient>
-    <linearGradient
-       inkscape:collect="always"
-       xlink:href="#linearGradient3777"
-       id="linearGradient3783"
-       x1="527.96405"
-       y1="57.421913"
-       x2="527.96405"
-       y2="275.88098"
-       gradientUnits="userSpaceOnUse"
-       gradientTransform="translate(0,-1052.3622)" />
-  </defs>
+     id="defs4" />
   <sodipodi:namedview
      id="base"
      pagecolor="#ffffff"
@@ -48,13 +24,13 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.98112738"
-     inkscape:cx="512.45174"
-     inkscape:cy="62.481604"
+     inkscape:zoom="1.3833896"
+     inkscape:cx="596.01657"
+     inkscape:cy="143.42923"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
-     inkscape:snap-page="false"
+     inkscape:snap-page="true"
      inkscape:snap-bbox="true"
      inkscape:window-width="1855"
      inkscape:window-height="1056"
@@ -77,18 +53,17 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(0,-752.36218)">
+     transform="translate(0,-852.36218)">
     <rect
-       style="fill:url(#linearGradient3783);fill-opacity:1;stroke:none"
-       id="rect2985"
+       style="fill:#000000;fill-opacity:1;stroke:none;display:none"
+       id="rect3008"
        width="960"
-       height="300"
+       height="200"
        x="0"
-       y="-1052.3622"
-       transform="scale(1,-1)" />
+       y="852.36218" />
     <g
        id="g3912"
-       transform="translate(-2.5857285,63.11648)">
+       transform="translate(-2.5857285,79.116482)">
       <g
          transform="translate(6,-53.667885)"
          id="text3755"
