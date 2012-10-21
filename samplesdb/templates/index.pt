@@ -24,7 +24,7 @@
   <!-- Place favicon.ico and apple-touch-icon.png in the root directory: mathiasbynens.be/notes/touch-icons -->
 
   <!-- CSS imports non-minified for staging, minify before moving to production-->
-  <link rel="stylesheet" href="${request.static_url('samplesdb:static/gumby/css/imports.css')}">
+  <link rel="stylesheet" href="${request.static_url('samplesdb:static/gumby/css/import12.css')}">
   <!-- end CSS-->
 
   <!-- More ideas for your <head> here: h5bp.com/d/head-Tips -->
