@@ -39,6 +39,7 @@ import os
 from datetime import datetime, timedelta, date
 from itertools import izip_longest
 
+import pytz
 from passlib.context import CryptContext
 from sqlalchemy import Table, Column, ForeignKey, CheckConstraint, func
 from sqlalchemy.types import Integer, Unicode, UnicodeText, Date, DateTime, String
@@ -181,6 +182,7 @@ class User(Base):
     password_changed = Column(DateTime)
     resets = relationship(PasswordReset, backref='user')
     created = Column(DateTime, default=datetime.utcnow, nullable=False)
+    _timezone = Column('timezone', Unicode(50), default='UTC', nullable=False),
     emails = relationship(EmailAddress, backref='user')
     limits_id = Column(
         Unicode(20), ForeignKey(
@@ -206,39 +208,35 @@ class User(Base):
 
     @property
     def permissions(self):
-        """Return a set with all permissions granted to the user."""
+        """Return a set with all permissions granted to the user"""
         result = set()
         for group in self.groups:
             result = result | set(group.permissions)
         return result
 
-    @classmethod
-    def _hash_password(cls, password):
-        """Generate a salted hash of the specified password."""
-        # Make sure password is a str because we cannot hash unicode objects
-        if isinstance(password, unicode):
-            password = password.encode('utf-8')
-        salt = os.urandom(30)
-        hash = hashlib.sha256()
-        hash.update(salt)
-        hash.update(password)
-        return '1:%s:%s' % (
-            salt.encode('base64').replace('\n', ''),
-            hash.digest().encode('base64').replace('\n', ''))
+    def _get_timezone(self):
+        """Return the timezone object corresponding to the name"""
+        return pytz.timezone(self._timezone)
+
+    def _set_timezone(self, value):
+        """Set the timezone to the name of the timezone object"""
+        self._timezone = value.zone
+
+    timezone = synonym('_timezone', descriptor=property(_get_timezone, _set_timezone))
 
     def _set_password(self, password):
-        """Store a hashed version of password."""
+        """Store a hashed version of password"""
         self._password = PasswordContext.encrypt(password)
         self.password_changed = datetime.utcnow()
 
     def _get_password(self):
-        """Return the hashed version of the password."""
+        """Return the hashed version of the password"""
         return self._password
 
     password = synonym('_password', descriptor=property(_get_password, _set_password))
 
     def test_password(self, password):
-        """Check the password against existing credentials."""
+        """Check the password against existing credentials"""
         # We call verify_and_update here in case we've defined any new
         # (hopefully stronger) algorithms in the context above. If so, this'll
         # take care of migrating users as they login
