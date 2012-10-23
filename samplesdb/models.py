@@ -302,7 +302,7 @@ class Group(Base):
     __tablename__ = 'groups'
 
     id = Column(Unicode(20), primary_key=True)
-    description = Column(Unicode(100))
+    description = Column(Unicode(200))
     users = relationship(
         User, secondary=lambda: user_group_table, backref='groups')
     # permissions defined as backref on Permissions
@@ -326,7 +326,7 @@ class Permission(Base):
     __tablename__ = 'permissions'
 
     id = Column(Unicode(20), primary_key=True)
-    description = Column(Unicode(100))
+    description = Column(Unicode(200))
     groups = relationship(
         Group, secondary=lambda: group_permission_table, backref='permissions')
 
@@ -413,15 +413,15 @@ class Sample(Base):
         'collections.id', onupdate='RESTRICT', ondelete='CASCADE'),
         nullable=False)
     # collection defined as backref on Collection
-    parents = relationship(
-        'Sample', secondary=lambda: sample_origins_table,
-        primaryjoin='samples.id == sample_origins.sample_id',
-        secondaryjoin='sample_origins.parent_id == samples.id')
-    children = relationship(
-        'Sample', secondary=lambda: sample_origins_table,
-        primaryjoin='samples.id == sample_origins.parent_id',
-        secondaryjoin='sample_origins.sample_id == samples.id',
-        cascade='all, delete-orphan', passive_deletes=True)
+    #parents = relationship(
+    #    'Sample', secondary=lambda: sample_origins_table,
+    #    primaryjoin='sample_origins.sample_id==samples.id',
+    #    secondaryjoin='sample_origins.parent_id==samples.id')
+    #children = relationship(
+    #    'Sample', secondary=lambda: sample_origins_table,
+    #    primaryjoin='samples.id == sample_origins.parent_id',
+    #    secondaryjoin='sample_origins.sample_id == samples.id',
+    #    cascade='all, delete-orphan', passive_deletes=True)
     images = relationship(
         SampleImage, backref='sample',
         cascade='all, delete-orphan', passive_deletes=True)
@@ -474,7 +474,7 @@ class Role(Base):
     __tablename__ = 'roles'
 
     id = Column(Unicode(20), primary_key=True)
-    description = Column(Unicode(100), nullable=False)
+    description = Column(Unicode(200), nullable=False)
     created = Column(DateTime, default=datetime.utcnow(), nullable=False)
 
     def __repr__(self):

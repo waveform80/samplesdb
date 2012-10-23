@@ -40,7 +40,6 @@ def main(argv=sys.argv):
     engine = engine_from_config(settings, 'sqlalchemy.')
     DBSession.configure(bind=engine)
     Base.metadata.create_all(engine)
-    import pdb; pdb.set_trace()
     with transaction.manager:
         admin_perm = Permission(
             id='admin', description='Administration authority')
@@ -54,15 +53,18 @@ def main(argv=sys.argv):
         admin_email = EmailAddress(
             email='admin@example.com', validated=datetime.utcnow())
         admin_collection = Collection(name='Default')
+        owner_role = Role(
+            id='role', description='Owner and administrator of the collection')
+        editor_role = Role(
+            id='editor', description='Can add and remove samples from a '
+                'collection, but cannot administer members of the collection')
+        auditor_role = Role(
+            id='auditor', description='Can audit samples within the '
+                'collection but cannot manipulate the collection')
+        viewer_role = Role(
+            id='viewer', description='Can view samples within the collection '
+                'but cannot manipulate the collection')
         admin_perm.groups.append(admins_group)
         admins_group.users.append(admin_user)
         admin_user.emails.append(admin_email)
         admin_user.password = 'adminpass'
-        # Create administrator default collection
-        # Create "academic" limit
-        # Create "commercial" limit
-        # Create "owner" role
-        # Create "editor" role
-        # Create "auditor" role
-        # Create "viewer" role
-        pass
