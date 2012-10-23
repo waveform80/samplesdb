@@ -182,7 +182,7 @@ class User(Base):
     password_changed = Column(DateTime)
     resets = relationship(PasswordReset, backref='user')
     created = Column(DateTime, default=datetime.utcnow, nullable=False)
-    _timezone = Column('timezone', Unicode(50), default='UTC', nullable=False),
+    _timezone = Column('timezone', Unicode(50), default='UTC', nullable=False)
     emails = relationship(EmailAddress, backref='user')
     limits_id = Column(
         Unicode(20), ForeignKey(
