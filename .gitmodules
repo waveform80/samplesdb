@@ -1,6 +1,3 @@
 [submodule "samplesdb/static/webforms2"]
 	path = samplesdb/static/webforms2
 	url = git://github.com/westonruter/webforms2.git
-[submodule "samplesdb/static/formalize"]
-	path = samplesdb/static/formalize
-	url = git://github.com/nathansmith/formalize.git
