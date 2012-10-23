@@ -41,9 +41,29 @@ from itertools import izip_longest
 
 import pytz
 from passlib.context import CryptContext
-from sqlalchemy import Table, Column, ForeignKey, CheckConstraint, func
-from sqlalchemy.types import Integer, Unicode, UnicodeText, Date, DateTime, String
-from sqlalchemy.orm import scoped_session, sessionmaker, relationship, synonym
+from sqlalchemy import (
+    Table,
+    Column,
+    ForeignKey,
+    CheckConstraint,
+    func,
+    )
+from sqlalchemy.types import (
+    Integer,
+    Unicode,
+    UnicodeText,
+    Date,
+    DateTime,
+    String,
+    )
+from sqlalchemy.orm import (
+    scoped_session,
+    sessionmaker,
+    relationship,
+    synonym,
+    backref,
+    )
+from sqlalchemy.orm.collections import attribute_mapped_collection
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.associationproxy import association_proxy
 from zope.sqlalchemy import ZopeTransactionExtension
@@ -113,7 +133,9 @@ class EmailAddress(Base):
     # user defined as backref on Users
     created = Column(DateTime, default=datetime.utcnow, nullable=False)
     validated = Column(DateTime)
-    validations = relationship(EmailValidation, backref='email')
+    validations = relationship(
+        EmailValidation, backref='email',
+        cascade='all, delete-orphan', passive_deletes=True)
 
     def __repr__(self):
         return ('<EmailAddress: email="%s">' % self.email).encode('utf-8')
@@ -180,17 +202,24 @@ class User(Base):
     organization = Column(Unicode(200), default='', nullable=False)
     _password = Column('password', String(200))
     password_changed = Column(DateTime)
-    resets = relationship(PasswordReset, backref='user')
+    resets = relationship(
+        PasswordReset, backref='user',
+        cascade='all, delete-orphan', passive_deletes=True)
     created = Column(DateTime, default=datetime.utcnow, nullable=False)
     _timezone = Column('timezone', Unicode(50), default='UTC', nullable=False)
-    emails = relationship(EmailAddress, backref='user')
+    emails = relationship(
+        EmailAddress, backref='user',
+        cascade='all, delete-orphan', passive_deletes=True)
     limits_id = Column(
         Unicode(20), ForeignKey(
             'user_limits.id', onupdate='RESTRICT', ondelete='RESTRICT'),
         nullable=False)
+    #collections = association_proxy(
+    #    'user_collections', 'role',
+    #    creator=lambda k, v: UserCollection(collection=k, role=v))
+
     # limits defined as backref on UserLimit
     # groups defined as backref on Group
-    # collections defined as backref on Collection
 
     def __repr__(self):
         return ('<User: id=%d>' % self.id).encode('utf-8')
@@ -386,14 +415,19 @@ class Sample(Base):
     # collection defined as backref on Collection
     parents = relationship(
         'Sample', secondary=lambda: sample_origins_table,
-        primaryjoin='samples.id = sample_origins.sample_id',
-        secondaryjoin='sample_origins.parent_id = samples.id')
+        primaryjoin='samples.id == sample_origins.sample_id',
+        secondaryjoin='sample_origins.parent_id == samples.id')
     children = relationship(
         'Sample', secondary=lambda: sample_origins_table,
-        primaryjoin='samples.id = sample_origins.parent_id',
-        secondaryjoin='sample_origins.sample_id = samples.id')
-    images = relationship(SampleImage, backref='sample')
-    audits = relationship(SampleAudit, backref='sample')
+        primaryjoin='samples.id == sample_origins.parent_id',
+        secondaryjoin='sample_origins.sample_id == samples.id',
+        cascade='all, delete-orphan', passive_deletes=True)
+    images = relationship(
+        SampleImage, backref='sample',
+        cascade='all, delete-orphan', passive_deletes=True)
+    audits = relationship(
+        SampleAudit, backref='sample',
+        cascade='all, delete-orphan', passive_deletes=True)
 
     def __repr__(self):
         return ('<Sample: id=%d>' % self.id).encode('utf-8')
@@ -417,8 +451,9 @@ class Collection(Base):
     name = Column(Unicode(200), nullable=False)
     created = Column(DateTime, default=datetime.utcnow(), nullable=False)
     samples = relationship(Sample, backref='collection')
-    users = relationship(
-        User, secondary=lambda: user_collections_table, backref='collections')
+    #users = association_proxy(
+    #    'collection_users', 'role',
+    #    creator=lambda k, v: UserCollection(user=k, role=v))
 
     def __repr__(self):
         return ('<Collection: id=%d>' % self.id).encode('utf-8')
@@ -457,6 +492,33 @@ class Role(Base):
         return DBSession.query(cls).filter_by(id=id).first()
 
 
+class UserCollection(Base):
+    __tablename__ = 'user_collections'
+
+    user_id = Column(Integer, ForeignKey(
+        'users.id', onupdate='RESTRICT', ondelete='CASCADE'),
+        primary_key=True)
+    collection_id = Column(Integer, ForeignKey(
+        'collections.id', onupdate='RESTRICT', ondelete='CASCADE'),
+        primary_key=True)
+    role_id = Column(Unicode(20), ForeignKey(
+        'roles.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+        nullable=False)
+    user = relationship(User)
+    #user = relationship(
+    #    User, backref=backref(
+    #        'user_collections',
+    #        collection_class=attribute_mapped_collection('collection'),
+    #        cascade='all, delete-orphan', passive_deletes=True))
+    collection = relationship(Collection)
+    #collection = relationship(
+    #    Collection, backref=backref(
+    #        'collection_users',
+    #        collection_class=attribute_mapped_collection('user'),
+    #        cascade='all, delete-orphan', passive_deletes=True))
+    role = relationship(Role)
+
+
 group_permission_table = Table(
     'group_permissions',
     Base.metadata,
@@ -482,24 +544,6 @@ user_group_table = Table(
         'group_id', Unicode(20),
         ForeignKey('groups.id', onupdate='RESTRICT', ondelete='RESTRICT'),
         primary_key=True)
-    )
-
-
-user_collections_table = Table(
-    'user_collections',
-    Base.metadata,
-    Column(
-        'user_id', Integer,
-        ForeignKey('users.id', onupdate='RESTRICT', ondelete='CASCADE'),
-        primary_key=True),
-    Column(
-        'collection_id', Integer,
-        ForeignKey('collections.id', onupdate='RESTRICT', ondelete='CASCADE'),
-        primary_key=True),
-    Column(
-        'role_id', Unicode(20),
-        ForeignKey('roles.id', onupdate='RESTRICT', ondelete='RESTRICT'),
-        nullable=False)
     )
 
 
