@@ -52,7 +52,7 @@
             <a href="${request.route_url('send_reset_email')}">Forgotten password</a>
           </div>
           <div class="two mobile-one columns">
-            <input type="submit" name="login" value="Login" />
+            <input class="right tiny button" type="submit" name="login" value="Login" />
           </div>
         </div>
       </form>
