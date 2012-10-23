@@ -16,7 +16,6 @@
   <!-- Place favicon.ico and apple-touch-icon.png in the root directory: mathiasbynens.be/notes/touch-icons -->
   <link rel="shortcut icon" href="${request.static_url('samplesdb:static/favicon.ico')}" />
   <link rel="stylesheet" href="${request.static_url('samplesdb:static/foundation/css/foundation.min.css')}">
-  <link rel="stylesheet" href="${request.static_url('samplesdb:static/formalize/assets/css/formalize.css')}">
   <link rel="stylesheet" href="${request.static_url('samplesdb:static/foundation/css/app.css')}">
   <!-- More ideas for your <head> here: h5bp.com/d/head-Tips -->
   <script src="${request.static_url('samplesdb:static/foundation/js/modernizr.foundation.js')}"></script>
@@ -29,20 +28,36 @@
     </div>
   </div>
   <div class="row">
-    <div id="login" class="five columns">
+    <div class="six columns">
       <form method="POST" action="${request.route_url('login')}" data-form="validate">
-        <label for="email">E-mail
-          <input type="email" id="email" name="email" placeholder="E-mail address" autofocus="autofocus" required="required" /></label>
-        <input type="password" name="password" placeholder="Password" required="required" />
-        <input type="submit" name="login" value="Login" />
-        <p>
-          <a href="${request.route_url('sign_up')}">New user</a> |
-          <a href="${request.route_url('send_reset_email')}">Forgotten password</a>
-        </p>
+        <div class="row">
+          <div class="two mobile-one columns">
+            <label class="inline" for="email">E-mail</label>
+          </div>
+          <div class="ten mobile-three columns">
+            <input type="email" id="email" name="email" placeholder="E-mail address" autofocus="autofocus" required="required" />
+          </div>
+        </div>
+        <div class="row">
+          <div class="two mobile-one columns">
+            <label class="inline" for="password">Password</label>
+          </div>
+          <div class="ten mobile-three columns">
+            <input type="password" id="password" name="password" placeholder="Password" required="required" />
+          </div>
+        </div>
+        <div class="row">
+          <div class="ten mobile-three columns">
+            <a href="${request.route_url('sign_up')}">New user</a> |
+            <a href="${request.route_url('send_reset_email')}">Forgotten password</a>
+          </div>
+          <div class="two mobile-one columns">
+            <input type="submit" name="login" value="Login" />
+          </div>
+        </div>
       </form>
     </div>
-    <div id="divider" class="one columns"></div>
-    <div id="info" class="six columns">
+    <div class="six columns">
       <p>Welcome to the <strong>${project}</strong> project. This is an
       open-source project designed to provide a flexible web-based database to
       lab technicians wishing to keep track of their samples. Features of the
