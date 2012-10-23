@@ -304,7 +304,7 @@ class Group(Base):
     id = Column(Unicode(20), primary_key=True)
     description = Column(Unicode(200))
     users = relationship(
-        User, secondary=lambda: user_group_table, backref='groups')
+        User, secondary='user_groups', backref='groups')
     # permissions defined as backref on Permissions
 
     def __repr__(self):
@@ -328,7 +328,7 @@ class Permission(Base):
     id = Column(Unicode(20), primary_key=True)
     description = Column(Unicode(200))
     groups = relationship(
-        Group, secondary=lambda: group_permission_table, backref='permissions')
+        Group, secondary='group_permissions', backref='permissions')
 
     def __repr__(self):
         return ('<Permission: id="%s">' % self.id).encode('utf-8')
@@ -413,15 +413,14 @@ class Sample(Base):
         'collections.id', onupdate='RESTRICT', ondelete='CASCADE'),
         nullable=False)
     # collection defined as backref on Collection
-    #parents = relationship(
-    #    'Sample', secondary=lambda: sample_origins_table,
-    #    primaryjoin='sample_origins.sample_id==samples.id',
-    #    secondaryjoin='sample_origins.parent_id==samples.id')
-    #children = relationship(
-    #    'Sample', secondary=lambda: sample_origins_table,
-    #    primaryjoin='samples.id == sample_origins.parent_id',
-    #    secondaryjoin='sample_origins.sample_id == samples.id',
-    #    cascade='all, delete-orphan', passive_deletes=True)
+    parents = relationship(
+        'Sample', secondary='sample_origins',
+        primaryjoin='sample_origins.c.sample_id==samples.c.id',
+        secondaryjoin='sample_origins.c.parent_id==samples.c.id')
+    children = relationship(
+        'Sample', secondary='sample_origins',
+        primaryjoin='sample_origins.c.parent_id==samples.c.id',
+        secondaryjoin='sample_origins.c.sample_id==samples.c.id')
     images = relationship(
         SampleImage, backref='sample',
         cascade='all, delete-orphan', passive_deletes=True)
@@ -519,43 +518,40 @@ class UserCollection(Base):
     role = relationship(Role)
 
 
-group_permission_table = Table(
-    'group_permissions',
-    Base.metadata,
-    Column(
-        'group_id', Unicode(20),
-        ForeignKey('groups.id', onupdate='RESTRICT', ondelete='CASCADE'),
-        primary_key=True),
-    Column(
-        'permission_id', Unicode(20),
-        ForeignKey('permissions.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+class GroupPermission(Base):
+    __tablename__ = 'group_permissions'
+
+    group_id = Column(
+        Unicode(20), ForeignKey(
+            'groups.id', onupdate='RESTRICT', ondelete='CASCADE'),
         primary_key=True)
-    )
-
-
-user_group_table = Table(
-    'user_groups',
-    Base.metadata,
-    Column(
-        'user_id', Integer,
-        ForeignKey('users.id', onupdate='RESTRICT', ondelete='CASCADE'),
-        primary_key=True),
-    Column(
-        'group_id', Unicode(20),
-        ForeignKey('groups.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+    permission_id = Column(
+        Unicode(20), ForeignKey(
+            'permissions.id', onupdate='RESTRICT', ondelete='RESTRICT'),
         primary_key=True)
-    )
 
 
-sample_origins_table = Table(
-    'sample_origins',
-    Base.metadata,
-    Column(
-        'sample_id', Integer,
-        ForeignKey('samples.id', onupdate='RESTRICT', ondelete='CASCADE'),
-        primary_key=True),
-    Column(
-        'parent_id', Integer,
-        ForeignKey('samples.id', onupdate='RESTRICT', ondelete='CASCADE'),
+class UserGroup(Base):
+    __tablename__ = 'user_groups'
+
+    user_id = Column(
+        Integer, ForeignKey(
+            'users.id', onupdate='RESTRICT', ondelete='CASCADE'),
         primary_key=True)
-    )
+    group_id = Column(
+        Unicode(20), ForeignKey(
+            'groups.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+        primary_key=True)
+
+
+class SampleOrigin(Base):
+    __tablename__ = 'sample_origins'
+
+    sample_id = Column(
+        Integer, ForeignKey(
+            'samples.id', onupdate='RESTRICT', ondelete='CASCADE'),
+        primary_key=True)
+    parent_id = Column(
+        Integer, ForeignKey(
+            'samples.id', onupdate='RESTRICT', ondelete='CASCADE'),
+        primary_key=True)
