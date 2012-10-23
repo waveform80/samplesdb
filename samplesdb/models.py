@@ -214,15 +214,14 @@ class User(Base):
         Unicode(20), ForeignKey(
             'user_limits.id', onupdate='RESTRICT', ondelete='RESTRICT'),
         nullable=False)
-    #collections = association_proxy(
-    #    'user_collections', 'role',
-    #    creator=lambda k, v: UserCollection(collection=k, role=v))
-
+    collections = association_proxy(
+        'user_collections', 'role',
+        creator=lambda k, v: UserCollection(collection=k, role=v))
     # limits defined as backref on UserLimit
     # groups defined as backref on Group
 
     def __repr__(self):
-        return ('<User: id=%d>' % self.id).encode('utf-8')
+        return ('<User: name="%s">' % self.name).encode('utf-8')
 
     def __str__(self):
         return unicode(self).encode('utf-8')
@@ -387,8 +386,8 @@ class SampleImage(Base):
     created = Column(DateTime, default=datetime.utcnow)
 
     def __repr__(self):
-        return ('<SampleImage: sample_id=%d, created_by=%d, created="%s">' % (
-            self.sample_id, self.created_by, self.audited.isoformat())).encode('utf-8')
+        return ('<SampleImage: sample_id=%d, filename="%s">' % (
+            self.sample_id, self.filename)).encode('utf-8')
 
     def __str__(self):
         return unicode(self).encode('utf-8')
@@ -429,7 +428,7 @@ class Sample(Base):
         cascade='all, delete-orphan', passive_deletes=True)
 
     def __repr__(self):
-        return ('<Sample: id=%d>' % self.id).encode('utf-8')
+        return ('<Sample: description="%s">' % self.description).encode('utf-8')
 
     def __str__(self):
         return unicode(self).encode('utf-8')
@@ -450,12 +449,12 @@ class Collection(Base):
     name = Column(Unicode(200), nullable=False)
     created = Column(DateTime, default=datetime.utcnow(), nullable=False)
     samples = relationship(Sample, backref='collection')
-    #users = association_proxy(
-    #    'collection_users', 'role',
-    #    creator=lambda k, v: UserCollection(user=k, role=v))
+    users = association_proxy(
+        'collection_users', 'role',
+        creator=lambda k, v: UserCollection(user=k, role=v))
 
     def __repr__(self):
-        return ('<Collection: id=%d>' % self.id).encode('utf-8')
+        return ('<Collection: name="%s">' % self.name).encode('utf-8')
 
     def __str__(self):
         return unicode(self).encode('utf-8')
@@ -503,18 +502,14 @@ class UserCollection(Base):
     role_id = Column(Unicode(20), ForeignKey(
         'roles.id', onupdate='RESTRICT', ondelete='RESTRICT'),
         nullable=False)
-    user = relationship(User)
-    #user = relationship(
-    #    User, backref=backref(
-    #        'user_collections',
-    #        collection_class=attribute_mapped_collection('collection'),
-    #        cascade='all, delete-orphan', passive_deletes=True))
-    collection = relationship(Collection)
-    #collection = relationship(
-    #    Collection, backref=backref(
-    #        'collection_users',
-    #        collection_class=attribute_mapped_collection('user'),
-    #        cascade='all, delete-orphan', passive_deletes=True))
+    user = relationship(
+        User, backref=backref(
+            'user_collections',
+            collection_class=attribute_mapped_collection('collection')))
+    collection = relationship(
+        Collection, backref=backref(
+            'collection_users',
+            collection_class=attribute_mapped_collection('user')))
     role = relationship(Role)
 
 

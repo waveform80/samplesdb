@@ -49,12 +49,13 @@ def main(argv=sys.argv):
             id='unlimited', collections_limit=1000000, samples_limit=1000000)
         academic_limit = UserLimit(
             id='academic', collections_limit=10, samples_limit=10000)
-        admin_user = User(name='Administrator', limits_id='unlimited')
+        admin_user = User(
+            name='Administrator', limits_id='unlimited')
         admin_email = EmailAddress(
             email='admin@example.com', validated=datetime.utcnow())
         admin_collection = Collection(name='Default')
         owner_role = Role(
-            id='role', description='Owner and administrator of the collection')
+            id='owner', description='Owner and administrator of the collection')
         editor_role = Role(
             id='editor', description='Can add and remove samples from a '
                 'collection, but cannot administer members of the collection')
@@ -64,7 +65,19 @@ def main(argv=sys.argv):
         viewer_role = Role(
             id='viewer', description='Can view samples within the collection '
                 'but cannot manipulate the collection')
+        DBSession.add(admin_perm)
+        DBSession.add(admins_group)
+        DBSession.add(unlimited_limit)
+        DBSession.add(academic_limit)
+        DBSession.add(admin_user)
+        DBSession.add(admin_email)
+        DBSession.add(admin_collection)
+        DBSession.add(owner_role)
+        DBSession.add(editor_role)
+        DBSession.add(auditor_role)
+        DBSession.add(viewer_role)
         admin_perm.groups.append(admins_group)
         admins_group.users.append(admin_user)
         admin_user.emails.append(admin_email)
         admin_user.password = 'adminpass'
+        admin_user.collections[admin_collection] = owner_role
