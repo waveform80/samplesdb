@@ -24,6 +24,7 @@ This module creates the SQLAlchemy engine, the Pyramid configurator object
 """
 
 from pyramid.config import Configurator
+from pyramid_beaker import session_factory_from_settings
 from sqlalchemy import engine_from_config
 
 from samplesdb.models import DBSession
@@ -52,8 +53,8 @@ ROUTES = {
     'admin_permission_view':   '/admin/permissions/{id}',
     'admin_permission_edit':   '/admin/permissions/{id}/edit',
     'admin_permission_remove': '/admin/permissions/{id}/remove',
-    'send_validate_email':     '/send_validation',
-    'send_reset_email':        '/send_reset',
+    'send_validation_email':   '/send_validation/{email}',
+    'send_reset_email':        '/send_reset/{email}',
     'user_validate_email':     '/validate/{code}',
     'user_reset_password':     '/reset_password/{code}',
     'user_profile':            '/profile',
@@ -72,9 +73,11 @@ ROUTES = {
 
 def main(global_config, **settings):
     """Returns the Pyramid WSGI application"""
+    session_factory = session_factory_from_settings(settings)
     engine = engine_from_config(settings, 'sqlalchemy.')
     DBSession.configure(bind=engine)
     config = Configurator(settings=settings)
+    config.set_session_factory(session_factory)
     config.add_static_view('static', 'static', cache_max_age=3600)
     for name, pattern in ROUTES.items():
         config.add_route(name, pattern)

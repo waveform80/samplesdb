@@ -9,7 +9,7 @@
        More info: h5bp.com/b/378 -->
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 
-  <title>Sign Up - ${project}</title>
+  <title>Validation Email Sent - ${project}</title>
   <meta name="description" content="New user sign up page for ${project}" />
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <!-- Place favicon.ico and apple-touch-icon.png in the root directory: mathiasbynens.be/notes/touch-icons -->
@@ -40,54 +40,10 @@
   </nav>
   <div class="row">
     <div class="twelve columns">
-      <h1>New User</h1>
-      <p>Please make sure you fill out your e-mail address accurately. We'll
-      send you a confirmation e-mail with a link to activate your account when
-      you submit the form.</p>
-      ${form.begin(request.route_url('sign_up'))}
-      ${form.csrf_token()}
-      <div class="row">
-        ${form.col_label('salutation', 'Name')}
-        ${form.col_select('salutation', autofocus='autofocus', cols=1)}
-        ${form.col_text('given_name', placeholder='First Name', cols=4)}
-        ${form.col_text('surname', placeholder='Last Name', cols=5)}
-      </div>
-      <div class="row">
-        ${form.col_label('organization', 'Organization')}
-        ${form.col_text('organization')}
-      </div>
-      <div class="row">
-        ${form.col_label('timezone', 'Timezone')}
-        ${form.col_select('timezone', class_='six')}
-      </div>
-      <div class="row">
-        ${form.col_label('email', 'Email Address')}
-        ${form.col_email('email', placeholder='someone@somewhere.edu')}
-      </div>
-      <div class="row">
-        ${form.col_label('email_confirm', 'Confirm Email')}
-        ${form.col_email('email_confirm', placeholder='someone@somewhere.edu')}
-      </div>
-      <div class="row">
-        ${form.col_label('limits_id', 'Account Type')}
-        <div class="ten columns">
-          ${form.radio('limits_id', 'academic', label='Academic', checked='checked')}
-          ${form.radio('limits_id', 'commercial', label='Commercial (not currently available)', disabled='disabled')}
-          ${form.errorlist('limits_id')}
-        </div>
-      </div>
-      <div class="row">
-        ${form.col_label('password', 'Password')}
-        ${form.col_password('password', class_='six')}
-      </div>
-      <div class="row">
-        ${form.col_label('password_confirm', 'Confirm Password')}
-        ${form.col_password('password_confirm', class_='six')}
-      </div>
-      <div class="row">
-        ${form.col_submit()}
-      </div>
-      ${form.end()}
+      <h1>Validation Email Sent</h1>
+      <p>A validation e-mail has been sent to <strong>${email}</strong>. Before
+      you can use this email address to login you will need to receive this
+      email and click on the link within it.</p>
     </div>
   </div>
   <div class="row">

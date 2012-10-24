@@ -15,7 +15,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <!-- Place favicon.ico and apple-touch-icon.png in the root directory: mathiasbynens.be/notes/touch-icons -->
   <link rel="shortcut icon" href="${request.static_url('samplesdb:static/favicon.ico')}" />
-  <link rel="stylesheet" href="${request.static_url('samplesdb:static/foundation/css/foundation.min.css')}">
+  <link rel="stylesheet" href="${request.static_url('samplesdb:static/foundation/css/foundation.css')}">
   <link rel="stylesheet" href="${request.static_url('samplesdb:static/foundation/css/app.css')}">
   <!-- More ideas for your <head> here: h5bp.com/d/head-Tips -->
   <script src="${request.static_url('samplesdb:static/foundation/js/modernizr.foundation.js')}"></script>
@@ -39,7 +39,7 @@
         <div class="row">
           <div class="ten mobile-three columns">
             <a href="${request.route_url('sign_up')}">New user</a> |
-            <a href="${request.route_url('send_reset_email')}">Forgotten password</a>
+            <a href="${request.route_url('send_reset_email', email='')}">Forgotten password</a>
           </div>
           <div class="two mobile-one columns">
             <input class="right tiny button" type="submit" name="login" value="Login" />

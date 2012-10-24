@@ -68,16 +68,31 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.associationproxy import association_proxy
 from zope.sqlalchemy import ZopeTransactionExtension
 
-
 DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
 Base = declarative_base()
 
-PasswordContext = CryptContext(
+PASSWORD_CONTEXT = CryptContext(
     # Use PBKDF2 algorithm for password hashing with 10% variance in the rounds
     schemes = [b'pbkdf2_sha256'],
     default = b'pbkdf2_sha256',
     all__vary_rounds = 0.1,
     )
+
+VALIDATION_TIMEOUT = 24 * 60 * 60 # 1 day in seconds
+VALIDATION_INTERVAL = 10 * 60 # 10 minutes in seconds
+VALIDATION_LIMIT = 3
+
+RESET_TIMEOUT = 24 * 60 * 60 # 1 day in seconds
+RESET_INTERNAL = 10 * 60 # 10 minutes in seconds
+RESET_LIMIT = 3
+
+
+class ValidationError(Exception):
+    pass
+
+
+class ResetError(Exception):
+    pass
 
 
 class EmailValidation(Base):
@@ -92,12 +107,22 @@ class EmailValidation(Base):
         nullable=False)
     # email defined as backref on EmailAddress
 
-    def __init__(self, **kwargs):
+    def __init__(self, email):
         super(EmailValidation, self).__init__(**kwargs)
-        # XXX Ensure a validation hasn't been requested in the last 10 minutes
-        self.expiry = datetime.utcnow() + timedelta(days=1)
-        # XXX Calculate os.urandom length from self.id.len? / 2
-        self.id = os.urandom(16).encode('hex')
+        if DBSession.query(EmailValidation).\
+            filter(EmailValidation.email_ref==email).\
+            filter(EmailValidation.created>datetime.utcnow() + timedelta(seconds=VALIDATION_INTERVAL)).first():
+                raise ValidationError('A validation was requested for that '
+                    'email address less than %d seconds ago' %
+                    VALIDATION_INTERVAL)
+        if DBSession.query(EmailValidation).\
+            filter(EmailValidation.email_ref==email).\
+            filter(EmailValidation.expiry<datetime.utcnow()).count() > VALIDATION_LIMIT:
+                raise ValidationError('Too many active validations '
+                    'currently exist for this account')
+        self.email_ref = email
+        self.expiry = datetime.utcnow() + timedelta(seconds=VALIDATION_TIMEOUT)
+        self.id = os.urandom(self.__table__.c.id.type.length / 2).encode('hex')
 
     def __repr__(self):
         return ('<EmailValidation: id="%s">' % self.id).encode('utf-8')
@@ -115,11 +140,12 @@ class EmailValidation(Base):
 
     def validate(self, user):
         if datetime.utcnow() > self.expiry:
-            raise ValueError('Validation code has expired')
+            raise ValidationError('Validation code has expired')
         if user is not self.email.user:
-            raise ValueError('Invalid user for validation code %s' % self.id)
+            raise ValidationError('Invalid user for validation code %s' % self.id)
         self.email.validated = datetime.utcnow()
-        DBSession.delete(self)
+        DBSession.query(EmailValidation).\
+            filter(EmailValidation.email_ref==self.email_ref).delete()
 
 
 class EmailAddress(Base):
@@ -164,12 +190,21 @@ class PasswordReset(Base):
         nullable=False)
     # user defined as backref on User
 
-    def __init__(self, **kwargs):
+    def __init__(self, user):
         super(PasswordReset, self).__init__(**kwargs)
-        # XXX Ensure a reset hasn't been requested in the last 10 minutes
-        self.expiry = datetime.utcnow() + timedelta(days=1)
-        # XXX Calculate os.urandom length from self.id.len? / 2
-        self.id = os.urandom(16).encode('hex')
+        if DBSession.query(PasswordReset).\
+            filter(PasswordReset.user_id==user.id).\
+            filter(PasswordReset.created>datetime.utcnow() + timedelta(seconds=RESET_INTERVAL)).first():
+                raise ResetError('A reset was requested for that '
+                    'account less than %d seconds ago' % RESET_INTERVAL)
+        if DBSession.query(PasswordReset).\
+            filter(PasswordReset.expiry<datetime.utcnow()).\
+            filter(PasswordReset.user_id==user.id).count() >= RESET_LIMIT:
+                raise ResetError('Too many active resets currently '
+                    'exist for this account')
+        self.user_id = user.id
+        self.expiry = datetime.utcnow() + timedelta(seconds=RESET_TIMEOUT)
+        self.id = os.urandom(self.__table__.c.id.type.length / 2).encode('hex')
 
     def __repr__(self):
         return ('<PasswordReset: id="%s">' % self.id).encode('utf-8')
@@ -187,11 +222,12 @@ class PasswordReset(Base):
 
     def reset_password(self, user, new_password):
         if datetime.utcnow() > self.expiry:
-            raise ValueError('Validation code has expired')
+            raise ValueError('Reset code has expired')
         if user is not self.user:
-            raise ValueError('Invalid user for validation code %s' % self.id)
+            raise ValueError('Invalid user for reset code %s' % self.id)
         self.user.password = new_password
-        DBSession.delete(self)
+        DBSession.query(PasswordReset).\
+            filter(PasswordReset.user_id==self.user_id).delete()
 
 
 class User(Base):
@@ -208,7 +244,9 @@ class User(Base):
         PasswordReset, backref='user',
         cascade='all, delete-orphan', passive_deletes=True)
     created = Column(DateTime, default=datetime.utcnow, nullable=False)
-    _timezone = Column('timezone', Unicode(50), default='UTC', nullable=False)
+    _timezone = Column(
+        'timezone', Unicode(max(len(t) for t in pytz.all_timezones)),
+        default='UTC', nullable=False)
     emails = relationship(
         EmailAddress, backref='user',
         cascade='all, delete-orphan', passive_deletes=True)
@@ -252,13 +290,15 @@ class User(Base):
 
     def _set_timezone(self, value):
         """Set the timezone to the name of the timezone object"""
+        if not hasattr(value, 'zone'):
+            value = pytz.timezone(value)
         self._timezone = value.zone
 
     timezone = synonym('_timezone', descriptor=property(_get_timezone, _set_timezone))
 
     def _set_password(self, password):
         """Store a hashed version of password"""
-        self._password = PasswordContext.encrypt(password)
+        self._password = PASSWORD_CONTEXT.encrypt(password)
         self.password_changed = datetime.utcnow()
 
     def _get_password(self):
@@ -272,7 +312,7 @@ class User(Base):
         # We call verify_and_update here in case we've defined any new
         # (hopefully stronger) algorithms in the context above. If so, this'll
         # take care of migrating users as they login
-        (result, new_password) = PasswordContext.verify_and_update(password, self.password)
+        (result, new_password) = PASSWORD_CONTEXT.verify_and_update(password, self.password)
         if result and new_password:
             self._password = new_password
         return result
@@ -398,6 +438,8 @@ class SampleImage(Base):
 
     def __unicode__(self):
         return self.content
+
+    # XXX Image read, write, and thumb read/write with pgmagick
 
 
 class Sample(Base):
