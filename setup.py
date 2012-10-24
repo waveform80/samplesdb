@@ -62,6 +62,8 @@ REQUIRES = [
     'transaction',
     'pyramid_tm',
     'pyramid_debugtoolbar',
+    'pyramid_simpleform',
+    'pydns',
     'zope.sqlalchemy',
     'waitress',
     'pytz',

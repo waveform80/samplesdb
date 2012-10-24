@@ -9,7 +9,7 @@
        More info: h5bp.com/b/378 -->
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 
-  <title>SamplesDB</title>
+  <title>${project}</title>
   <meta name="description" content="Samples database for lab technicians" />
   <meta name="keywords" content="samples database science technician" />
   <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -28,23 +28,13 @@
     </div>
   </div>
   <div class="row">
-    <div class="six columns">
+    <div class="five columns">
       <form method="POST" action="${request.route_url('login')}" data-form="validate">
         <div class="row">
-          <div class="two mobile-one columns">
-            <label class="inline" for="email">E-mail</label>
-          </div>
-          <div class="ten mobile-three columns">
             <input type="email" id="email" name="email" placeholder="E-mail address" autofocus="autofocus" required="required" />
-          </div>
         </div>
         <div class="row">
-          <div class="two mobile-one columns">
-            <label class="inline" for="password">Password</label>
-          </div>
-          <div class="ten mobile-three columns">
             <input type="password" id="password" name="password" placeholder="Password" required="required" />
-          </div>
         </div>
         <div class="row">
           <div class="ten mobile-three columns">
@@ -57,7 +47,7 @@
         </div>
       </form>
     </div>
-    <div class="six columns">
+    <div class="seven columns">
       <p>Welcome to the <strong>${project}</strong> project. This is an
       open-source project designed to provide a flexible web-based database to
       lab technicians wishing to keep track of their samples. Features of the

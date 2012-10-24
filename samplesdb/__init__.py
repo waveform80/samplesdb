@@ -32,7 +32,7 @@ from samplesdb.models import DBSession
 __version__ = '0.1'
 
 ROUTES = {
-    'home':                    '/',
+    'index':                    '/',
     'login':                   '/login',
     'logout':                  '/logout',
     'sign_up':                 '/signup',

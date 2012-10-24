@@ -7,9 +7,9 @@ from __future__ import (
 
 import os
 import sys
-import transaction
 from datetime import datetime
 
+import transaction
 from sqlalchemy import engine_from_config
 from pyramid.paster import get_appsettings, setup_logging
 
@@ -50,7 +50,8 @@ def main(argv=sys.argv):
         academic_limit = UserLimit(
             id='academic', collections_limit=10, samples_limit=10000)
         admin_user = User(
-            name='Administrator', limits_id='unlimited')
+            salutation='', given_name='Administrator', surname='',
+            limits_id='unlimited')
         admin_email = EmailAddress(
             email='admin@example.com', validated=datetime.utcnow())
         admin_collection = Collection(name='Default')

@@ -198,7 +198,9 @@ class User(Base):
     __tablename__ = 'users'
 
     id = Column(Integer, primary_key=True)
-    name = Column(Unicode(200), nullable=False)
+    salutation = Column(Unicode(10), nullable=False)
+    given_name = Column(Unicode(200), nullable=False)
+    surname = Column(Unicode(200), nullable=False)
     organization = Column(Unicode(200), default='', nullable=False)
     _password = Column('password', String(200))
     password_changed = Column(DateTime)
@@ -221,13 +223,15 @@ class User(Base):
     # groups defined as backref on Group
 
     def __repr__(self):
-        return ('<User: name="%s">' % self.name).encode('utf-8')
+        return ('<User: name="%s">' % ' '.join((
+            self.salutation, self.given_name, self.surname))).encode('utf-8')
 
     def __str__(self):
         return unicode(self).encode('utf-8')
 
     def __unicode__(self):
-        return self.name
+        return ' '.join((
+            self.salutation, self.given_name, self.surname))
 
     @classmethod
     def by_id(cls, id):
