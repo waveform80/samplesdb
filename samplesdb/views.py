@@ -85,7 +85,7 @@ def sign_up(request):
             owner_role = DBSession.query(Role).filter(Role.id=='owner').one()
             new_user.collections[new_collection] = owner_role
         return HTTPFound(location=request.route_url(
-            'send_validation_email', email=form.data['email']))
+            'user_validate_request', email=form.data['email']))
     return dict(form=FormRenderer(form))
 
 @view_config(route_name='user_validate_start', renderer='templates/send_validation_email.pt')
@@ -100,6 +100,7 @@ def user_validate_start(request):
         recipients=[email],
         subject='%s user validation' % request.registry.settings['site_title'],
         body=render_template('samplesdb:templates/validation_email.txt',
-            user=user,
-            code=new_validation.id))
+            request=request,
+            user=new_validation.email.user,
+            validation=new_validation))
     return dict(email=email, timeout=VALIDATION_TIMEOUT)

@@ -1,16 +1,16 @@
 Dear ${user.salutation} ${user.surname},
 
 You are receiving this e-mail because a request has been made to validate this
-email address by a user at ${root_url}.
+email address by a user at ${request.registry.settings['site_title']}.
 
-${validation_complete_url}
+${request.route_url('user_validate_complete', code=validation.id)}
 
 If this email was sent in error, we would be grateful if you could click on
 the following link to inform us of the issue:
 
-${validation_cancel_url}
+${request.route_url('user_validate_cancel', code=validation.id)}
 
 
-Thanks,
+Many thanks,
 
-SamplesDB.
+The ${request.registry.settings['site_title']} Team.
