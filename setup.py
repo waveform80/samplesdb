@@ -64,6 +64,7 @@ REQUIRES = [
     'pyramid_debugtoolbar',
     'pyramid_simpleform',
     'pyramid_beaker',
+    'pyramid_mailer',
     'pydns',
     'zope.sqlalchemy',
     'waitress',

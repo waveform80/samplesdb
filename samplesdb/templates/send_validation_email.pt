@@ -9,8 +9,7 @@
        More info: h5bp.com/b/378 -->
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 
-  <title>Validation Email Sent - ${project}</title>
-  <meta name="description" content="New user sign up page for ${project}" />
+  <title>Validation Email Sent - ${request.registry.settings['site_title']}</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <!-- Place favicon.ico and apple-touch-icon.png in the root directory: mathiasbynens.be/notes/touch-icons -->
   <link rel="shortcut icon" href="${request.static_url('samplesdb:static/favicon.ico')}" />
@@ -25,7 +24,7 @@
   <ul>
     <li class="name">
       <a href="${request.route_url('index')}">
-        <img src="${request.static_url('samplesdb:static/logo_small.svg')}" alt="SamplesDB" />
+        <img src="${request.static_url('samplesdb:static/logo_small.svg')}" alt="${request.registry.settings['site_title']}" />
       </a>
     </li>
     <li class="toggle-topbar"><a href="#"></a></li>

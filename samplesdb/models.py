@@ -36,6 +36,8 @@ from __future__ import (
     )
 
 import os
+import tempfile
+from contextlib import closing
 from datetime import datetime, timedelta, date
 from itertools import izip_longest
 
@@ -47,14 +49,17 @@ from sqlalchemy import (
     ForeignKey,
     CheckConstraint,
     func,
+    event,
     )
 from sqlalchemy.types import (
+    Boolean,
     Integer,
     Unicode,
     UnicodeText,
     Date,
     DateTime,
     String,
+    Float,
     )
 from sqlalchemy.orm import (
     scoped_session,
@@ -66,7 +71,9 @@ from sqlalchemy.orm import (
 from sqlalchemy.orm.collections import attribute_mapped_collection
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.associationproxy import association_proxy
+from sqlalchemy.engine import Engine
 from zope.sqlalchemy import ZopeTransactionExtension
+from pyramid.threadlocal import get_current_registry
 
 DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
 Base = declarative_base()
@@ -87,12 +94,20 @@ RESET_INTERNAL = 10 * 60 # 10 minutes in seconds
 RESET_LIMIT = 3
 
 
+# Ensure SQLite uses foreign keys properly
+@event.listens_for(Engine, 'connect')
+def set_sqlite_pragma(dbapi_connection, connection_record):
+    cursor = dbapi_connection.cursor()
+    cursor.execute('PRAGMA foreign_keys=ON')
+    cursor.close()
+
+
 class ValidationError(Exception):
-    pass
+    """Class for e-mail validation errors"""
 
 
 class ResetError(Exception):
-    pass
+    """Class for password reset errors"""
 
 
 class EmailValidation(Base):
@@ -108,7 +123,7 @@ class EmailValidation(Base):
     # email defined as backref on EmailAddress
 
     def __init__(self, email):
-        super(EmailValidation, self).__init__(**kwargs)
+        super(EmailValidation, self).__init__()
         if DBSession.query(EmailValidation).\
             filter(EmailValidation.email_ref==email).\
             filter(EmailValidation.created>datetime.utcnow() + timedelta(seconds=VALIDATION_INTERVAL)).first():
@@ -222,12 +237,72 @@ class PasswordReset(Base):
 
     def reset_password(self, user, new_password):
         if datetime.utcnow() > self.expiry:
-            raise ValueError('Reset code has expired')
+            raise ResetError('Reset code has expired')
         if user is not self.user:
-            raise ValueError('Invalid user for reset code %s' % self.id)
+            raise ResetError('Invalid user for reset code %s' % self.id)
         self.user.password = new_password
         DBSession.query(PasswordReset).\
             filter(PasswordReset.user_id==self.user_id).delete()
+
+
+class LabelTemplate(Base):
+    __tablename__ = 'label_templates'
+
+    id = Column(Unicode(50), primary_key=True)
+    creator_id = Column(
+        Integer, ForeignKey(
+            'users.id', onupdate='RESTRICT', ondelete='CASCADE'),
+        primary_key=True)
+    public = Column(Boolean, default=False, nullable=False)
+    # creator defined as backref on User
+    columns = Column(
+        Integer, CheckConstraint('columns >= 1'), default=1, nullable=False)
+    rows = Column(
+        Integer, CheckConstraint('rows >= 1'), default=1, nullable=False)
+    horizontal_spacing = Column(Float, default=0.0, nullable=False)
+    vertical_spacing = Column(Float, default=0.0, nullable=False)
+
+    def __repr__(self):
+        return ('<LabelTemplate: id="%s">' % self.id).encode('utf-8')
+
+    def __str__(self):
+        return unicode(self).encode('utf-8')
+
+    def __unicode__(self):
+        return self.id
+
+    @property
+    def template_filename(self):
+        return os.path.join(
+            get_current_registry().settings['label_templates_dir'],
+            '%d-%s.svg' % (self.creator_id, self.id))
+
+    @property
+    def created(self):
+        if os.path.exists(self.template_filename):
+            return datetime.fromtimestamp(os.stat(self.template_filename).st_mtime)
+
+    def _get_template(self):
+        if os.path.exists(self.template_filename):
+            with open(self.template_filename, 'rb') as f:
+                return f.read()
+
+    def _set_template(self, value):
+        if value is None:
+            if os.path.exists(self.template_filename):
+                os.unlink(self.template_filename)
+        else:
+            tempfd, temppath = tempfile.mkstemp(
+                dir=get_current_registry().settings['label_templates_dir'])
+            try:
+                with closing(os.fdopen(tempfd, 'wb')) as f:
+                    f.write(value)
+            except:
+                os.unlink(temppath)
+                raise
+            os.rename(temppath, self.template_filename)
+
+    template = property(_get_template, _set_template)
 
 
 class User(Base):
@@ -254,6 +329,7 @@ class User(Base):
         Unicode(20), ForeignKey(
             'user_limits.id', onupdate='RESTRICT', ondelete='RESTRICT'),
         nullable=False)
+    # user_collections defined as backref on UserCollection
     collections = association_proxy(
         'user_collections', 'role',
         creator=lambda k, v: UserCollection(collection=k, role=v))
@@ -322,8 +398,18 @@ class UserLimit(Base):
     __tablename__ = 'user_limits'
 
     id = Column(Unicode(20), primary_key=True)
-    collections_limit = Column(Integer, default=10, nullable=False)
-    samples_limit = Column(Integer, default=1000, nullable=False)
+    collections_limit = Column(
+        Integer, CheckConstraint('collections_limit >= 0'),
+        default=10, nullable=False)
+    samples_limit = Column(
+        Integer, CheckConstraint('samples_limit >= 0'),
+        default=10000, nullable=False)
+    images_limit = Column(
+        Integer, CheckConstraint('images_limit >= 0'),
+        default=10, nullable=False)
+    templates_limit = Column(
+        Integer, CheckConstraint('templates_limit >= 0'),
+        default=10, nullable=False)
     users = relationship(User, backref='limits')
 
     def __repr__(self):
@@ -417,17 +503,17 @@ class SampleAudit(Base):
 class SampleImage(Base):
     __tablename__ = 'sample_images'
 
+    id = Column(Integer, primary_key=True)
+    filename = Column(Unicode(200))
     sample_id = Column(
         Integer, ForeignKey(
             'samples.id', onupdate='RESTRICT', ondelete='CASCADE'),
-        primary_key=True)
+        nullable=False)
     # sample defined as backref on Sample
-    filename = Column(Unicode(200), primary_key=True)
     creator_id = Column(
         Integer, ForeignKey(
             'users.id', onupdate='RESTRICT', ondelete='SET NULL'))
     creator = relationship(User)
-    created = Column(DateTime, default=datetime.utcnow)
 
     def __repr__(self):
         return ('<SampleImage: sample_id=%d, filename="%s">' % (
@@ -437,9 +523,78 @@ class SampleImage(Base):
         return unicode(self).encode('utf-8')
 
     def __unicode__(self):
-        return self.content
+        return self.filename
 
-    # XXX Image read, write, and thumb read/write with pgmagick
+    @property
+    def image_filename(self):
+        return os.path.join(
+            get_current_registry().settings['sample_images_dir'],
+            '%d.image' % self.id)
+
+    @property
+    def thumb_filename(self):
+        return os.path.join(
+            get_current_registry().settings['sample_images_dir'],
+            '%d.thumb' % self.id)
+
+    @property
+    def image_updated(self):
+        if os.path.exists(self.image_filename):
+            return datetime.fromtimestamp(os.stat(self.image_filename).st_mtime)
+
+    @property
+    def thumb_updated(self):
+        if os.path.exists(self.thumb_filename):
+            return datetime.fromtimestamp(os.stat(self.thumb_filename).st_mtime)
+
+    @property
+    def thumb(self):
+        THUMB_MAXWIDTH = 200
+        THUMB_MAXHEIGHT = 200
+        if os.path.exists(self.image_filename) and (
+                not os.path.exists(self.thumb_filename) or
+                self.thumb_updated < self.image_updated):
+            im = Image.open(self.image_filename)
+            (w, h) = im.size
+            if w > THUMB_MAXWIDTH or h > THUMB_MAXHEIGHT:
+                scale = min(float(THUMB_MAXWIDTH) / w, float(THUMB_MAXHEIGHT) / h)
+                w = int(round(w * scale))
+                h = int(round(h * scale))
+                im = im.convert('RGB').resize((w, h), Image.ANTIALIAS)
+                tempfd, temppath = tempfile.mkstemp(
+                    dir=get_current_registry().settings['sample_images_dir'])
+                try:
+                    with closing(os.fdopen(tempfd, 'wb')) as f:
+                        im.save(f, 'JPEG')
+                except:
+                    os.unlink(temppath)
+                    raise
+                os.rename(temppath, self.thumb_filename)
+        if os.path.exists(self.thumb_filename):
+            with open(self.thumb_filename, 'rb') as f:
+                return f.read()
+
+    def _get_image(self):
+        if os.path.exists(self.image_filename):
+            with open(self.image_filename, 'rb') as f:
+                return f.read()
+
+    def _set_image(self, value):
+        if value is None:
+            if os.path.exists(self.image_filename):
+                os.unlink(self.image_filename)
+        else:
+            tempfd, temppath = tempfile.mkstemp(
+                dir=get_current_registry().settings['sample_images_dir'])
+            try:
+                with closing(os.fdopen(tempfd, 'wb')) as f:
+                    f.write(value)
+            except:
+                os.unlink(temppath)
+                raise
+            os.rename(temppath, self.image_filename)
+
+    image = property(_get_image, _set_image)
 
 
 class Sample(Base):
@@ -447,12 +602,11 @@ class Sample(Base):
 
     id = Column(Integer, primary_key=True)
     description = Column(Unicode(200), nullable=False)
-    created = Column(DateTime)
     creator_id = Column(Integer, ForeignKey(
         'users.id', onupdate='RESTRICT', ondelete='SET NULL'))
     creator = relationship(User)
+    created = Column(DateTime, default=datetime.utcnow, nullable=False)
     destroyed = Column(DateTime)
-    code = Column(Unicode(50), default='', nullable=False)
     notes = Column(UnicodeText, default='', nullable=False)
     collection_id = Column(Integer, ForeignKey(
         'collections.id', onupdate='RESTRICT', ondelete='CASCADE'),
@@ -472,6 +626,9 @@ class Sample(Base):
     audits = relationship(
         SampleAudit, backref='sample',
         cascade='all, delete-orphan', passive_deletes=True)
+    # sample_codes defined as backref on SampleCode
+    codes = association_proxy('sample_codes', 'value',
+        creator=lambda k, v: SampleCode(name=k, value=v))
 
     def __repr__(self):
         return ('<Sample: description="%s">' % self.description).encode('utf-8')
@@ -488,6 +645,31 @@ class Sample(Base):
         return DBSession.query(cls).filter_by(id=id).first()
 
 
+class SampleCode(Base):
+    __tablename__ = 'sample_codes'
+
+    sample_id = Column(
+        Integer, ForeignKey(
+            'samples.id', onupdate='RESTRICT', ondelete='CASCADE'),
+        primary_key=True)
+    sample = relationship(Sample, backref=backref(
+        'sample_codes',
+        collection_class=attribute_mapped_collection('name'),
+        cascade='all, delete-orphan'))
+    name = Column(Unicode(50), primary_key=True)
+    value = Column(Unicode(50), default='', nullable=False)
+
+    def __repr__(self):
+        return ('<SampleCode: sample_id=%d, name="%s">' % (
+            self.sample_id, self.name)).encode('utf-8')
+
+    def __str__(self):
+        return unicode(self).encode('utf-8')
+
+    def __unicode__(self):
+        return self.name
+
+
 class Collection(Base):
     __tablename__ = 'collections'
 
@@ -495,6 +677,7 @@ class Collection(Base):
     name = Column(Unicode(200), nullable=False)
     created = Column(DateTime, default=datetime.utcnow(), nullable=False)
     samples = relationship(Sample, backref='collection')
+    # collection_users defined as backref on UserCollection
     users = association_proxy(
         'collection_users', 'role',
         creator=lambda k, v: UserCollection(user=k, role=v))

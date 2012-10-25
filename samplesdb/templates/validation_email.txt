@@ -1,0 +1,16 @@
+Dear ${user.salutation} ${user.surname},
+
+You are receiving this e-mail because a request has been made to validate this
+email address by a user at ${root_url}.
+
+${validation_complete_url}
+
+If this email was sent in error, we would be grateful if you could click on
+the following link to inform us of the issue:
+
+${validation_cancel_url}
+
+
+Thanks,
+
+SamplesDB.

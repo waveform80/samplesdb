@@ -22,7 +22,9 @@ import transaction
 from pyramid.response import Response
 from pyramid.view import view_config
 from pyramid.httpexceptions import HTTPFound
+from pyramid.chameleon_text import render_template
 from pyramid_simpleform import Form
+from pyramid_mailer.message import Message
 from formencode import Schema, validators
 
 from samplesdb.forms import FormRenderer
@@ -30,6 +32,7 @@ from samplesdb.models import (
     VALIDATION_TIMEOUT,
     DBSession,
     User,
+    Collection,
     EmailAddress,
     EmailValidation,
     Sample,
@@ -38,7 +41,7 @@ from samplesdb.models import (
 
 @view_config(route_name='index', renderer='templates/index.pt')
 def index(request):
-    return {'project': 'SamplesDB'}
+    return {}
 
 class BaseSchema(Schema):
     filter_extra_fields = True
@@ -77,15 +80,26 @@ def sign_up(request):
             new_email = form.bind(EmailAddress())
             new_email.user = new_user
             DBSession.add(new_email)
+            new_collection = Collection()
+            new_collection.name = 'Default'
+            owner_role = DBSession.query(Role).filter(Role.id=='owner').one()
+            new_user.collections[new_collection] = owner_role
         return HTTPFound(location=request.route_url(
             'send_validation_email', email=form.data['email']))
-    return dict(form=FormRenderer(form), project='SamplesDB')
+    return dict(form=FormRenderer(form))
 
-@view_config(route_name='send_validation_email', renderer='templates/send_validation_email.pt')
-def send_validation_email(request):
+@view_config(route_name='user_validate_start', renderer='templates/send_validation_email.pt')
+def user_validate_start(request):
     email = request.matchdict['email']
     with transaction.manager:
         new_validation = EmailValidation(email)
         DBSession.add(new_validation)
-    print("Sent a mail to %s" % email)
-    return dict(email=email, timeout=VALIDATION_TIMEOUT, project='SamplesDB')
+        user = new_validation.email.user
+    mailer = request.registry['mailer']
+    message = Message(
+        recipients=[email],
+        subject='%s user validation' % request.registry.settings['site_title'],
+        body=render_template('samplesdb:templates/validation_email.txt',
+            user=user,
+            code=new_validation.id))
+    return dict(email=email, timeout=VALIDATION_TIMEOUT)

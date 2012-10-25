@@ -9,7 +9,7 @@
        More info: h5bp.com/b/378 -->
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 
-  <title>${project}</title>
+  <title>${request.registry.settings['site_title']}</title>
   <meta name="description" content="Samples database for lab technicians" />
   <meta name="keywords" content="samples database science technician" />
   <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -48,10 +48,11 @@
       </form>
     </div>
     <div class="seven columns">
-      <p>Welcome to the <strong>${project}</strong> project. This is an
-      open-source project designed to provide a flexible web-based database to
-      lab technicians wishing to keep track of their samples. Features of the
-      system include:</p>
+      <p>Welcome to the
+      <strong>${request.registry.settings['site_title']}</strong> project. This
+      is an open-source project designed to provide a flexible web-based
+      database to lab technicians wishing to keep track of their samples.
+      Features of the system include:</p>
 
       <ul>
         <li>Multiple sample collections per user, including multiple images per
