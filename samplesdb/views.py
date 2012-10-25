@@ -88,7 +88,7 @@ def sign_up(request):
             'user_validate_request', email=form.data['email']))
     return dict(form=FormRenderer(form))
 
-@view_config(route_name='user_validate_start', renderer='templates/send_validation_email.pt')
+@view_config(route_name='user_validate_request', renderer='templates/user_validate_request.pt')
 def user_validate_start(request):
     email = request.matchdict['email']
     with transaction.manager:
@@ -104,3 +104,11 @@ def user_validate_start(request):
             user=new_validation.email.user,
             validation=new_validation))
     return dict(email=email, timeout=VALIDATION_TIMEOUT)
+
+@view_config(route_name='user_validate_complete', renderer='templates/user_validate_complete.pt')
+def user_validate_complete(request):
+    return {}
+
+@view_config(route_name='user_validate_cancel', renderer='templates/user_validate_cancel.pt')
+def user_validate_cancel(request):
+    return {}
