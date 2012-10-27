@@ -24,18 +24,20 @@ This module creates the SQLAlchemy engine, the Pyramid configurator object
 """
 
 from pyramid.config import Configurator
+from pyramid.authentication import AuthTktAuthenticationPolicy
+from pyramid.authorization import ACLAuthorizationPolicy
 from pyramid_beaker import session_factory_from_settings
 from pyramid_mailer import mailer_factory_from_settings
 from sqlalchemy import engine_from_config
 
+from samplesdb.security import group_finder
 from samplesdb.models import DBSession
 
 
 __version__ = '0.1'
 
 ROUTES = {
-    'index':                    '/',
-    'login':                   '/login',
+    'login':                   '/',
     'logout':                  '/logout',
     'sign_up':                 '/signup',
     'admin_home':              '/admin/',
@@ -79,13 +81,20 @@ def main(global_config, **settings):
     session_factory = session_factory_from_settings(settings)
     mailer_factory = mailer_factory_from_settings(settings)
     engine = engine_from_config(settings, 'sqlalchemy.')
+    authn_policy = AuthTktAuthenticationPolicy('secret', callback=group_finder)
+    authz_policy = ACLAuthorizationPolicy()
     DBSession.configure(bind=engine)
-    config = Configurator(settings=settings)
+
+    config = Configurator(
+        settings=settings, root_factory='samplesdb.models.RootFactory')
+    config.set_authentication_policy(authn_policy)
+    config.set_authorization_policy(authz_policy)
     config.registry['mailer'] = mailer_factory
     config.set_session_factory(session_factory)
     config.add_static_view('static', 'static', cache_max_age=3600)
     for name, pattern in ROUTES.items():
         config.add_route(name, pattern)
     config.scan()
+
     return config.make_wsgi_app()
 

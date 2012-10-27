@@ -10,14 +10,6 @@
 <head metal:use-macro="master.head"></head>
 <body>
   <nav metal:use-macro="master.top_bar"></nav>
-  <div class="row">
-    <div class="twelve columns">
-      <h1>${page_title}</h1>
-      <p>A validation e-mail has been sent to <strong>${email}</strong>. Before
-      you can use this email address to login you will need to receive this
-      email and click on the link within it.</p>
-    </div>
-  </div>
   <span metal:use-macro="master.footer"></span>
   <span metal:use-macro="master.scripts"></span>
 </body>

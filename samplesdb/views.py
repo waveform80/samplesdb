@@ -20,8 +20,10 @@
 import pytz
 import transaction
 from pyramid.response import Response
-from pyramid.view import view_config
+from pyramid.view import view_config, forbidden_view_config
+from pyramid.security import remember, forget, authenticated_userid
 from pyramid.httpexceptions import HTTPFound
+from pyramid.renderers import get_renderer
 from pyramid.chameleon_text import render_template
 from pyramid_simpleform import Form
 from pyramid_mailer.message import Message
@@ -39,9 +41,38 @@ from samplesdb.models import (
     )
 
 
-@view_config(route_name='index', renderer='templates/index.pt')
-def index(request):
-    return {}
+@view_config(route_name='login', renderer='templates/login.pt')
+@forbidden_view_config(renderer='templates/login.pt')
+def login(request):
+    master = get_renderer('templates/master.pt').implementation()
+    login_url = request.route_url('login')
+    referer = request.url
+    if referer == login_url:
+        referer = request.route_url('user_profile')
+    came_from = request.params.get('came_from', referer)
+    username = None
+    password = None
+    # XXX Do we need to add this to the form?
+    if 'form.submitted' in request.params:
+        username = request.params.get('username')
+        password = request.params.get('password')
+        # XXX Replace with real login code
+        if password == password:
+            headers = remember(request, login)
+            return HTTPFound(location=came_from, headers=headers)
+        flash = 'Invalid login'
+    return dict(
+        page_title='Home',
+        master=master,
+        url=request.route_url('login'),
+        came_from=came_from,
+        username=username,
+        password=password)
+
+@view_config(route_name='logout')
+def logout(request):
+    headers = forget(request)
+    return HTTPFound(location=request.route_url('login'), headers=headers)
 
 class BaseSchema(Schema):
     filter_extra_fields = True
@@ -72,6 +103,7 @@ class SignUpSchema(BaseSchema):
 
 @view_config(route_name='sign_up', renderer='templates/sign_up.pt')
 def sign_up(request):
+    master = get_renderer('templates/master.pt').implementation()
     form = Form(request, schema=SignUpSchema)
     if form.validate():
         with transaction.manager:
@@ -86,10 +118,11 @@ def sign_up(request):
             new_user.collections[new_collection] = owner_role
         return HTTPFound(location=request.route_url(
             'user_validate_request', email=form.data['email']))
-    return dict(form=FormRenderer(form))
+    return dict(page_title='New User', master=master, form=FormRenderer(form))
 
 @view_config(route_name='user_validate_request', renderer='templates/user_validate_request.pt')
 def user_validate_start(request):
+    master = get_renderer('templates/master.pt').implementation()
     email = request.matchdict['email']
     with transaction.manager:
         new_validation = EmailValidation(email)
@@ -103,12 +136,14 @@ def user_validate_start(request):
             request=request,
             user=new_validation.email.user,
             validation=new_validation))
-    return dict(email=email, timeout=VALIDATION_TIMEOUT)
+    return dict(page_title='Validation Sent', master=master, email=email, timeout=VALIDATION_TIMEOUT)
 
 @view_config(route_name='user_validate_complete', renderer='templates/user_validate_complete.pt')
 def user_validate_complete(request):
-    return {}
+    master = get_renderer('templates/master.pt').implementation()
+    return dict(page_title='Validation Complete', master=master)
 
 @view_config(route_name='user_validate_cancel', renderer='templates/user_validate_cancel.pt')
 def user_validate_cancel(request):
-    return {}
+    master = get_renderer('templates/master.pt').implementation()
+    return dict(page_title='Validation Cancelled', master=master)

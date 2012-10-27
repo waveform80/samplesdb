@@ -67,6 +67,7 @@ REQUIRES = [
     'pyramid_mailer',
     'pydns',
     'zope.sqlalchemy',
+    'repoze.who>=2.0',
     'waitress',
     'pytz',
     'passlib>=1.6',

@@ -1,0 +1,63 @@
+<!doctype html>
+<!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
+<!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
+<!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en"
+  xmlns:tal="http://xml.zope.org/namespaces/tal"
+  xmlns:metal="http://xml.zope.org/namespaces/metal"
+  xmlns:i18n="http://xml.zope.org/namespaces/i18n">
+<!--<![endif]-->
+<head metal:use-macro="master.head"></head>
+<body>
+  <div metal:use-macro="master.top_banner"></div>
+  <div class="row">
+    <div class="five columns">
+      <form method="POST" action="${request.route_url('login')}" data-form="validate">
+        <input type="hidden" name="came_from" value="${came_from}" />
+        <div class="row">
+          <input type="email" id="username" name="username" value="${username}" placeholder="E-mail address" autofocus="autofocus" required="required" />
+        </div>
+        <div class="row">
+          <input type="password" id="password" name="password" value="${password}" placeholder="Password" required="required" />
+        </div>
+        <div class="row">
+          <div class="ten mobile-three columns">
+            <a href="${request.route_url('sign_up')}">New user</a> |
+            <a href="${request.route_url('reset_password_request', email='')}">Forgotten password</a>
+          </div>
+          <div class="two mobile-one columns">
+            <input class="right tiny button" type="submit" name="form.submitted" value="Login" />
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="seven columns">
+      <p>Welcome to the
+      <strong>${request.registry.settings['site_title']}</strong> project. This
+      is an open-source project designed to provide a flexible web-based
+      database to lab technicians wishing to keep track of their samples.
+      Features of the system include:</p>
+
+      <ul>
+        <li>Multiple sample collections per user, including multiple images per
+        sample</li>
+        <li>Provenance of samples &ndash; visual history of splits and
+        combinations</li>
+        <li>Auditing of samples (optional) including e-mailed reminders</li>
+        <li>Downloadable copies of your collections in multiple formats (PDFs
+        for labelling, Excel files for offline copies of your database,
+        etc.)</li>
+      </ul>
+
+      <p>This is currently a beta-testing system. Usage for academic users and
+      technicians is free (based upon e-mail address: if your address ends in
+      <tt>.edu</tt> or <tt>.ac.<em>some-country</em></tt> you will be able to
+      sign up for a free account). Usage for commercial technicians will
+      require a nominal fee (to be decided) once the system is finalized.</p>
+    </div>
+  </div>
+  <span metal:use-macro="master.footer"></span>
+  <span metal:use-macro="master.scripts"></span>
+</body>
+</html>
+

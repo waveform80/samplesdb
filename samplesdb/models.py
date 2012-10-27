@@ -53,6 +53,7 @@ from sqlalchemy import (
     )
 from sqlalchemy.types import (
     Boolean,
+    BigInteger,
     Integer,
     Unicode,
     UnicodeText,
@@ -74,6 +75,7 @@ from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.engine import Engine
 from zope.sqlalchemy import ZopeTransactionExtension
 from pyramid.threadlocal import get_current_registry
+from pyramid.security import Allow, Everyone
 
 DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
 Base = declarative_base()
@@ -108,6 +110,35 @@ class ValidationError(Exception):
 
 class ResetError(Exception):
     """Class for password reset errors"""
+
+
+class RootFactory(object):
+    __acl__ = []
+
+    def __init__(self, request):
+        pass
+
+
+class CollectionFactory(object):
+    __acl__ = [
+        (Allow, 'role:owner',   'destroy_collection'),
+        (Allow, 'role:owner',   'rename_collection'),
+        (Allow, 'role:owner',   'edit_members'),
+        (Allow, 'role:owner',   'add_samples'),
+        (Allow, 'role:owner',   'remove_samples'),
+        (Allow, 'role:owner',   'audit_samples'),
+        (Allow, 'role:owner',   'view_samples'),
+        (Allow, 'role:editor',  'add_samples'),
+        (Allow, 'role:editor',  'remove_samples'),
+        (Allow, 'role:editor',  'audit_samples'),
+        (Allow, 'role:editor',  'view_samples'),
+        (Allow, 'role:auditor', 'audit_samples'),
+        (Allow, 'role:auditor', 'view_samples'),
+        (Allow, 'role:viewer',  'view_samples'),
+        ]
+
+    def __init__(self, request):
+        pass
 
 
 class EmailValidation(Base):
@@ -403,13 +434,13 @@ class UserLimit(Base):
         default=10, nullable=False)
     samples_limit = Column(
         Integer, CheckConstraint('samples_limit >= 0'),
-        default=10000, nullable=False)
-    images_limit = Column(
-        Integer, CheckConstraint('images_limit >= 0'),
-        default=10, nullable=False)
+        default=1000, nullable=False)
     templates_limit = Column(
         Integer, CheckConstraint('templates_limit >= 0'),
         default=10, nullable=False)
+    storage_limit = Column(
+        BigInteger, CheckConstraint('storage_limit >= 0'),
+        default=1048576 * 100, nullable=False)
     users = relationship(User, backref='limits')
 
     def __repr__(self):
@@ -500,15 +531,15 @@ class SampleAudit(Base):
         return '%d at %s' % (self.sample_id, self.audited.isoformat())
 
 
-class SampleImage(Base):
-    __tablename__ = 'sample_images'
+class SampleAttachment(Base):
+    __tablename__ = 'sample_attachments'
 
-    id = Column(Integer, primary_key=True)
-    filename = Column(Unicode(200))
     sample_id = Column(
         Integer, ForeignKey(
             'samples.id', onupdate='RESTRICT', ondelete='CASCADE'),
-        nullable=False)
+        primary_key=True)
+    name = Column(Unicode(200), primary_key=True)
+    mime_type = Column(Unicode(50), nullable=False)
     # sample defined as backref on Sample
     creator_id = Column(
         Integer, ForeignKey(
@@ -516,7 +547,7 @@ class SampleImage(Base):
     creator = relationship(User)
 
     def __repr__(self):
-        return ('<SampleImage: sample_id=%d, filename="%s">' % (
+        return ('<SampleAttachment: sample_id=%d, filename="%s">' % (
             self.sample_id, self.filename)).encode('utf-8')
 
     def __str__(self):
@@ -526,21 +557,29 @@ class SampleImage(Base):
         return self.filename
 
     @property
-    def image_filename(self):
+    def filename(self):
         return os.path.join(
-            get_current_registry().settings['sample_images_dir'],
-            '%d.image' % self.id)
+            get_current_registry().settings['sample_attachments_dir'],
+            self.sample_id,
+            self.name)
 
     @property
     def thumb_filename(self):
         return os.path.join(
-            get_current_registry().settings['sample_images_dir'],
-            '%d.thumb' % self.id)
+            get_current_registry().settings['sample_attachments_dir'],
+            'thumbs',
+            self.sample_id,
+            self.name)
 
     @property
-    def image_updated(self):
-        if os.path.exists(self.image_filename):
-            return datetime.fromtimestamp(os.stat(self.image_filename).st_mtime)
+    def updated(self):
+        if os.path.exists(self.filename):
+            return datetime.fromtimestamp(os.stat(self.filename).st_mtime)
+
+    @property
+    def size(self):
+        if os.path.exists(self.filename):
+            return os.stat(self.filename).st_size
 
     @property
     def thumb_updated(self):
@@ -551,10 +590,10 @@ class SampleImage(Base):
     def thumb(self):
         THUMB_MAXWIDTH = 200
         THUMB_MAXHEIGHT = 200
-        if os.path.exists(self.image_filename) and (
+        if os.path.exists(self.filename) and (
                 not os.path.exists(self.thumb_filename) or
-                self.thumb_updated < self.image_updated):
-            im = Image.open(self.image_filename)
+                self.thumb_updated < self.updated):
+            im = Image.open(self.filename)
             (w, h) = im.size
             if w > THUMB_MAXWIDTH or h > THUMB_MAXHEIGHT:
                 scale = min(float(THUMB_MAXWIDTH) / w, float(THUMB_MAXHEIGHT) / h)
@@ -562,7 +601,7 @@ class SampleImage(Base):
                 h = int(round(h * scale))
                 im = im.convert('RGB').resize((w, h), Image.ANTIALIAS)
                 tempfd, temppath = tempfile.mkstemp(
-                    dir=get_current_registry().settings['sample_images_dir'])
+                    dir=os.path.dirname(self.thumb_filename))
                 try:
                     with closing(os.fdopen(tempfd, 'wb')) as f:
                         im.save(f, 'JPEG')
@@ -574,27 +613,27 @@ class SampleImage(Base):
             with open(self.thumb_filename, 'rb') as f:
                 return f.read()
 
-    def _get_image(self):
-        if os.path.exists(self.image_filename):
-            with open(self.image_filename, 'rb') as f:
+    def _get_data(self):
+        if os.path.exists(self.filename):
+            with open(self.filename, 'rb') as f:
                 return f.read()
 
-    def _set_image(self, value):
+    def _set_data(self, value):
         if value is None:
-            if os.path.exists(self.image_filename):
-                os.unlink(self.image_filename)
+            if os.path.exists(self.filename):
+                os.unlink(self.filename)
         else:
             tempfd, temppath = tempfile.mkstemp(
-                dir=get_current_registry().settings['sample_images_dir'])
+                dir=os.path.dirname(self.filename))
             try:
                 with closing(os.fdopen(tempfd, 'wb')) as f:
                     f.write(value)
             except:
                 os.unlink(temppath)
                 raise
-            os.rename(temppath, self.image_filename)
+            os.rename(temppath, self.filename)
 
-    image = property(_get_image, _set_image)
+    data = property(_get_data, _set_data)
 
 
 class Sample(Base):
@@ -620,8 +659,8 @@ class Sample(Base):
         'Sample', secondary='sample_origins',
         primaryjoin='sample_origins.c.parent_id==samples.c.id',
         secondaryjoin='sample_origins.c.sample_id==samples.c.id')
-    images = relationship(
-        SampleImage, backref='sample',
+    attachments = relationship(
+        SampleAttachment, backref='sample',
         cascade='all, delete-orphan', passive_deletes=True)
     audits = relationship(
         SampleAudit, backref='sample',

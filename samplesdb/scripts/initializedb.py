@@ -47,10 +47,10 @@ def main(argv=sys.argv):
             id='admins', description='Group of administrators')
         unlimited_limit = UserLimit(
             id='unlimited', collections_limit=1000000, samples_limit=1000000,
-            images_limit=1000000, templates_limit=1000000)
+            templates_limit=1000000, storage_limit=1048576 * 8192)
         academic_limit = UserLimit(
             id='academic', collections_limit=10, samples_limit=10000,
-            images_limit=10, templates_limit=10)
+            templates_limit=10, storage_limit=1048576 * 100)
         admin_user = User(
             salutation='', given_name='Administrator', surname='',
             limits_id='unlimited')
