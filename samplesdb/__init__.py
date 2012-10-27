@@ -26,11 +26,11 @@ This module creates the SQLAlchemy engine, the Pyramid configurator object
 from pyramid.config import Configurator
 from pyramid.authentication import AuthTktAuthenticationPolicy
 from pyramid.authorization import ACLAuthorizationPolicy
-from pyramid_beaker import session_factory_from_settings
-from pyramid_mailer import mailer_factory_from_settings
+#from pyramid_beaker import session_factory_from_settings
+#from pyramid_mailer import mailer_factory_from_settings
 from sqlalchemy import engine_from_config
 
-from samplesdb.security import group_finder
+from samplesdb.security import group_finder, RootFactory
 from samplesdb.models import DBSession
 
 
@@ -86,7 +86,7 @@ def main(global_config, **settings):
     DBSession.configure(bind=engine)
 
     config = Configurator(
-        settings=settings, root_factory='samplesdb.models.RootFactory')
+        settings=settings, root_factory=RootFactory)
     config.set_authentication_policy(authn_policy)
     config.set_authorization_policy(authz_policy)
     config.registry['mailer'] = mailer_factory

@@ -75,7 +75,6 @@ from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.engine import Engine
 from zope.sqlalchemy import ZopeTransactionExtension
 from pyramid.threadlocal import get_current_registry
-from pyramid.security import Allow, Everyone
 
 DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
 Base = declarative_base()
@@ -110,35 +109,6 @@ class ValidationError(Exception):
 
 class ResetError(Exception):
     """Class for password reset errors"""
-
-
-class RootFactory(object):
-    __acl__ = []
-
-    def __init__(self, request):
-        pass
-
-
-class CollectionFactory(object):
-    __acl__ = [
-        (Allow, 'role:owner',   'destroy_collection'),
-        (Allow, 'role:owner',   'rename_collection'),
-        (Allow, 'role:owner',   'edit_members'),
-        (Allow, 'role:owner',   'add_samples'),
-        (Allow, 'role:owner',   'remove_samples'),
-        (Allow, 'role:owner',   'audit_samples'),
-        (Allow, 'role:owner',   'view_samples'),
-        (Allow, 'role:editor',  'add_samples'),
-        (Allow, 'role:editor',  'remove_samples'),
-        (Allow, 'role:editor',  'audit_samples'),
-        (Allow, 'role:editor',  'view_samples'),
-        (Allow, 'role:auditor', 'audit_samples'),
-        (Allow, 'role:auditor', 'view_samples'),
-        (Allow, 'role:viewer',  'view_samples'),
-        ]
-
-    def __init__(self, request):
-        pass
 
 
 class EmailValidation(Base):
@@ -383,6 +353,13 @@ class User(Base):
         """return the user with id ``id``"""
         return DBSession.query(cls).filter_by(id=id).first()
 
+    @classmethod
+    def by_email(cls, email):
+        """return the user with an email ``email``"""
+        return DBSession.query(cls).join(EmailAddress).\
+            filter(EmailAddress.email==email).\
+            filter(EmailAddress.validated is not None).first()
+
     @property
     def permissions(self):
         """Return a set with all permissions granted to the user"""
@@ -414,7 +391,7 @@ class User(Base):
 
     password = synonym('_password', descriptor=property(_get_password, _set_password))
 
-    def test_password(self, password):
+    def authenticate(self, password):
         """Check the password against existing credentials"""
         # We call verify_and_update here in case we've defined any new
         # (hopefully stronger) algorithms in the context above. If so, this'll

@@ -29,6 +29,7 @@ from pyramid_simpleform import Form
 from pyramid_mailer.message import Message
 from formencode import Schema, validators
 
+from samplesdb.security import authenticate
 from samplesdb.forms import FormRenderer
 from samplesdb.models import (
     VALIDATION_TIMEOUT,
@@ -52,12 +53,10 @@ def login(request):
     came_from = request.params.get('came_from', referer)
     username = None
     password = None
-    # XXX Do we need to add this to the form?
     if 'form.submitted' in request.params:
         username = request.params.get('username')
         password = request.params.get('password')
-        # XXX Replace with real login code
-        if password == password:
+        if authenticate(username, password):
             headers = remember(request, login)
             return HTTPFound(location=came_from, headers=headers)
         flash = 'Invalid login'

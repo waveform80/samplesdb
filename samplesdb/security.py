@@ -18,12 +18,57 @@
 # samplesdb.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import transaction
 from samplesdb.models import DBSession, User, EmailAddress, Collection
+from pyramid.security import Allow, Everyone
 
 
-def group_finder(user_id, request):
-    try:
-        user = DBSession.query(User).\
-            join(EmailAddress).\
-            filter(EmailAddress.email==user_id).one()
+def user_finder(email_address):
+    return User.by_email(email_address)
+
+def group_finder(email_address, request):
+    user = user_finder(email_address)
+    if user is not None:
+        for collection, role in user.collections.items():
+            pass
+
+def authenticate(email_address, password):
+    # Need a transaction as User.authenticate can potentially write to the
+    # database in the event of hash transitions
+    with transaction.manager:
+        user = user_finder(email_address)
+        if user is not None:
+            return user.authenticate(password)
+        else:
+            return False
+
+
+class RootFactory(object):
+    __acl__ = []
+
+    def __init__(self, request):
+        pass
+
+
+class CollectionFactory(object):
+    __acl__ = [
+        (Allow, 'role:owner',   'destroy_collection'),
+        (Allow, 'role:owner',   'rename_collection'),
+        (Allow, 'role:owner',   'edit_members'),
+        (Allow, 'role:owner',   'add_samples'),
+        (Allow, 'role:owner',   'remove_samples'),
+        (Allow, 'role:owner',   'audit_samples'),
+        (Allow, 'role:owner',   'view_samples'),
+        (Allow, 'role:editor',  'add_samples'),
+        (Allow, 'role:editor',  'remove_samples'),
+        (Allow, 'role:editor',  'audit_samples'),
+        (Allow, 'role:editor',  'view_samples'),
+        (Allow, 'role:auditor', 'audit_samples'),
+        (Allow, 'role:auditor', 'view_samples'),
+        (Allow, 'role:viewer',  'view_samples'),
+        ]
+
+    def __init__(self, request):
+        pass
+
 
