@@ -22,7 +22,6 @@ import transaction
 from samplesdb.models import (
     DBSession,
     User,
-    EmailAddress,
     Collection,
     Sample,
     )
@@ -104,7 +103,9 @@ def group_finder(email_address, request):
     if user is not None:
         # Each group the user belongs to is added as a principal
         principals.extend(GROUP_PREFIX + group for group in user.groups)
-        if request.context.collection is not None:
+        if (
+                isinstance(request.context, CollectionContextFactory) or
+                isinstance(request.context, SampleContextFactory)):
             # Each role the user holds in the current context's collection
             # is added as a principal
             principals.extend(
@@ -124,7 +125,7 @@ def authenticate(email_address, password):
             return False
 
 
-class RootFactory(object):
+class RootContextFactory(object):
     __acl__ = [
         (Allow, ADMINS_PRINCIPAL , ADMIN_PERMISSIONS)  ,
         (Allow, Authenticated    , CREATE_COLLECTION)  ,
@@ -135,14 +136,19 @@ class RootFactory(object):
         ]
 
     def __init__(self, request):
-        self.sample = None
-        self.collection = None
-        if 'collection_id' in request.matchdict:
-            self.sample = None
-            self.collection = DBSession.query(Collection).\
-                filter_by(id=request.matchdict['collection_id']).one()
-        elif 'sample_id' in request.matchdict:
-            self.sample = DBSession.query(Sample).\
-                filter_by(id=request.matchdict['sample_id']).one()
-            self.collection = self.sample.collection
+        pass
 
+
+class CollectionContextFactory(RootContextFactory):
+    def __init__(self, request):
+        super(CollectionContextFactory, self).__init__(request)
+        self.collection = DBSession.query(Collection).\
+            filter_by(id=request.matchdict['collection_id']).one()
+
+
+class SampleContextFactory(RootContextFactory):
+    def __init__(self, request):
+        super(SampleContextFactory, self).__init__(request)
+        self.sample = DBSession.query(Sample).\
+            filter_by(id=request.matchdict['sample_id']).one()
+        self.collection = self.sample.collection

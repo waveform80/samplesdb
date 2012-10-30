@@ -7,14 +7,14 @@
   xmlns:metal="http://xml.zope.org/namespaces/metal"
   xmlns:i18n="http://xml.zope.org/namespaces/i18n">
 <!--<![endif]-->
-<head metal:use-macro="master.head"></head>
+<head metal:use-macro="view.master.head"></head>
 <body>
-  <nav metal:use-macro="master.top_bar"></nav>
+  <nav metal:use-macro="view.master.top_bar"></nav>
   <div class="row">
     <div class="two columns">Name</div>
     <div class="ten columns">${user.salutation} ${user.given_name} ${user.surname}</div>
   </div>
-  <span metal:use-macro="master.footer"></span>
-  <span metal:use-macro="master.scripts"></span>
+  <span metal:use-macro="view.master.footer"></span>
+  <span metal:use-macro="view.master.scripts"></span>
 </body>
 </html>

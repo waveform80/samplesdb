@@ -111,6 +111,9 @@ class FormRenderer(pyramid_simpleform.renderers.FormRenderer):
         return super(FormRenderer, self).label(name, label, **attrs)
 
     def errorlist(self, name=None, **attrs):
+        return self.error_flashes(name, **attrs)
+
+    def error_flashes(self, name=None, **attrs):
         if name is None:
             errors = self.all_errors()
         else:
@@ -120,10 +123,24 @@ class FormRenderer(pyramid_simpleform.renderers.FormRenderer):
             for error in errors]
         return HTML(*content)
 
+    def error_small(self, name=None, **attrs):
+        if name is None:
+            errors = self.all_errors()
+        else:
+            errors = self.errors_for(name)
+        if not errors:
+            return ''
+        content = []
+        for error in errors:
+            content.append(HTML(error))
+            content.append(tags.BR)
+        content = content[:-1]
+        return HTML.tag('small', *content, class_='error', **attrs)
+
     def column(self, name, content, cols, errors=True):
         error_content = ''
         if errors:
-            error_content = self.errorlist(name)
+            error_content = self.error_small(name)
         return HTML.tag(
             'div', tags.literal(content), error_content,
             class_='%s columns %s' % (
@@ -147,5 +164,4 @@ class FormRenderer(pyramid_simpleform.renderers.FormRenderer):
 
     def col_submit(self, name='submit', value='Submit', id=None, cols=12, **attrs):
         return self.column(name, self.submit(name, value, id, **attrs), cols, errors=False)
-
 

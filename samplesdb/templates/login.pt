@@ -7,59 +7,33 @@
   xmlns:metal="http://xml.zope.org/namespaces/metal"
   xmlns:i18n="http://xml.zope.org/namespaces/i18n">
 <!--<![endif]-->
-<head metal:use-macro="master.head"></head>
+<head metal:use-macro="view.master.head"></head>
 <body>
-  <div metal:use-macro="master.top_banner"></div>
+  <nav metal:use-macro="view.master.top_bar"></nav>
   <div class="row">
-    <div class="five columns">
-      <div metal:use-macro="master.flashes"></div>
+    <div class="twelve columns">
+      <p>Please enter your login credentials below and you will be redirected
+      back to the page you came from.</p>
+      <div metal:use-macro="view.master.flashes"></div>
       ${form.begin(request.route_url('login'))}
       ${form.hidden_tag('came_from')}
       ${form.errorlist()}
       <div class="row">
-        ${form.email('username', placeholder='E-mail Address')}
+        ${form.col_label('username', 'Username')}
+        ${form.col_email('username', placeholder='someone@somewhere.edu')}
       </div>
       <div class="row">
-        ${form.password('password', placeholder='Password')}
+        ${form.col_label('password', 'Password')}
+        ${form.col_password('password', placeholder='Password')}
       </div>
       <div class="row">
-        <div class="ten mobile-three columns">
-          <a href="${request.route_url('sign_up')}">New user</a> |
-          <a href="${request.route_url('reset_password_request', email='')}">Forgotten password</a>
-        </div>
-        <div class="two mobile-one columns">
-          ${form.submit('submit', value='Login', class_='tiny right button')}
-        </div>
+        ${form.col_submit()}
       </div>
       ${form.end()}
     </div>
-    <div class="seven columns">
-      <p>Welcome to the
-      <strong>${request.registry.settings['site_title']}</strong> project. This
-      is an open-source project designed to provide a flexible web-based
-      database to lab technicians wishing to keep track of their samples.
-      Features of the system include:</p>
-
-      <ul>
-        <li>Multiple sample collections per user, including multiple images per
-        sample</li>
-        <li>Provenance of samples &ndash; visual history of splits and
-        combinations</li>
-        <li>Auditing of samples (optional) including e-mailed reminders</li>
-        <li>Downloadable copies of your collections in multiple formats (PDFs
-        for labelling, Excel files for offline copies of your database,
-        etc.)</li>
-      </ul>
-
-      <p>This is currently a beta-testing system. Usage for academic users and
-      technicians is free (based upon e-mail address: if your address ends in
-      <tt>.edu</tt> or <tt>.ac.<em>some-country</em></tt> you will be able to
-      sign up for a free account). Usage for commercial technicians will
-      require a nominal fee (to be decided) once the system is finalized.</p>
-    </div>
   </div>
-  <span metal:use-macro="master.footer"></span>
-  <span metal:use-macro="master.scripts"></span>
+  <span metal:use-macro="view.master.footer"></span>
+  <span metal:use-macro="view.master.scripts"></span>
 </body>
 </html>
 

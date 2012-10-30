@@ -9,7 +9,17 @@
 <!--<![endif]-->
 <head metal:use-macro="view.master.head"></head>
 <body>
-  <nav metal:use-macro="view.master.top_bar"></nav>
+  <div metal:use-macro="view.master.top_bar"></div>
+  <div class="row">
+    <div class="twelve columns">
+      <div metal:use-macro="view.master.flashes"></div>
+      <h3>The sign-up complains my e-mail address isn't valid</h3>
+      <p>Currently, the system is limited to academic users. This means that
+      all e-mail addresses used during sign-up must end with <tt>.edu</tt> or
+      <tt>.ac.<em>country</em></tt> (where country is something like
+      <tt>uk</tt> or <tt>fr</tt>, etc.)</p>
+    </div>
+  </div>
   <span metal:use-macro="view.master.footer"></span>
   <span metal:use-macro="view.master.scripts"></span>
 </body>

@@ -76,7 +76,6 @@ class SignUpView(BaseView):
                 'user_validate_request', email=form.data['email']))
         return dict(
             page_title='New User',
-            master=self.master,
             form=FormRenderer(form),
             )
 
@@ -99,7 +98,6 @@ class SignUpView(BaseView):
                 validation=new_validation))
         return dict(
             page_title='Validation Sent',
-            master=self.master,
             email=email,
             timeout=VALIDATION_TIMEOUT,
             )
@@ -110,7 +108,6 @@ class SignUpView(BaseView):
     def user_validate_complete(self):
         return dict(
             page_title='Validation Complete',
-            master=self.master,
             )
 
     @view_config(
@@ -119,7 +116,6 @@ class SignUpView(BaseView):
     def user_validate_cancel(self):
         return dict(
             page_title='Validation Cancelled',
-            master=self.master,
             )
 
     @view_config(
@@ -129,5 +125,5 @@ class SignUpView(BaseView):
         return dict(
             page_title='User Profile',
             user=User.by_email(authenticated_userid(self.request)),
-            master=self.master,
             )
+

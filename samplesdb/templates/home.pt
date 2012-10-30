@@ -1,0 +1,72 @@
+<!doctype html>
+<!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
+<!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
+<!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en"
+  xmlns:tal="http://xml.zope.org/namespaces/tal"
+  xmlns:metal="http://xml.zope.org/namespaces/metal"
+  xmlns:i18n="http://xml.zope.org/namespaces/i18n">
+<!--<![endif]-->
+<head metal:use-macro="view.master.head"></head>
+<body>
+  <div metal:use-macro="view.master.top_banner"></div>
+  <div class="row">
+    <div class="five columns" tal:condition="not view.user">
+      <div metal:use-macro="view.master.flashes"></div>
+      ${form.begin(request.route_url('login'))}
+      ${form.hidden_tag('came_from')}
+      ${form.errorlist()}
+      <div class="row">
+        ${form.email('username', placeholder='E-mail Address')}
+      </div>
+      <div class="row">
+        ${form.password('password', placeholder='Password')}
+      </div>
+      <div class="row">
+        <div class="ten mobile-three columns">
+          <a href="${request.route_url('sign_up')}">New user</a> |
+          <a href="${request.route_url('reset_password_request', email='')}">Forgotten password</a>
+        </div>
+        <div class="two mobile-one columns">
+          ${form.submit('submit', value='Login', class_='tiny right button')}
+        </div>
+      </div>
+      ${form.end()}
+    </div>
+    <div class="five columns" tal:condition="view.user">
+      <p><a class="button" href="${request.route_url('user_collections')}">My Collections</a></p>
+      <p><a class="button" href="${request.route_url('user_profile')}">My Account</a></p>
+      <p><a class="secondary button" href="${request.route_url('logout')}">Logout</a></p>
+    </div>
+    <div class="seven columns">
+      <p>Welcome to the
+      <strong>${request.registry.settings['site_title']}</strong> project. This
+      is an open-source project designed to provide a flexible web-based
+      database to lab technicians wishing to keep track of their samples.
+      Features of the system include:</p>
+
+      <ul>
+        <li>Multiple sample collections per user, including multiple images per
+        sample</li>
+        <li>Provenance of samples &ndash; visual history of splits and
+        combinations</li>
+        <li>Auditing of samples (optional) including e-mailed reminders</li>
+        <li>Downloadable copies of your collections in multiple formats (PDFs
+        for labelling, Excel files for offline copies of your database,
+        etc.)</li>
+      </ul>
+
+      <p>This is currently a beta-testing system. Usage for academic users and
+      technicians is free (based upon e-mail address: if your address ends in
+      <tt>.edu</tt> or <tt>.ac.<em>some-country</em></tt> you will be able to
+      sign up for a free account). Usage for commercial technicians will
+      require a nominal fee (to be decided) once the system is finalized. If
+      you have any questions, please peruse our <a
+        href="${request.route_url('faq')}">FAQ</a>.</p>
+    </div>
+  </div>
+  <span metal:use-macro="view.master.footer"></span>
+  <span metal:use-macro="view.master.scripts"></span>
+</body>
+</html>
+

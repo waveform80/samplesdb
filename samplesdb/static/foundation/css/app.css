@@ -7,10 +7,10 @@
     background: -ms-linear-gradient(top, #c9de96 0%,#8ab66b 44%,#398235 100%); /* IE10+ */
     background: linear-gradient(to bottom, #c9de96 0%,#8ab66b 44%,#398235 100%); /* W3C */
     filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#c9de96', endColorstr='#398235',GradientType=0 ); /* IE6-9 */
-    box-shadow: 10px 10px 20px #999;
     margin-bottom: 2em;
     padding: 0;
-    /*box-shadow: 10px 10px 10px #666;*/
+    box-shadow: 0 10px 20px #666;
+	border-radius: 15px;
 }
 
 #footer {
@@ -18,6 +18,7 @@
     background: #444;
     padding: 1em;
     font-size: 9pt;
+	border-radius: 8px;
 }
 
 /* Make placeholder text lighter - no decent standards for this yet. See

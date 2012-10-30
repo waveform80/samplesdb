@@ -38,7 +38,7 @@ class LoginSchema(BaseSchema):
     came_from = validators.UnicodeString()
 
 
-class LoginHandler(BaseView):
+class LoginView(BaseView):
     """Handler for login and logout"""
 
     @view_config(route_name='login', renderer='../templates/login.pt')
@@ -46,7 +46,7 @@ class LoginHandler(BaseView):
     def login(self):
         referer = self.request.url
         if referer == self.request.route_url('login'):
-            referer = self.request.route_url('user_profile')
+            referer = self.request.route_url('home')
         form = Form(
             self.request,
             schema=LoginSchema,
@@ -62,8 +62,7 @@ class LoginHandler(BaseView):
             else:
                 self.request.session.flash('Invalid login')
         return dict(
-            page_title='Home',
-            master=self.master,
+            page_title='Login',
             form=FormRenderer(form),
             )
 
@@ -71,5 +70,6 @@ class LoginHandler(BaseView):
     def logout(self):
         headers = forget(self.request)
         return HTTPFound(
-            location=self.request.route_url('login'),
+            location=self.request.route_url('home'),
             headers=headers)
+

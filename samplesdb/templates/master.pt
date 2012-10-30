@@ -22,14 +22,17 @@
     <nav class="top-bar">
     <ul>
       <li class="name">
-        <a href="${request.route_url('login')}">
+        <a href="${request.route_url('home')}">
           <img src="${request.static_url('samplesdb:static/logo_small.svg')}" alt="${request.registry.settings['site_title']}" />
         </a>
       </li>
       <li class="toggle-topbar"><a href="#"></a></li>
     </ul>
     <section>
-    <ul class="right">
+    <ul class="right" tal:condition="not view.user">
+      <li><a href="${request.route_url('login')}">Login</a></li>
+    </ul>
+    <ul class="right" tal:condition="view.user">
       <li><a href="${request.route_url('user_collections')}">My Collections</a></li>
       <li><a href="${request.route_url('user_profile')}">My Account</a></li>
       <li><a href="${request.route_url('logout')}">Logout</a></li>
@@ -45,7 +48,7 @@
 
   <div class="row" metal:define-macro="top_banner">
     <div id="header" class="twelve columns">
-      <a href=""><img src="${request.static_url('samplesdb:static/logo_large_optimized.svg')}" /></a>
+      <a href="${request.route_url('home')}"><img src="${request.static_url('samplesdb:static/logo_large_optimized.svg')}" /></a>
     </div>
   </div>
 

@@ -30,16 +30,26 @@ from pyramid_beaker import session_factory_from_settings
 from pyramid_mailer import mailer_factory_from_settings
 from sqlalchemy import engine_from_config
 
-from samplesdb.security import group_finder, RootFactory
+from samplesdb.security import group_finder, RootContextFactory
 from samplesdb.models import DBSession
 
 
 __version__ = '0.1'
 
 ROUTES = {
-    'login':                   '/',
+    # views.root
+    'home':                    '/',
+    'faq':                     '/faq',
+    # views.login
+    'login':                   '/login',
     'logout':                  '/logout',
+    # views.sign_up
     'sign_up':                 '/signup',
+    'user_validate_request':   '/validate/send/{email}',
+    'user_validate_complete':  '/validate/complete/{code}',
+    'user_validate_cancel':    '/validate/cancel/{code}',
+    'user_profile':            '/profile',
+    # ???
     'admin_home':              '/admin/',
     'admin_users':             '/admin/users/',
     'admin_user_create':       '/admin/users/new',
@@ -51,13 +61,9 @@ ROUTES = {
     'admin_group_view':        '/admin/group/{id}',
     'admin_group_edit':        '/admin/group/{id}/edit',
     'admin_group_remove':      '/admin/group/{id}/remove',
-    'user_validate_request':   '/validate/send/{email}',
-    'user_validate_complete':  '/validate/complete/{code}',
-    'user_validate_cancel':    '/validate/cancel/{code}',
     'reset_password_request':  '/reset/send/{email}',
     'reset_password_complete': '/reset/complete/{code}',
     'reset_password_cancel':   '/reset/cancel/{code}',
-    'user_profile':            '/profile',
     'user_collections':        '/collections',
     'user_collection_create':  '/collections/new',
     'user_collection_view':    '/collections/{collection_id}',
@@ -82,7 +88,7 @@ def main(global_config, **settings):
     DBSession.configure(bind=engine)
 
     config = Configurator(
-        settings=settings, root_factory=RootFactory)
+        settings=settings, root_factory=RootContextFactory)
     config.set_authentication_policy(authn_policy)
     config.set_authorization_policy(authz_policy)
     config.registry['mailer'] = mailer_factory

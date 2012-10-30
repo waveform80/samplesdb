@@ -17,22 +17,28 @@
 # You should have received a copy of the GNU General Public License along with
 # samplesdb.  If not, see <http://www.gnu.org/licenses/>.
 
-from pyramid.renderers import get_renderer
-from pyramid.security import authenticated_userid
+from pyramid.view import view_config
 
-from samplesdb.models import (
-    DBSession,
-    Collection,
-    Sample,
-    )
+from samplesdb.views import BaseView
+from samplesdb.views.login import LoginSchema
+from samplesdb.forms import BaseSchema, Form, FormRenderer
 
-class BaseView(object):
-    """Abstract base class for view handlers"""
+class RootView(BaseView):
+    """Handler for root (mostly static) views"""
 
-    def __init__(self, request):
-        self.request = request
-        # Every handler needs the master template, the authenticated user, and
-        # the sample and collection selected (if any)
-        self.master = get_renderer('../templates/master.pt').implementation()
-        self.user = authenticated_userid(request)
+    @view_config(route_name='home', renderer='../templates/home.pt')
+    def home(self):
+        form = Form(
+            self.request,
+            schema=LoginSchema,
+            defaults=dict(came_from=self.request.url))
+        return dict(
+            page_title='Home',
+            form=FormRenderer(form),
+            )
 
+    @view_config(route_name='faq', renderer='../templates/faq.pt')
+    def faq(self):
+        return dict(
+            page_title='FAQ',
+            )
