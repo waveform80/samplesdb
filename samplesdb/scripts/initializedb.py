@@ -13,13 +13,19 @@ import transaction
 from sqlalchemy import engine_from_config
 from pyramid.paster import get_appsettings, setup_logging
 
+from samplesdb.security import (
+    ADMINS_GROUP,
+    VIEWER_ROLE,
+    AUDITOR_ROLE,
+    EDITOR_ROLE,
+    OWNER_ROLE,
+    )
 from samplesdb.models import (
     DBSession,
     EmailAddress,
     User,
     UserLimit,
     Group,
-    Permission,
     Collection,
     Role,
     Base,
@@ -41,10 +47,8 @@ def main(argv=sys.argv):
     DBSession.configure(bind=engine)
     Base.metadata.create_all(engine)
     with transaction.manager:
-        admin_perm = Permission(
-            id='admin', description='Administration authority')
         admins_group = Group(
-            id='admins', description='Group of administrators')
+            id=ADMINS_GROUP, description='Group of administrators')
         unlimited_limit = UserLimit(
             id='unlimited', collections_limit=1000000, samples_limit=1000000,
             templates_limit=1000000, storage_limit=1048576 * 8192)
@@ -58,17 +62,20 @@ def main(argv=sys.argv):
             email='admin@example.com', validated=datetime.utcnow())
         admin_collection = Collection(name='Default')
         owner_role = Role(
-            id='owner', description='Owner and administrator of the collection')
+            id=OWNER_ROLE,
+            description='Owner and administrator of the collection')
         editor_role = Role(
-            id='editor', description='Can add and remove samples from a '
-                'collection, but cannot administer members of the collection')
+            id=EDITOR_ROLE,
+            description='Can add and remove samples from a collection, but '
+                        'cannot administer members of the collection')
         auditor_role = Role(
-            id='auditor', description='Can audit samples within the '
-                'collection but cannot manipulate the collection')
+            id=AUDITOR_ROLE,
+            description='Can audit samples within the collection but cannot '
+                        'manipulate the collection')
         viewer_role = Role(
-            id='viewer', description='Can view samples within the collection '
-                'but cannot manipulate the collection')
-        DBSession.add(admin_perm)
+            id=VIEWER_ROLE,
+            description='Can view samples within the collection but cannot '
+                        'manipulate the collection')
         DBSession.add(admins_group)
         DBSession.add(unlimited_limit)
         DBSession.add(academic_limit)
@@ -79,7 +86,6 @@ def main(argv=sys.argv):
         DBSession.add(editor_role)
         DBSession.add(auditor_role)
         DBSession.add(viewer_role)
-        admin_perm.groups.append(admins_group)
         admins_group.users.append(admin_user)
         admin_user.emails.append(admin_email)
         admin_user.password = 'adminpass'

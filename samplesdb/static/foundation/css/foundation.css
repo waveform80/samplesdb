@@ -832,7 +832,7 @@ div.alert-box { display: block; padding: 6px 7px 7px; font-weight: bold; font-si
 div.alert-box.success { background-color: #5da423; color: #fff; text-shadow: 0 -1px rgba(0, 0, 0, 0.3); }
 div.alert-box.alert { background-color: #c60f13; color: #fff; text-shadow: 0 -1px rgba(0, 0, 0, 0.3); }
 div.alert-box.secondary { background-color: #e9e9e9; color: #505050; text-shadow: 0 1px rgba(255, 255, 255, 0.3); }
-div.alert-box a.close { color: #333; position: absolute; right: 4px; top: -1px; font-size: 18px; opacity: 0.2; padding: 4px; }
+div.alert-box a.close { color: #333; position: absolute; right: 4px; top: -1px; font-size: 18px; opacity: 0.5; padding: 4px; }
 div.alert-box a.close:hover, div.alert-box a.close:focus { opacity: 0.4; }
 
 /* Labels ---------------------- */
@@ -1002,6 +1002,7 @@ div.progress.round .meter { -webkit-border-radius: 1000px; -moz-border-radius: 1
   background: -ms-linear-gradient(top, #c9de96 0%,#8ab66b 44%,#398235 100%); /* IE10+ */
   background: linear-gradient(to bottom, #c9de96 0%,#8ab66b 44%,#398235 100%); /* W3C */
   filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#c9de96', endColorstr='#398235',GradientType=0 ); /* IE6-9 */
+  box-shadow: 10px 10px 5px #888;
   height: 45px;
   line-height: 45px;
   margin: 0 0 30px;

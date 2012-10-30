@@ -19,20 +19,101 @@
 
 
 import transaction
-from samplesdb.models import DBSession, User, EmailAddress, Collection
-from pyramid.security import Allow, Everyone
+from samplesdb.models import (
+    DBSession,
+    User,
+    EmailAddress,
+    Collection,
+    Sample,
+    )
+from pyramid.security import (
+    Allow,
+    Everyone,
+    Authenticated,
+    )
+
+
+# Permissions
+CREATE_USER        = 'create_user'
+DESTROY_USER       = 'destroy_user'
+EDIT_USER          = 'edit_user'
+CREATE_GROUP       = 'create_group'
+DESTROY_GROUP      = 'destroy_group'
+EDIT_GROUP         = 'edit_group'
+CREATE_LIMIT       = 'create_limit'
+DESTROY_LIMIT      = 'destroy_limit'
+EDIT_LIMIT         = 'edit_limit'
+CREATE_COLLECTION  = 'create_collection'
+DESTROY_COLLECTION = 'destroy_collection'
+RENAME_COLLECTION  = 'rename_collection'
+EDIT_MEMBERS       = 'edit_members'
+EDIT_COLLECTION    = 'edit_collection'
+AUDIT_COLLECTION   = 'audit_collection',
+VIEW_COLLECTION    = 'view_collection'
+
+# Permission groups
+VIEWER_PERMISSIONS  = (VIEW_COLLECTION,)
+AUDITOR_PERMISSIONS = VIEWER_PERMISSIONS + (AUDIT_COLLECTION,)
+EDITOR_PERMISSIONS  = AUDITOR_PERMISSIONS + (EDIT_COLLECTION,)
+OWNER_PERMISSIONS   = EDITOR_PERMISSIONS + (
+    DESTROY_COLLECTION,
+    RENAME_COLLECTION,
+    EDIT_MEMBERS,
+    )
+ADMIN_PERMISSIONS = OWNER_PERMISSIONS + (
+    CREATE_USER,
+    DESTROY_USER,
+    EDIT_USER,
+    CREATE_GROUP,
+    DESTROY_GROUP,
+    EDIT_GROUP,
+    CREATE_LIMIT,
+    DESTROY_LIMIT,
+    EDIT_LIMIT,
+    )
+
+# Principal prefixes
+ROLE_PREFIX  = 'role:'
+GROUP_PREFIX = 'group:'
+
+# Role and group names
+VIEWER_ROLE  = 'viewer'
+AUDITOR_ROLE = 'auditor'
+EDITOR_ROLE  = 'editor'
+OWNER_ROLE   = 'owner'
+ADMINS_GROUP = 'admins'
+
+# Collection principals
+VIEWER_PRINCIPAL  = ROLE_PREFIX + 'viewer'
+AUDITOR_PRINCIPAL = ROLE_PREFIX + 'auditor'
+EDITOR_PRINCIPAL  = ROLE_PREFIX + 'editor'
+OWNER_PRINCIPAL   = ROLE_PREFIX + 'owner'
+
+# Administration principals
+ADMINS_PRINCIPAL  = GROUP_PREFIX + 'admins'
 
 
 def user_finder(email_address):
+    "Returns the User object with the specified email address or None"
     return User.by_email(email_address)
 
 def group_finder(email_address, request):
+    "Returns the set of principals for a user in the current context"
     user = user_finder(email_address)
+    principals = []
     if user is not None:
-        for collection, role in user.collections.items():
-            pass
+        # Each group the user belongs to is added as a principal
+        principals.extend(GROUP_PREFIX + group for group in user.groups)
+        if request.context.collection is not None:
+            # Each role the user holds in the current context's collection
+            # is added as a principal
+            principals.extend(
+                ROLE_PREFIX + role
+                for role in user.collections[request.context.collection])
+    return principals
 
 def authenticate(email_address, password):
+    "Authenticates the user with the specified email address and password"
     # Need a transaction as User.authenticate can potentially write to the
     # database in the event of hash transitions
     with transaction.manager:
@@ -44,31 +125,24 @@ def authenticate(email_address, password):
 
 
 class RootFactory(object):
-    __acl__ = []
-
-    def __init__(self, request):
-        pass
-
-
-class CollectionFactory(object):
     __acl__ = [
-        (Allow, 'role:owner',   'destroy_collection'),
-        (Allow, 'role:owner',   'rename_collection'),
-        (Allow, 'role:owner',   'edit_members'),
-        (Allow, 'role:owner',   'add_samples'),
-        (Allow, 'role:owner',   'remove_samples'),
-        (Allow, 'role:owner',   'audit_samples'),
-        (Allow, 'role:owner',   'view_samples'),
-        (Allow, 'role:editor',  'add_samples'),
-        (Allow, 'role:editor',  'remove_samples'),
-        (Allow, 'role:editor',  'audit_samples'),
-        (Allow, 'role:editor',  'view_samples'),
-        (Allow, 'role:auditor', 'audit_samples'),
-        (Allow, 'role:auditor', 'view_samples'),
-        (Allow, 'role:viewer',  'view_samples'),
+        (Allow, ADMINS_PRINCIPAL , ADMIN_PERMISSIONS)  ,
+        (Allow, Authenticated    , CREATE_COLLECTION)  ,
+        (Allow, OWNER_PRINCIPAL  , OWNER_PERMISSIONS)  ,
+        (Allow, EDITOR_PRINCIPAL , EDITOR_PERMISSIONS) ,
+        (Allow, AUDITOR_PRINCIPAL, AUDITOR_PERMISSIONS),
+        (Allow, VIEWER_PRINCIPAL , VIEWER_PERMISSIONS) ,
         ]
 
     def __init__(self, request):
-        pass
-
+        self.sample = None
+        self.collection = None
+        if 'collection_id' in request.matchdict:
+            self.sample = None
+            self.collection = DBSession.query(Collection).\
+                filter_by(id=request.matchdict['collection_id']).one()
+        elif 'sample_id' in request.matchdict:
+            self.sample = DBSession.query(Sample).\
+                filter_by(id=request.matchdict['sample_id']).one()
+            self.collection = self.sample.collection
 

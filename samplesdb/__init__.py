@@ -26,8 +26,8 @@ This module creates the SQLAlchemy engine, the Pyramid configurator object
 from pyramid.config import Configurator
 from pyramid.authentication import AuthTktAuthenticationPolicy
 from pyramid.authorization import ACLAuthorizationPolicy
-#from pyramid_beaker import session_factory_from_settings
-#from pyramid_mailer import mailer_factory_from_settings
+from pyramid_beaker import session_factory_from_settings
+from pyramid_mailer import mailer_factory_from_settings
 from sqlalchemy import engine_from_config
 
 from samplesdb.security import group_finder, RootFactory
@@ -51,11 +51,6 @@ ROUTES = {
     'admin_group_view':        '/admin/group/{id}',
     'admin_group_edit':        '/admin/group/{id}/edit',
     'admin_group_remove':      '/admin/group/{id}/remove',
-    'admin_permissions':       '/admin/permissions/',
-    'admin_permission_create': '/admin/permissions/new',
-    'admin_permission_view':   '/admin/permissions/{id}',
-    'admin_permission_edit':   '/admin/permissions/{id}/edit',
-    'admin_permission_remove': '/admin/permissions/{id}/remove',
     'user_validate_request':   '/validate/send/{email}',
     'user_validate_complete':  '/validate/complete/{code}',
     'user_validate_cancel':    '/validate/cancel/{code}',
@@ -65,16 +60,17 @@ ROUTES = {
     'user_profile':            '/profile',
     'user_collections':        '/collections',
     'user_collection_create':  '/collections/new',
-    'user_collection_view':    '/collections/{id}',
-    'user_collection_edit':    '/collections/{id}/edit',
-    'user_collection_remove':  '/collections/{id}/remove',
-    'user_sample_view':        '/samples/{id}',
-    'user_sample_edit':        '/samples/{id}/edit',
-    'user_sample_split':       '/samples/{id}/split',
-    'user_sample_destroy':     '/samples/{id}/destroy',
-    'user_sample_remove':      '/samples/{id}/remove',
+    'user_collection_view':    '/collections/{collection_id}',
+    'user_collection_edit':    '/collections/{collection_id}/edit',
+    'user_collection_destroy': '/collections/{collection_id}/destroy',
+    'user_sample_view':        '/samples/{sample_id}',
+    'user_sample_edit':        '/samples/{sample_id}/edit',
+    'user_sample_split':       '/samples/{sample_id}/split',
+    'user_sample_destroy':     '/samples/{sample_id}/destroy',
+    'user_sample_remove':      '/samples/{sample_id}/remove',
     'user_sample_combine':     '/samples/combine',
     }
+
 
 def main(global_config, **settings):
     """Returns the Pyramid WSGI application"""

@@ -335,7 +335,8 @@ class User(Base):
         'user_collections', 'role',
         creator=lambda k, v: UserCollection(collection=k, role=v))
     # limits defined as backref on UserLimit
-    # groups defined as backref on Group
+    # user_groups defined as backref on Group
+    groups = association_proxy('user_groups', 'id')
 
     def __repr__(self):
         return ('<User: name="%s">' % ' '.join((
@@ -357,16 +358,8 @@ class User(Base):
     def by_email(cls, email):
         """return the user with an email ``email``"""
         return DBSession.query(cls).join(EmailAddress).\
-            filter(EmailAddress.email==email).\
-            filter(EmailAddress.validated is not None).first()
-
-    @property
-    def permissions(self):
-        """Return a set with all permissions granted to the user"""
-        result = set()
-        for group in self.groups:
-            result = result | set(group.permissions)
-        return result
+            filter(EmailAddress.email == email).\
+            filter(EmailAddress.validated != None).first()
 
     def _get_timezone(self):
         """Return the timezone object corresponding to the name"""
@@ -441,8 +434,7 @@ class Group(Base):
     id = Column(Unicode(20), primary_key=True)
     description = Column(Unicode(200))
     users = relationship(
-        User, secondary='user_groups', backref='groups')
-    # permissions defined as backref on Permissions
+        User, secondary='user_groups', backref='user_groups')
 
     def __repr__(self):
         return ('<Group: id="%s">' % self.id).encode('utf-8')
@@ -456,29 +448,6 @@ class Group(Base):
     @classmethod
     def by_id(cls, id):
         """return the group object with id ``id``"""
-        return DBSession.query(cls).filter_by(id=id).first()
-
-
-class Permission(Base):
-    __tablename__ = 'permissions'
-
-    id = Column(Unicode(20), primary_key=True)
-    description = Column(Unicode(200))
-    groups = relationship(
-        Group, secondary='group_permissions', backref='permissions')
-
-    def __repr__(self):
-        return ('<Permission: id="%s">' % self.id).encode('utf-8')
-
-    def __str__(self):
-        return unicode(self).encode('utf-8')
-
-    def __unicode__(self):
-        return self.id
-
-    @classmethod
-    def by_id(cls, id):
-        """return the permission object with id ``id``"""
         return DBSession.query(cls).filter_by(id=id).first()
 
 
@@ -756,19 +725,6 @@ class UserCollection(Base):
             'collection_users',
             collection_class=attribute_mapped_collection('user')))
     role = relationship(Role)
-
-
-class GroupPermission(Base):
-    __tablename__ = 'group_permissions'
-
-    group_id = Column(
-        Unicode(20), ForeignKey(
-            'groups.id', onupdate='RESTRICT', ondelete='CASCADE'),
-        primary_key=True)
-    permission_id = Column(
-        Unicode(20), ForeignKey(
-            'permissions.id', onupdate='RESTRICT', ondelete='RESTRICT'),
-        primary_key=True)
 
 
 class UserGroup(Base):

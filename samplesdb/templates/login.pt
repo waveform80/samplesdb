@@ -12,24 +12,26 @@
   <div metal:use-macro="master.top_banner"></div>
   <div class="row">
     <div class="five columns">
-      <form method="POST" action="${request.route_url('login')}" data-form="validate">
-        <input type="hidden" name="came_from" value="${came_from}" />
-        <div class="row">
-          <input type="email" id="username" name="username" value="${username}" placeholder="E-mail address" autofocus="autofocus" required="required" />
+      <div metal:use-macro="master.flashes"></div>
+      ${form.begin(request.route_url('login'))}
+      ${form.hidden_tag('came_from')}
+      ${form.errorlist()}
+      <div class="row">
+        ${form.email('username', placeholder='E-mail Address')}
+      </div>
+      <div class="row">
+        ${form.password('password', placeholder='Password')}
+      </div>
+      <div class="row">
+        <div class="ten mobile-three columns">
+          <a href="${request.route_url('sign_up')}">New user</a> |
+          <a href="${request.route_url('reset_password_request', email='')}">Forgotten password</a>
         </div>
-        <div class="row">
-          <input type="password" id="password" name="password" value="${password}" placeholder="Password" required="required" />
+        <div class="two mobile-one columns">
+          ${form.submit('submit', value='Login', class_='tiny right button')}
         </div>
-        <div class="row">
-          <div class="ten mobile-three columns">
-            <a href="${request.route_url('sign_up')}">New user</a> |
-            <a href="${request.route_url('reset_password_request', email='')}">Forgotten password</a>
-          </div>
-          <div class="two mobile-one columns">
-            <input class="right tiny button" type="submit" name="form.submitted" value="Login" />
-          </div>
-        </div>
-      </form>
+      </div>
+      ${form.end()}
     </div>
     <div class="seven columns">
       <p>Welcome to the

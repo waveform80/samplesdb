@@ -17,10 +17,16 @@
 # You should have received a copy of the GNU General Public License along with
 # samplesdb.  If not, see <http://www.gnu.org/licenses/>.
 
+import logging
+
 from webhelpers.html import tags
 from webhelpers.html.builder import HTML
-from formencode import validators
+from formencode import Schema, validators
+from pyramid.events import NewRequest, subscriber
+from pyramid.httpexceptions import HTTPForbidden
+import pyramid_simpleform
 import pyramid_simpleform.renderers
+
 
 COL_NAMES = {
     1:  'one',
@@ -37,10 +43,41 @@ COL_NAMES = {
     12: 'twelve',
 }
 
+
+@subscriber(NewRequest)
+def csrf_validation(event):
+    if event.request.method == 'POST':
+        logging.debug('Checking CSRF token')
+        token = event.request.POST.get('_csrf')
+        if token is None or token != event.request.session.get_csrf_token():
+            raise HTTPForbidden('CSRF token is missing or invalid')
+        logging.debug('CSRF token is valid')
+
+
+class BaseSchema(Schema):
+    filter_extra_fields = True
+    allow_extra_fields = True
+
+
+class Form(pyramid_simpleform.Form):
+    pass
+
+
 class FormRenderer(pyramid_simpleform.renderers.FormRenderer):
     def begin(self, url=None, **attrs):
-        #attrs['class_'] = attrs.get('class_', '') + ' custom'
+        self._csrf_done = False
         return super(FormRenderer, self).begin(url, **attrs)
+
+    def end(self):
+        if not self._csrf_done:
+            logging.debug('Forcing inclusion of CSRF token')
+            return self.csrf_token() + super(FormRenderer, self).end()
+        return super(FormRenderer, self).end()
+
+    def csrf(self, name=None):
+        result = super(FormRenderer, self).csrf(name)
+        self._csrf_done = True
+        return result
 
     def select(self, name, options=None, selected_value=None, id=None, **attrs):
         if options is None:
@@ -63,6 +100,11 @@ class FormRenderer(pyramid_simpleform.renderers.FormRenderer):
             attrs['type'] = 'email'
         return self.text(name, value, id, **attrs)
 
+    def submit(self, name, value=None, id=None, **attrs):
+        if not 'class_' in attrs:
+            attrs['class_'] = 'small button right'
+        return super(FormRenderer, self).submit(name, value, id, **attrs)
+
     def label(self, name, label=None, **attrs):
         if 'class_' not in attrs:
             attrs['class_'] = 'inline'
@@ -73,15 +115,10 @@ class FormRenderer(pyramid_simpleform.renderers.FormRenderer):
             errors = self.all_errors()
         else:
             errors = self.errors_for(name)
-        if not errors:
-            return ''
-        if 'class_' not in attrs:
-            attrs['class_'] = "error"
-        content = []
-        for error in errors:
-            content.append(tags.escape(error))
-            content.append(tags.BR)
-        return HTML.tag('small', *content[:-1], **attrs)
+        content = [
+            HTML.div(error, class_='alert-box alert', **attrs)
+            for error in errors]
+        return HTML(*content)
 
     def column(self, name, content, cols, errors=True):
         error_content = ''
@@ -109,6 +146,6 @@ class FormRenderer(pyramid_simpleform.renderers.FormRenderer):
         return self.column(name, self.password(name, value, id, **attrs), cols, errors)
 
     def col_submit(self, name='submit', value='Submit', id=None, cols=12, **attrs):
-        if not 'class_' in attrs:
-            attrs['class_'] = 'small button right'
         return self.column(name, self.submit(name, value, id, **attrs), cols, errors=False)
+
+
