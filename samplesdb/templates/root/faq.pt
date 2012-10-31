@@ -25,6 +25,14 @@
       users to sign-up with any e-mail address. For academic users, the system
       will always remain free.</p>
     </div>
+    <div class="twelve columns">
+      <h3 class="subheader">Why can't I remove my e-mail address</h3>
+      <p>The <a href="${request.route_url('account_edit')}">edit account details</a> page
+      will only let you remove an e-mail address if there is more than one
+      <em>verified</em> address associated with your account. All accounts must
+      have at least one verified address at all times (otherwise you wouldn't
+      be able to login).</p>
+    </div>
   </div>
   <span metal:use-macro="view.master.footer"></span>
   <span metal:use-macro="view.master.scripts"></span>

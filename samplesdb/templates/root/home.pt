@@ -36,9 +36,16 @@
       ${form.end()}
     </div>
     <div class="five columns" tal:condition="view.user">
-      <p><a class="button" href="${request.route_url('collections')}">My Collections</a></p>
-      <p><a class="button" href="${request.route_url('account_view')}">My Account</a></p>
-      <p><a class="secondary button" href="${request.route_url('account_logout')}">Logout</a></p>
+      <ul class="button-group even three-up radius">
+        <li><a class="small button" href="${request.route_url('collections_index')}">Collections</a></li>
+        <li><a class="small button" href="${request.route_url('account_index')}">Account</a></li>
+        <li><a class="small button" href="${request.route_url('account_logout')}">Logout</a></li>
+      </ul>
+      <p>You are logged in as ${view.user}. Please click on one of the buttons
+      above to view your collections (you currently have
+      ${len(view.user.collections)} of these, containing
+      ${len(view.user.owned_samples)} samples), control your account, or to
+      logout.</p>
     </div>
     <div class="seven columns">
       <p>Welcome to the

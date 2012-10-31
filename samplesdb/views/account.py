@@ -17,6 +17,13 @@
 # You should have received a copy of the GNU General Public License along with
 # samplesdb.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import (
+    unicode_literals,
+    print_function,
+    absolute_import,
+    division,
+    )
+
 import logging
 from datetime import datetime
 
@@ -34,6 +41,7 @@ from samplesdb.models import EmailAddress, User
 
 
 class LoginSchema(BaseSchema):
+    """Schema for account login form"""
     username = validators.Email(
         not_empty=True, resolve_domain=False,
         max=EmailAddress.__table__.c.email.type.length)
@@ -42,6 +50,7 @@ class LoginSchema(BaseSchema):
 
 
 class SignUpSchema(BaseSchema):
+    """Schema for account creation form"""
     email = validators.Email(
         not_empty=True, resolve_domain=True,
         max=EmailAddress.__table__.c.email.type.length)
@@ -66,7 +75,7 @@ class SignUpSchema(BaseSchema):
 
 
 class AccountView(BaseView):
-    """Handler for login and logout"""
+    """Handler for account related views"""
 
     @view_config(route_name='account_login', renderer='../templates/account/login.pt')
     @forbidden_view_config(renderer='../templates/account/login.pt')
@@ -88,24 +97,21 @@ class AccountView(BaseView):
                     headers=headers)
             else:
                 self.request.session.flash('Invalid login')
-        return dict(
-            form=FormRenderer(form),
-            )
+        return dict(form=FormRenderer(form))
 
     @view_config(route_name='account_logout')
     def logout(self):
+        referer = self.request.url
         headers = forget(self.request)
         return HTTPFound(
             location=self.request.route_url('home'),
             headers=headers)
 
     @view_config(
-        route_name='account_view',
-        renderer='../templates/account/view.pt')
-    def view(self):
-        return dict(
-            page_title='User Profile',
-            )
+        route_name='account_index',
+        renderer='../templates/account/index.pt')
+    def index(self):
+        return {}
 
     @view_config(
         route_name='account_create',
@@ -133,10 +139,7 @@ class AccountView(BaseView):
                 new_user.collections[new_collection] = owner_role
             return HTTPFound(location=self.request.route_url(
                 'account_verify_email', email=form.data['email']))
-        return dict(
-            form=FormRenderer(form),
-            timezones=timezones,
-            )
+        return dict(form=FormRenderer(form), timezones=timezones)
 
     @view_config(
         route_name='account_verify_email',
@@ -155,24 +158,17 @@ class AccountView(BaseView):
                 request=self.request,
                 user=new_verification.email.user,
                 verification=new_verification))
-        return dict(
-            email=email,
-            timeout=VALIDATION_TIMEOUT,
-            )
+        return dict(email=email, timeout=VALIDATION_TIMEOUT)
 
     @view_config(
         route_name='account_verify_complete',
         renderer='../templates/account/verify_complete.pt')
     def verify_complete(self):
-        return dict(
-            page_title='Validation Complete',
-            )
+        return {}
 
     @view_config(
         route_name='account_verify_cancel',
         renderer='../templates/account/verify_cancel.pt')
     def verify_cancel(self):
-        return dict(
-            page_title='Validation Cancelled',
-            )
+        return {}
 

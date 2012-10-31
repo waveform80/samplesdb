@@ -23,6 +23,13 @@ This module creates the SQLAlchemy engine, the Pyramid configurator object
 (which handles routing), and the WSGI application itself.
 """
 
+from __future__ import (
+    unicode_literals,
+    print_function,
+    absolute_import,
+    division,
+    )
+
 from pyramid.config import Configurator
 from pyramid.authentication import AuthTktAuthenticationPolicy
 from pyramid.authorization import ACLAuthorizationPolicy
@@ -43,8 +50,9 @@ ROUTES = {
     # views.account
     'account_login':              '/login',
     'account_logout':             '/logout',
-    'account_view':               '/account',
+    'account_index':              '/account',
     'account_create':             '/signup',
+    'account_edit':               '/account/edit',
     'account_add_email':          '/account/add-email',
     'account_remove_email':       '/account/remove-email',
     'account_verify_email':       '/account/verify',
@@ -54,18 +62,18 @@ ROUTES = {
     'reset_password_complete':    '/reset/complete/{code}',
     'reset_password_cancel':      '/reset/cancel/{code}',
     # views.collections
-    'collections':                '/collections',
-    'collection_create':          '/collections/new',
-    'collection_view':            '/collections/{collection_id}',
-    'collection_edit':            '/collections/{collection_id}/edit',
-    'collection_destroy':         '/collections/{collection_id}/destroy',
+    'collections_index':          '/collections',
+    'collections_create':         '/collections/new',
+    'collections_view':           '/collections/{collection_id}',
+    'collections_edit':           '/collections/{collection_id}/edit',
+    'collections_destroy':        '/collections/{collection_id}/destroy',
     'sample_view':                '/samples/{sample_id}',
     'sample_edit':                '/samples/{sample_id}/edit',
     'sample_split':               '/samples/{sample_id}/split',
     'sample_destroy':             '/samples/{sample_id}/destroy',
     'sample_remove':              '/samples/{sample_id}/remove',
     'sample_combine':             '/samples/combine',
-    # ???
+    # views.admin
     'admin_home':              '/admin/',
     'admin_users':             '/admin/users/',
     'admin_user_create':       '/admin/users/new',

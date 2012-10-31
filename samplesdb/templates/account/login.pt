@@ -19,7 +19,7 @@
       <p>Please enter your login credentials below and you will be redirected
       back to the page you came from.</p>
       <div metal:use-macro="view.master.flashes"></div>
-      ${form.begin(request.route_url('login'))}
+      ${form.begin(request.route_url('account_login'))}
       ${form.hidden_tag('came_from')}
       ${form.errorlist()}
       <div class="row">
