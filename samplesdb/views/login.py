@@ -19,6 +19,8 @@
 
 import logging
 
+import pytz
+import transaction
 from pyramid.view import view_config, forbidden_view_config
 from pyramid.security import remember, forget
 from pyramid.httpexceptions import HTTPFound
@@ -27,7 +29,7 @@ from formencode import validators
 from samplesdb.views import BaseView
 from samplesdb.forms import BaseSchema, Form, FormRenderer
 from samplesdb.security import authenticate
-from samplesdb.models import EmailAddress
+from samplesdb.models import EmailAddress, User
 
 
 class LoginSchema(BaseSchema):
@@ -36,6 +38,30 @@ class LoginSchema(BaseSchema):
         max=EmailAddress.__table__.c.email.type.length)
     password = validators.UnicodeString(not_empty=True, max=100)
     came_from = validators.UnicodeString()
+
+
+class SignUpSchema(BaseSchema):
+    email = validators.Email(
+        not_empty=True, resolve_domain=True,
+        max=EmailAddress.__table__.c.email.type.length)
+    email_confirm = validators.UnicodeString()
+    password = validators.UnicodeString(not_empty=True, max=100)
+    password_confirm = validators.UnicodeString()
+    salutation = validators.OneOf([
+        '', 'Mr.', 'Mrs.', 'Miss', 'Ms.', 'Dr.', 'Prof.'])
+    given_name = validators.UnicodeString(
+        not_empty=True, max=User.__table__.c.given_name.type.length)
+    surname = validators.UnicodeString(
+        not_empty=True, max=User.__table__.c.surname.type.length)
+    organization = validators.UnicodeString(
+        max=User.__table__.c.organization.type.length)
+    limits_id = validators.OneOf([
+        'academic', 'commercial'])
+    timezone = validators.OneOf(pytz.all_timezones)
+    chained_validators = [
+        validators.FieldsMatch('email', 'email_confirm'),
+        validators.FieldsMatch('password', 'password_confirm'),
+        ]
 
 
 class LoginView(BaseView):
@@ -72,4 +98,74 @@ class LoginView(BaseView):
         return HTTPFound(
             location=self.request.route_url('home'),
             headers=headers)
+
+    @view_config(
+        route_name='sign_up',
+        renderer='../templates/sign_up.pt')
+    def sign_up(self):
+        form = Form(self.request, schema=SignUpSchema)
+        if form.validate():
+            with transaction.manager:
+                new_user = form.bind(User())
+                DBSession.add(new_user)
+                new_email = form.bind(EmailAddress())
+                new_email.user = new_user
+                DBSession.add(new_email)
+                new_collection = Collection()
+                new_collection.name = 'Default'
+                owner_role = DBSession.query(Role).filter(Role.id=='owner').one()
+                new_user.collections[new_collection] = owner_role
+            return HTTPFound(location=self.request.route_url(
+                'user_validate_request', email=form.data['email']))
+        return dict(
+            page_title='New User',
+            form=FormRenderer(form),
+            )
+
+    @view_config(
+        route_name='user_validate_request',
+        renderer='../templates/user_validate_request.pt')
+    def user_validate_request(self):
+        email = self.request.matchdict['email']
+        with transaction.manager:
+            new_validation = EmailValidation(email)
+            DBSession.add(new_validation)
+            user = new_validation.email.user
+        mailer = self.request.registry['mailer']
+        message = Message(
+            recipients=[email],
+            subject='%s user validation' % self.request.registry.settings['site_title'],
+            body=render_template('../templates/validation_email.txt',
+                request=self.request,
+                user=new_validation.email.user,
+                validation=new_validation))
+        return dict(
+            page_title='Validation Sent',
+            email=email,
+            timeout=VALIDATION_TIMEOUT,
+            )
+
+    @view_config(
+        route_name='user_validate_complete',
+        renderer='../templates/user_validate_complete.pt')
+    def user_validate_complete(self):
+        return dict(
+            page_title='Validation Complete',
+            )
+
+    @view_config(
+        route_name='user_validate_cancel',
+        renderer='../templates/user_validate_cancel.pt')
+    def user_validate_cancel(self):
+        return dict(
+            page_title='Validation Cancelled',
+            )
+
+    @view_config(
+        route_name='user_profile',
+        renderer='../templates/user_profile.pt')
+    def user_profile(self):
+        return dict(
+            page_title='User Profile',
+            )
 

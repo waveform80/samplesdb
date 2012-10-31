@@ -31,8 +31,7 @@ class BaseView(object):
 
     def __init__(self, request):
         self.request = request
-        # Every handler needs the master template, the authenticated user, and
-        # the sample and collection selected (if any)
+        # Every handler needs the master template and the authenticated user
         self.master = get_renderer('../templates/master.pt').implementation()
         self.user = authenticated_userid(request)
 
