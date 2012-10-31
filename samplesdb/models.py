@@ -254,8 +254,8 @@ class LabelTemplate(Base):
         Integer, ForeignKey(
             'users.id', onupdate='RESTRICT', ondelete='CASCADE'),
         primary_key=True)
-    public = Column(Boolean, default=False, nullable=False)
     # creator defined as backref on User
+    public = Column(Boolean, default=False, nullable=False)
     columns = Column(
         Integer, CheckConstraint('columns >= 1'), default=1, nullable=False)
     rows = Column(
@@ -330,11 +330,12 @@ class User(Base):
         Unicode(20), ForeignKey(
             'user_limits.id', onupdate='RESTRICT', ondelete='RESTRICT'),
         nullable=False)
+    # limits defined as backref on UserLimit
+    templates = relationship(LabelTemplate, backref='creator')
     # user_collections defined as backref on UserCollection
     collections = association_proxy(
         'user_collections', 'role',
         creator=lambda k, v: UserCollection(collection=k, role=v))
-    # limits defined as backref on UserLimit
     # user_groups defined as backref on Group
     groups = association_proxy('user_groups', 'id')
 
@@ -393,6 +394,21 @@ class User(Base):
         if result and new_password:
             self._password = new_password
         return result
+
+    @property
+    def owned_samples(self):
+        return (
+            sample
+            for collection, role in self.collections.items()
+            for sample in collection.samples
+            if role.id in ('editor', 'owner'))
+
+    @property
+    def storage_used(self):
+        return sum(
+            attachment.size
+            for sample in self.owned_samples
+            for attachment in sample.attachments)
 
 
 class UserLimit(Base):
