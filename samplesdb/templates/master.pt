@@ -40,9 +40,7 @@
     </section>
     </nav>
     <div class="row">
-      <div class="twelve columns">
-        <h1>${page_title}</h1>
-      </div>
+      <h1 class="twelve columns">${page_title}</h1>
     </div>
   </span>
 

@@ -1,0 +1,70 @@
+<!doctype html>
+<!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
+<!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
+<!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en"
+  xmlns:tal="http://xml.zope.org/namespaces/tal"
+  xmlns:metal="http://xml.zope.org/namespaces/metal"
+  xmlns:i18n="http://xml.zope.org/namespaces/i18n">
+<!--<![endif]-->
+<head metal:use-macro="view.master.head"></head>
+<body>
+  <nav metal:use-macro="view.master.top_bar"></nav>
+  <div class="row">
+    <h3 class="twelve columns subheader">Details</h3>
+  </div>
+  <dl class="row">
+    <dt class="three columns">Name</dt>
+    <dd class="nine columns">${view.user.salutation} ${view.user.given_name} ${view.user.surname}</dd>
+  </dl>
+  <dl class="row">
+    <dt class="three columns">Organization</dt>
+    <dd class="nine columns">${view.user.organization}&nbsp;</dd>
+  </dl>
+  <dl class="row">
+    <dt class="three columns">E-mail Address(es)</dt>
+    <dd class="nine columns">
+      <ul>
+        <li tal:repeat="email view.user.emails">
+          ${email.email}
+          <span class="round alert label" tal:condition="not email.validated">unverified</span>
+        </li>
+        <li><a href="${request.route_url('account_add_email')}">Add address</a></li>
+      </ul>
+    </dd>
+  </dl>
+  <dl class="row">
+    <dt class="three columns">Account Created</dt>
+    <dd class="nine columns">${view.helpers.date.time_ago_in_words(view.user.created, granularity='day')} ago</dd>
+  </dl>
+  <dl class="row">
+    <dt class="three columns">Password Changed</dt>
+    <dd class="nine columns">${view.helpers.date.time_ago_in_words(view.user.password_changed, granularity='day')} ago</dd>
+  </dl>
+  <dl class="row">
+    <dt class="three columns">Timezone</dt>
+    <dd class="nine columns">${view.user.timezone.zone.replace('_', ' ')}</dd>
+  </dl>
+  <div class="row">
+    <h3 class="twelve columns subheader">Account Limits</h3>
+  </div>
+  <dl class="row">
+    <dt class="three columns">Collections</dt>
+    <dd class="nine columns">${view.user.limits.collections_limit} (${len(view.user.collections)} currently used)</dd>
+  </dl>
+  <dl class="row">
+    <dt class="three columns">Samples</dt>
+    <dd class="nine columns">${view.user.limits.samples_limit} (${len(list(view.user.owned_samples))} currently used)</dd>
+  </dl>
+  <dl class="row">
+    <dt class="three columns">Templates</dt>
+    <dd class="nine columns">${view.user.limits.templates_limit} (${len(view.user.templates)} currently used)</dd>
+  </dl>
+  <dl class="row">
+    <dt class="three columns">Attachment Storage</dt>
+    <dd class="nine columns">${view.helpers.number.format_data_size(view.user.limits.storage_limit, 'B')} (${view.helpers.number.format_data_size(view.user.storage_used, 'B')} currently used)</dd>
+  </dl>
+  <span metal:use-macro="view.master.footer"></span>
+  <span metal:use-macro="view.master.scripts"></span>
+</body>
+</html>

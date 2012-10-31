@@ -18,6 +18,7 @@
 # samplesdb.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
+from datetime import datetime
 
 import pytz
 import transaction
@@ -64,11 +65,11 @@ class SignUpSchema(BaseSchema):
         ]
 
 
-class LoginView(BaseView):
+class AccountView(BaseView):
     """Handler for login and logout"""
 
-    @view_config(route_name='login', renderer='../templates/login.pt')
-    @forbidden_view_config(renderer='../templates/login.pt')
+    @view_config(route_name='login', renderer='../templates/account/login.pt')
+    @forbidden_view_config(renderer='../templates/account/login.pt')
     def login(self):
         referer = self.request.url
         if referer == self.request.route_url('login'):
@@ -100,9 +101,25 @@ class LoginView(BaseView):
             headers=headers)
 
     @view_config(
-        route_name='sign_up',
-        renderer='../templates/sign_up.pt')
-    def sign_up(self):
+        route_name='account_view',
+        renderer='../templates/account/view.pt')
+    def account_view(self):
+        return dict(
+            page_title='User Profile',
+            )
+
+    @view_config(
+        route_name='account_create',
+        renderer='../templates/account/create.pt')
+    def account_create(self):
+        # TODO Determine user timezone as default
+        now = datetime(2000, 1, 1, 0, 0, 0)
+        timezones = sorted((
+            (tz, '(UTC%s) %s' % (
+                pytz.timezone(tz).localize(now).strftime('%z'), tz.replace('_', ' ')))
+            for tz in pytz.common_timezones
+            if tz != 'GMT'),
+            key=lambda t: (pytz.timezone(t[0]).localize(now), t[0]))
         form = Form(self.request, schema=SignUpSchema)
         if form.validate():
             with transaction.manager:
@@ -120,12 +137,13 @@ class LoginView(BaseView):
         return dict(
             page_title='New User',
             form=FormRenderer(form),
+            timezones=timezones,
             )
 
     @view_config(
-        route_name='user_validate_request',
-        renderer='../templates/user_validate_request.pt')
-    def user_validate_request(self):
+        route_name='account_validate_email',
+        renderer='../templates/account/validate_email.pt')
+    def account_validate_email(self):
         email = self.request.matchdict['email']
         with transaction.manager:
             new_validation = EmailValidation(email)
@@ -135,7 +153,7 @@ class LoginView(BaseView):
         message = Message(
             recipients=[email],
             subject='%s user validation' % self.request.registry.settings['site_title'],
-            body=render_template('../templates/validation_email.txt',
+            body=render_template('../templates/account/validation_email.txt',
                 request=self.request,
                 user=new_validation.email.user,
                 validation=new_validation))
@@ -146,26 +164,18 @@ class LoginView(BaseView):
             )
 
     @view_config(
-        route_name='user_validate_complete',
-        renderer='../templates/user_validate_complete.pt')
-    def user_validate_complete(self):
+        route_name='account_validate_complete',
+        renderer='../templates/account/validate_complete.pt')
+    def account_validate_complete(self):
         return dict(
             page_title='Validation Complete',
             )
 
     @view_config(
-        route_name='user_validate_cancel',
-        renderer='../templates/user_validate_cancel.pt')
-    def user_validate_cancel(self):
+        route_name='account_validate_cancel',
+        renderer='../templates/account/validate_cancel.pt')
+    def account_validate_cancel(self):
         return dict(
             page_title='Validation Cancelled',
-            )
-
-    @view_config(
-        route_name='user_profile',
-        renderer='../templates/user_profile.pt')
-    def user_profile(self):
-        return dict(
-            page_title='User Profile',
             )
 

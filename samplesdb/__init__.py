@@ -40,15 +40,16 @@ ROUTES = {
     # views.root
     'home':                    '/',
     'faq':                     '/faq',
-    # views.login
-    'login':                   '/login',
-    'logout':                  '/logout',
-    # views.sign_up
-    'sign_up':                 '/signup',
-    'user_validate_request':   '/validate/send/{email}',
-    'user_validate_complete':  '/validate/complete/{code}',
-    'user_validate_cancel':    '/validate/cancel/{code}',
-    'user_profile':            '/profile',
+    # views.account
+    'login':                      '/login',
+    'logout':                     '/logout',
+    'account_view':               '/account',
+    'account_create':             '/signup',
+    'account_add_email':          '/account/add-email',
+    'account_remove_email':       '/account/remove-email',
+    'account_validate_email':     '/account/validate',
+    'account_validate_complete':  '/validate/{code}',
+    'account_validate_cancel':    '/cancel/{code}',
     # ???
     'admin_home':              '/admin/',
     'admin_users':             '/admin/users/',

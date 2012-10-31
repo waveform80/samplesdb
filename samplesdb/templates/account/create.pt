@@ -29,7 +29,7 @@
       </div>
       <div class="row">
         ${form.col_label('timezone', 'Timezone')}
-        ${form.col_select('timezone', class_='six')}
+        ${form.col_select('timezone', options=timezones, selected_value='UTC', class_='six')}
       </div>
       <div class="row">
         ${form.col_label('email', 'Email Address')}
