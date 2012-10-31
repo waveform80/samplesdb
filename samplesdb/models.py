@@ -103,16 +103,16 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
     cursor.close()
 
 
-class ValidationError(Exception):
-    """Class for e-mail validation errors"""
+class VerificationError(Exception):
+    """Class for e-mail verification errors"""
 
 
 class ResetError(Exception):
     """Class for password reset errors"""
 
 
-class EmailValidation(Base):
-    __tablename__ = 'email_validations'
+class EmailVerification(Base):
+    __tablename__ = 'email_verifications'
 
     id = Column(String(32), primary_key=True)
     created = Column(DateTime, default=datetime.utcnow, nullable=False)
@@ -124,24 +124,24 @@ class EmailValidation(Base):
     # email defined as backref on EmailAddress
 
     def __init__(self, email):
-        super(EmailValidation, self).__init__()
-        if DBSession.query(EmailValidation).\
-            filter(EmailValidation.email_ref==email).\
-            filter(EmailValidation.created>datetime.utcnow() + timedelta(seconds=VALIDATION_INTERVAL)).first():
-                raise ValidationError('A validation was requested for that '
+        super(EmailVerification, self).__init__()
+        if DBSession.query(EmailVerification).\
+            filter(EmailVerification.email_ref==email).\
+            filter(EmailVerification.created>datetime.utcnow() + timedelta(seconds=VALIDATION_INTERVAL)).first():
+                raise VerificationError('A verification was requested for that '
                     'email address less than %d seconds ago' %
                     VALIDATION_INTERVAL)
-        if DBSession.query(EmailValidation).\
-            filter(EmailValidation.email_ref==email).\
-            filter(EmailValidation.expiry<datetime.utcnow()).count() > VALIDATION_LIMIT:
-                raise ValidationError('Too many active validations '
+        if DBSession.query(EmailVerification).\
+            filter(EmailVerification.email_ref==email).\
+            filter(EmailVerification.expiry<datetime.utcnow()).count() > VALIDATION_LIMIT:
+                raise VerificationError('Too many active verifications '
                     'currently exist for this account')
         self.email_ref = email
         self.expiry = datetime.utcnow() + timedelta(seconds=VALIDATION_TIMEOUT)
         self.id = os.urandom(self.__table__.c.id.type.length / 2).encode('hex')
 
     def __repr__(self):
-        return ('<EmailValidation: id="%s">' % self.id).encode('utf-8')
+        return ('<EmailVerification: id="%s">' % self.id).encode('utf-8')
 
     def __str__(self):
         return unicode(self).encode('utf-8')
@@ -151,17 +151,17 @@ class EmailValidation(Base):
 
     @classmethod
     def by_id(cls, id):
-        """return the email validation record with id ``id``"""
+        """return the email verification record with id ``id``"""
         return DBSession.query(cls).filter_by(id=id).first()
 
-    def validate(self, user):
+    def verify(self, user):
         if datetime.utcnow() > self.expiry:
-            raise ValidationError('Validation code has expired')
+            raise VerificationError('Verification code has expired')
         if user is not self.email.user:
-            raise ValidationError('Invalid user for validation code %s' % self.id)
-        self.email.validated = datetime.utcnow()
-        DBSession.query(EmailValidation).\
-            filter(EmailValidation.email_ref==self.email_ref).delete()
+            raise VerificationError('Invalid user for verification code %s' % self.id)
+        self.email.verified = datetime.utcnow()
+        DBSession.query(EmailVerification).\
+            filter(EmailVerification.email_ref==self.email_ref).delete()
 
 
 class EmailAddress(Base):
@@ -174,9 +174,9 @@ class EmailAddress(Base):
         nullable=False)
     # user defined as backref on Users
     created = Column(DateTime, default=datetime.utcnow, nullable=False)
-    validated = Column(DateTime)
-    validations = relationship(
-        EmailValidation, backref='email',
+    verified = Column(DateTime)
+    verifications = relationship(
+        EmailVerification, backref='email',
         cascade='all, delete-orphan', passive_deletes=True)
 
     def __repr__(self):
@@ -360,7 +360,7 @@ class User(Base):
         """return the user with an email ``email``"""
         return DBSession.query(cls).join(EmailAddress).\
             filter(EmailAddress.email == email).\
-            filter(EmailAddress.validated != None).first()
+            filter(EmailAddress.verified != None).first()
 
     def _get_timezone(self):
         """Return the timezone object corresponding to the name"""
@@ -396,12 +396,19 @@ class User(Base):
         return result
 
     @property
+    def verified_emails(self):
+        return [
+            email
+            for email in self.emails
+            if email.verified]
+
+    @property
     def owned_samples(self):
-        return (
+        return [
             sample
             for collection, role in self.collections.items()
             for sample in collection.samples
-            if role.id in ('editor', 'owner'))
+            if role.id in ('editor', 'owner')]
 
     @property
     def storage_used(self):

@@ -68,11 +68,11 @@ class SignUpSchema(BaseSchema):
 class AccountView(BaseView):
     """Handler for login and logout"""
 
-    @view_config(route_name='login', renderer='../templates/account/login.pt')
+    @view_config(route_name='account_login', renderer='../templates/account/login.pt')
     @forbidden_view_config(renderer='../templates/account/login.pt')
     def login(self):
         referer = self.request.url
-        if referer == self.request.route_url('login'):
+        if referer == self.request.route_url('account_login'):
             referer = self.request.route_url('home')
         form = Form(
             self.request,
@@ -89,11 +89,10 @@ class AccountView(BaseView):
             else:
                 self.request.session.flash('Invalid login')
         return dict(
-            page_title='Login',
             form=FormRenderer(form),
             )
 
-    @view_config(route_name='logout')
+    @view_config(route_name='account_logout')
     def logout(self):
         headers = forget(self.request)
         return HTTPFound(
@@ -103,7 +102,7 @@ class AccountView(BaseView):
     @view_config(
         route_name='account_view',
         renderer='../templates/account/view.pt')
-    def account_view(self):
+    def view(self):
         return dict(
             page_title='User Profile',
             )
@@ -111,7 +110,7 @@ class AccountView(BaseView):
     @view_config(
         route_name='account_create',
         renderer='../templates/account/create.pt')
-    def account_create(self):
+    def create(self):
         # TODO Determine user timezone as default
         now = datetime(2000, 1, 1, 0, 0, 0)
         timezones = sorted((
@@ -133,48 +132,46 @@ class AccountView(BaseView):
                 owner_role = DBSession.query(Role).filter(Role.id=='owner').one()
                 new_user.collections[new_collection] = owner_role
             return HTTPFound(location=self.request.route_url(
-                'user_validate_request', email=form.data['email']))
+                'account_verify_email', email=form.data['email']))
         return dict(
-            page_title='New User',
             form=FormRenderer(form),
             timezones=timezones,
             )
 
     @view_config(
-        route_name='account_validate_email',
-        renderer='../templates/account/validate_email.pt')
-    def account_validate_email(self):
+        route_name='account_verify_email',
+        renderer='../templates/account/verify_email.pt')
+    def verify_email(self):
         email = self.request.matchdict['email']
         with transaction.manager:
-            new_validation = EmailValidation(email)
-            DBSession.add(new_validation)
-            user = new_validation.email.user
+            new_verification = EmailVerification(email)
+            DBSession.add(new_verification)
+            user = new_verification.email.user
         mailer = self.request.registry['mailer']
         message = Message(
             recipients=[email],
-            subject='%s user validation' % self.request.registry.settings['site_title'],
-            body=render_template('../templates/account/validation_email.txt',
+            subject='%s email verification' % self.request.registry.settings['site_title'],
+            body=render_template('../templates/account/verify_email.txt',
                 request=self.request,
-                user=new_validation.email.user,
-                validation=new_validation))
+                user=new_verification.email.user,
+                verification=new_verification))
         return dict(
-            page_title='Validation Sent',
             email=email,
             timeout=VALIDATION_TIMEOUT,
             )
 
     @view_config(
-        route_name='account_validate_complete',
-        renderer='../templates/account/validate_complete.pt')
-    def account_validate_complete(self):
+        route_name='account_verify_complete',
+        renderer='../templates/account/verify_complete.pt')
+    def verify_complete(self):
         return dict(
             page_title='Validation Complete',
             )
 
     @view_config(
-        route_name='account_validate_cancel',
-        renderer='../templates/account/validate_cancel.pt')
-    def account_validate_cancel(self):
+        route_name='account_verify_cancel',
+        renderer='../templates/account/verify_cancel.pt')
+    def verify_cancel(self):
         return dict(
             page_title='Validation Cancelled',
             )

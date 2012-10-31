@@ -7,17 +7,23 @@
   xmlns:metal="http://xml.zope.org/namespaces/metal"
   xmlns:i18n="http://xml.zope.org/namespaces/i18n">
 <!--<![endif]-->
-<head metal:use-macro="view.master.head"></head>
+<head metal:use-macro="view.master.head">
+  <span tal:omit-tag="True" metal:fill-slot="title">FAQ</span>
+</head>
 <body>
-  <div metal:use-macro="view.master.top_bar"></div>
+  <div metal:use-macro="view.master.top_bar">
+    <span tal:omit-tag="True" metal:fill-slot="title">FAQ</span>
+  </div>
   <div class="row">
     <div class="twelve columns">
-      <div metal:use-macro="view.master.flashes"></div>
-      <h3>The sign-up complains my e-mail address isn't valid</h3>
+      <h3 class="subheader">The sign-up complains my e-mail address isn't valid</h3>
       <p>Currently, the system is limited to academic users. This means that
       all e-mail addresses used during sign-up must end with <tt>.edu</tt> or
       <tt>.ac.<em>country</em></tt> (where country is something like
       <tt>uk</tt> or <tt>fr</tt>, etc.)</p>
+      <p>Once the system is out of beta, we will extend it to permit paying
+      users to sign-up with any e-mail address. For academic users, the system
+      will always remain free.</p>
     </div>
   </div>
   <span metal:use-macro="view.master.footer"></span>

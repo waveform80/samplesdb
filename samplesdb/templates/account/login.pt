@@ -7,9 +7,13 @@
   xmlns:metal="http://xml.zope.org/namespaces/metal"
   xmlns:i18n="http://xml.zope.org/namespaces/i18n">
 <!--<![endif]-->
-<head metal:use-macro="view.master.head"></head>
+<head metal:use-macro="view.master.head">
+  <span tal:omit-tag="True" metal:fill-slot="title">Login</span>
+</head>
 <body>
-  <nav metal:use-macro="view.master.top_bar"></nav>
+  <nav metal:use-macro="view.master.top_bar">
+    <span tal:omit-tag="True" metal:fill-slot="title">Login</span>
+  </nav>
   <div class="row">
     <div class="twelve columns">
       <p>Please enter your login credentials below and you will be redirected

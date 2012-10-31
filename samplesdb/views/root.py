@@ -20,25 +20,20 @@
 from pyramid.view import view_config
 
 from samplesdb.views import BaseView
-from samplesdb.views.login import LoginSchema
+from samplesdb.views.account import LoginSchema
 from samplesdb.forms import BaseSchema, Form, FormRenderer
 
 class RootView(BaseView):
     """Handler for root (mostly static) views"""
 
-    @view_config(route_name='home', renderer='../templates/home.pt')
+    @view_config(route_name='home', renderer='../templates/root/home.pt')
     def home(self):
         form = Form(
             self.request,
             schema=LoginSchema,
             defaults=dict(came_from=self.request.url))
-        return dict(
-            page_title='Home',
-            form=FormRenderer(form),
-            )
+        return dict(form=FormRenderer(form))
 
-    @view_config(route_name='faq', renderer='../templates/faq.pt')
+    @view_config(route_name='faq', renderer='../templates/root/faq.pt')
     def faq(self):
-        return dict(
-            page_title='FAQ',
-            )
+        return {}

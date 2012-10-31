@@ -7,7 +7,7 @@
        More info: h5bp.com/b/378 -->
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 
-  <title>${page_title} - ${request.registry.settings['site_title']}</title>
+  <title><span metal:define-slot="title"></span> - ${request.registry.settings['site_title']}</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <!-- Place favicon.ico and apple-touch-icon.png in the root directory: mathiasbynens.be/notes/touch-icons -->
   <link rel="shortcut icon" href="${request.static_url('samplesdb:static/favicon.ico')}" />
@@ -30,17 +30,17 @@
     </ul>
     <section>
     <ul class="right" tal:condition="not view.user">
-      <li><a href="${request.route_url('login')}">Login</a></li>
+      <li><a href="${request.route_url('account_login')}">Login</a></li>
     </ul>
     <ul class="right" tal:condition="view.user">
-      <li><a href="${request.route_url('user_collections')}">My Collections</a></li>
-      <li><a href="${request.route_url('user_profile')}">My Account</a></li>
-      <li><a href="${request.route_url('logout')}">Logout</a></li>
+      <li><a href="${request.route_url('collections')}">My Collections</a></li>
+      <li><a href="${request.route_url('account_view')}">My Account</a></li>
+      <li><a href="${request.route_url('account_logout')}">Logout</a></li>
     </ul>
     </section>
     </nav>
     <div class="row">
-      <h1 class="twelve columns">${page_title}</h1>
+      <h1 class="twelve columns"><span metal:define-slot="title"></span></h1>
     </div>
   </span>
 

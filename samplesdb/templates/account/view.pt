@@ -7,9 +7,13 @@
   xmlns:metal="http://xml.zope.org/namespaces/metal"
   xmlns:i18n="http://xml.zope.org/namespaces/i18n">
 <!--<![endif]-->
-<head metal:use-macro="view.master.head"></head>
+<head metal:use-macro="view.master.head">
+  <span tal:omit-tag="True" metal:fill-slot="title">My Account</span>
+</head>
 <body>
-  <nav metal:use-macro="view.master.top_bar"></nav>
+  <nav metal:use-macro="view.master.top_bar">
+    <span tal:omit-tag="True" metal:fill-slot="title">My Account</span>
+  </nav>
   <div class="row">
     <h3 class="twelve columns subheader">Details</h3>
   </div>
@@ -24,10 +28,13 @@
   <dl class="row">
     <dt class="three columns">E-mail Address(es)</dt>
     <dd class="nine columns">
-      <ul>
-        <li tal:repeat="email view.user.emails">
-          ${email.email}
-          <span class="round alert label" tal:condition="not email.validated">unverified</span>
+      <ul class="no-bullet">
+        <li tal:repeat="email view.user.emails">${email.email}
+          <span class="round alert label" tal:condition="not email.verified">unverified</span>
+          <a tal:condition="not email.verified"
+            href="${request.route_url('account_verify_email', _query={'email': email.email})}">Re-send verification code</a>
+          <a tal:condition="len(view.user.verified_emails) > 1"
+            href="${request.route_url('account_remove_email', _query={'email': email.email})}">Remove</a>
         </li>
         <li><a href="${request.route_url('account_add_email')}">Add address</a></li>
       </ul>

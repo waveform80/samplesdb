@@ -59,7 +59,7 @@ def main(argv=sys.argv):
             salutation='', given_name='Administrator', surname='',
             limits_id='unlimited')
         admin_email = EmailAddress(
-            email='admin@example.com', validated=datetime.utcnow())
+            email='admin@example.com', verified=datetime.utcnow())
         admin_collection = Collection(name='Default')
         owner_role = Role(
             id=OWNER_ROLE,

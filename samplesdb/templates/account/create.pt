@@ -7,16 +7,20 @@
   xmlns:metal="http://xml.zope.org/namespaces/metal"
   xmlns:i18n="http://xml.zope.org/namespaces/i18n">
 <!--<![endif]-->
-<head metal:use-macro="view.master.head"></head>
+<head metal:use-macro="view.master.head">
+  <span tal:omit-tag="True" metal:fill-slot="title">New User</span>
+</head>
 <body>
-  <nav metal:use-macro="view.master.top_bar"></nav>
+  <nav metal:use-macro="view.master.top_bar">
+    <span tal:omit-tag="True" metal:fill-slot="title">New User</span>
+  </nav>
   <div class="row">
     <div class="twelve columns">
       <div metal:use-macro="view.master.flashes"></div>
       <p>Please make sure you fill out your e-mail address accurately. We'll
       send you a confirmation e-mail with a link to activate your account when
       you submit the form.</p>
-      ${form.begin(request.route_url('sign_up'))}
+      ${form.begin(request.route_url('account_create'))}
       <div class="row">
         ${form.col_label('salutation', 'Name')}
         ${form.col_select('salutation', autofocus='autofocus', cols=1)}

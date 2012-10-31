@@ -7,13 +7,15 @@
   xmlns:metal="http://xml.zope.org/namespaces/metal"
   xmlns:i18n="http://xml.zope.org/namespaces/i18n">
 <!--<![endif]-->
-<head metal:use-macro="view.master.head"></head>
+<head metal:use-macro="view.master.head">
+  <span tal:omit-tag="True" metal:fill-slot="title">Home</span>
+</head>
 <body>
   <div metal:use-macro="view.master.top_banner"></div>
   <div class="row">
     <div class="five columns" tal:condition="not view.user">
       <div metal:use-macro="view.master.flashes"></div>
-      ${form.begin(request.route_url('login'))}
+      ${form.begin(request.route_url('account_login'))}
       ${form.hidden_tag('came_from')}
       ${form.errorlist()}
       <div class="row">
@@ -24,7 +26,7 @@
       </div>
       <div class="row">
         <div class="ten mobile-three columns">
-          <a href="${request.route_url('sign_up')}">New user</a> |
+          <a href="${request.route_url('account_create')}">New user</a> |
           <a href="${request.route_url('reset_password_request', email='')}">Forgotten password</a>
         </div>
         <div class="two mobile-one columns">
@@ -34,9 +36,9 @@
       ${form.end()}
     </div>
     <div class="five columns" tal:condition="view.user">
-      <p><a class="button" href="${request.route_url('user_collections')}">My Collections</a></p>
-      <p><a class="button" href="${request.route_url('user_profile')}">My Account</a></p>
-      <p><a class="secondary button" href="${request.route_url('logout')}">Logout</a></p>
+      <p><a class="button" href="${request.route_url('collections')}">My Collections</a></p>
+      <p><a class="button" href="${request.route_url('account_view')}">My Account</a></p>
+      <p><a class="secondary button" href="${request.route_url('account_logout')}">Logout</a></p>
     </div>
     <div class="seven columns">
       <p>Welcome to the
@@ -45,7 +47,7 @@
       database to lab technicians wishing to keep track of their samples.
       Features of the system include:</p>
 
-      <ul>
+      <ul class="disc">
         <li>Multiple sample collections per user, including multiple images per
         sample</li>
         <li>Provenance of samples &ndash; visual history of splits and
@@ -56,12 +58,12 @@
         etc.)</li>
       </ul>
 
-      <p>This is currently a beta-testing system. Usage for academic users and
-      technicians is free (based upon e-mail address: if your address ends in
-      <tt>.edu</tt> or <tt>.ac.<em>some-country</em></tt> you will be able to
-      sign up for a free account). Usage for commercial technicians will
-      require a nominal fee (to be decided) once the system is finalized. If
-      you have any questions, please peruse our <a
+      <p><em>Please note this is currently a beta-testing system</em>. We
+      currently make no guarantees about data persistence or system uptime. In
+      other words, though we have nightly backup procedures in place we cannot
+      guarantee that functional changes to the system won't invalidate existing
+      data.</p>
+      <p>If you have any questions, please peruse our <a
         href="${request.route_url('faq')}">FAQ</a>.</p>
     </div>
   </div>
