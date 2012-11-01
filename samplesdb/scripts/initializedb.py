@@ -31,21 +31,7 @@ from samplesdb.models import (
     Base,
     )
 
-def usage(argv):
-    cmd = os.path.basename(argv[0])
-    print('usage: %s <config_uri>\n'
-          '(example: "%s development.ini")' % (cmd, cmd)) 
-    sys.exit(1)
-
-def main(argv=sys.argv):
-    if len(argv) != 2:
-        usage(argv)
-    config_uri = argv[1]
-    setup_logging(config_uri)
-    settings = get_appsettings(config_uri)
-    engine = engine_from_config(settings, 'sqlalchemy.')
-    DBSession.configure(bind=engine)
-    Base.metadata.create_all(engine)
+def init_instances():
     with transaction.manager:
         admins_group = Group(
             id=ADMINS_GROUP, description='Group of administrators')
@@ -90,3 +76,20 @@ def main(argv=sys.argv):
         admin_user.emails.append(admin_email)
         admin_user.password = 'adminpass'
         admin_user.collections[admin_collection] = owner_role
+
+def usage(argv):
+    cmd = os.path.basename(argv[0])
+    print('usage: %s <config_uri>\n'
+          '(example: "%s development.ini")' % (cmd, cmd)) 
+    sys.exit(1)
+
+def main(argv=sys.argv):
+    if len(argv) != 2:
+        usage(argv)
+    config_uri = argv[1]
+    setup_logging(config_uri)
+    settings = get_appsettings(config_uri)
+    engine = engine_from_config(settings, 'sqlalchemy.')
+    DBSession.configure(bind=engine)
+    Base.metadata.create_all(engine)
+    init_instances()

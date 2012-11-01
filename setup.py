@@ -66,6 +66,8 @@ REQUIRES = [
     'pyramid_beaker',
     'pyramid_mailer',
     'pydns',
+    'nose',
+    'mock',
     'zope.sqlalchemy',
     'repoze.who>=2.0',
     'waitress',
@@ -98,7 +100,7 @@ def main():
         install_requires     = REQUIRES,
         extras_require       = {},
         zip_safe             = False,
-        test_suite           = 'samplesdb',
+        test_suite           = 'nose.collector',
         entry_points         = ENTRY_POINTS,
         )
 

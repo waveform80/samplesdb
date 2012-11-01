@@ -104,8 +104,8 @@ def main(global_config, **settings):
     config.registry['mailer'] = mailer_factory
     config.set_session_factory(session_factory)
     config.add_static_view('static', 'static', cache_max_age=3600)
-    for name, pattern in ROUTES.items():
-        config.add_route(name, pattern)
+    for name, url in ROUTES.items():
+        config.add_route(name, url)
     config.scan()
 
     return config.make_wsgi_app()

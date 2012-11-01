@@ -24,23 +24,17 @@ from __future__ import (
     division,
     )
 
+import transaction
 from pyramid.view import view_config
+from formencode import validators
 
 from samplesdb.views import BaseView
-from samplesdb.views.account import LoginSchema
 from samplesdb.forms import BaseSchema, Form, FormRenderer
+from samplesdb.models import Collection, Sample
 
-class RootView(BaseView):
-    """Handler for root (mostly static) views"""
+class CollectionsView(BaseView):
+    """Handler for collection related views"""
 
-    @view_config(route_name='home', renderer='../templates/root/home.pt')
-    def home(self):
-        form = Form(
-            self.request,
-            schema=LoginSchema,
-            defaults=dict(came_from=self.request.route_url('collections_index')))
-        return dict(form=FormRenderer(form))
-
-    @view_config(route_name='faq', renderer='../templates/root/faq.pt')
-    def faq(self):
+    @view_config(route_name='collections_index', renderer='../templates/collections/index.pt')
+    def index(self):
         return {}

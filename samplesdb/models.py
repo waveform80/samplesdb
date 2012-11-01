@@ -86,9 +86,9 @@ PASSWORD_CONTEXT = CryptContext(
     all__vary_rounds = 0.1,
     )
 
-VALIDATION_TIMEOUT = 24 * 60 * 60 # 1 day in seconds
-VALIDATION_INTERVAL = 10 * 60 # 10 minutes in seconds
-VALIDATION_LIMIT = 3
+VERIFICATION_TIMEOUT = 24 * 60 * 60 # 1 day in seconds
+VERIFICATION_INTERVAL = 10 * 60 # 10 minutes in seconds
+VERIFICATION_LIMIT = 3
 
 RESET_TIMEOUT = 24 * 60 * 60 # 1 day in seconds
 RESET_INTERNAL = 10 * 60 # 10 minutes in seconds
@@ -127,18 +127,18 @@ class EmailVerification(Base):
         super(EmailVerification, self).__init__()
         if DBSession.query(EmailVerification).\
             filter(EmailVerification.email_ref==email).\
-            filter(EmailVerification.created>datetime.utcnow() + timedelta(seconds=VALIDATION_INTERVAL)).first():
+            filter(EmailVerification.created>datetime.utcnow() + timedelta(seconds=VERIFICATION_INTERVAL)).first():
                 raise VerificationError('A verification was requested for that '
                     'email address less than %d seconds ago' %
-                    VALIDATION_INTERVAL)
+                    VERIFICATION_INTERVAL)
         if DBSession.query(EmailVerification).\
             filter(EmailVerification.email_ref==email).\
-            filter(EmailVerification.expiry<datetime.utcnow()).count() > VALIDATION_LIMIT:
+            filter(EmailVerification.expiry<datetime.utcnow()).count() > VERIFICATION_LIMIT:
                 raise VerificationError('Too many active verifications '
                     'currently exist for this account')
         self.email_ref = email
-        self.expiry = datetime.utcnow() + timedelta(seconds=VALIDATION_TIMEOUT)
-        self.id = os.urandom(self.__table__.c.id.type.length / 2).encode('hex')
+        self.expiry = datetime.utcnow() + timedelta(seconds=VERIFICATION_TIMEOUT)
+        self.id = os.urandom(self.__table__.c.id.type.length // 2).encode('hex')
 
     def __repr__(self):
         return ('<EmailVerification: id="%s">' % self.id).encode('utf-8')
@@ -220,7 +220,7 @@ class PasswordReset(Base):
                     'exist for this account')
         self.user_id = user.id
         self.expiry = datetime.utcnow() + timedelta(seconds=RESET_TIMEOUT)
-        self.id = os.urandom(self.__table__.c.id.type.length / 2).encode('hex')
+        self.id = os.urandom(self.__table__.c.id.type.length // 2).encode('hex')
 
     def __repr__(self):
         return ('<PasswordReset: id="%s">' % self.id).encode('utf-8')
@@ -433,7 +433,7 @@ class UserLimit(Base):
         default=10, nullable=False)
     storage_limit = Column(
         BigInteger, CheckConstraint('storage_limit >= 0'),
-        default=1048576 * 100, nullable=False)
+        default=1000000 * 100, nullable=False)
     users = relationship(User, backref='limits')
 
     def __repr__(self):
@@ -683,7 +683,7 @@ class Collection(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(Unicode(200), nullable=False)
-    created = Column(DateTime, default=datetime.utcnow(), nullable=False)
+    created = Column(DateTime, default=datetime.utcnow, nullable=False)
     samples = relationship(Sample, backref='collection')
     # collection_users defined as backref on UserCollection
     users = association_proxy(
@@ -704,13 +704,20 @@ class Collection(Base):
         """return the collection with id ``id``"""
         return DBSession.query(cls).filter_by(id=id).first()
 
+    @property
+    def existing_samples(self):
+        return [
+            sample
+            for sample in self.samples
+            if not sample.destroyed]
+
 
 class Role(Base):
     __tablename__ = 'roles'
 
     id = Column(Unicode(20), primary_key=True)
     description = Column(Unicode(200), nullable=False)
-    created = Column(DateTime, default=datetime.utcnow(), nullable=False)
+    created = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     def __repr__(self):
         return ('<Role: id="%s">' % self.id).encode('utf-8')

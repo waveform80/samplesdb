@@ -28,16 +28,23 @@ import logging
 from datetime import datetime
 
 import pytz
-import transaction
 from pyramid.view import view_config, forbidden_view_config
 from pyramid.security import remember, forget
 from pyramid.httpexceptions import HTTPFound
+from pyramid.chameleon_text import render_template
+from pyramid_mailer.message import Message
 from formencode import validators
 
 from samplesdb.views import BaseView
 from samplesdb.forms import BaseSchema, Form, FormRenderer
 from samplesdb.security import authenticate
-from samplesdb.models import EmailAddress, User
+from samplesdb.models import (
+    DBSession,
+    EmailAddress,
+    EmailVerification,
+    User,
+    VERIFICATION_TIMEOUT,
+    )
 
 
 class LoginSchema(BaseSchema):
@@ -82,7 +89,7 @@ class AccountView(BaseView):
     def login(self):
         referer = self.request.url
         if referer == self.request.route_url('account_login'):
-            referer = self.request.route_url('home')
+            referer = self.request.route_url('collections_index')
         form = Form(
             self.request,
             schema=LoginSchema,
@@ -91,21 +98,18 @@ class AccountView(BaseView):
             username = form.data['username']
             password = form.data['password']
             if authenticate(username, password):
-                headers = remember(self.request, username)
                 return HTTPFound(
                     location=form.data['came_from'],
-                    headers=headers)
+                    headers=remember(self.request, username))
             else:
                 self.request.session.flash('Invalid login')
         return dict(form=FormRenderer(form))
 
     @view_config(route_name='account_logout')
     def logout(self):
-        referer = self.request.url
-        headers = forget(self.request)
         return HTTPFound(
             location=self.request.route_url('home'),
-            headers=headers)
+            headers=forget(self.request))
 
     @view_config(
         route_name='account_index',
@@ -118,6 +122,7 @@ class AccountView(BaseView):
         renderer='../templates/account/create.pt')
     def create(self):
         # TODO Determine user timezone as default
+        # Build a nice sorted list of (timezone_id, description) for the 
         now = datetime(2000, 1, 1, 0, 0, 0)
         timezones = sorted((
             (tz, '(UTC%s) %s' % (
@@ -127,16 +132,15 @@ class AccountView(BaseView):
             key=lambda t: (pytz.timezone(t[0]).localize(now), t[0]))
         form = Form(self.request, schema=SignUpSchema)
         if form.validate():
-            with transaction.manager:
-                new_user = form.bind(User())
-                DBSession.add(new_user)
-                new_email = form.bind(EmailAddress())
-                new_email.user = new_user
-                DBSession.add(new_email)
-                new_collection = Collection()
-                new_collection.name = 'Default'
-                owner_role = DBSession.query(Role).filter(Role.id=='owner').one()
-                new_user.collections[new_collection] = owner_role
+            new_user = form.bind(User())
+            DBSession.add(new_user)
+            new_email = form.bind(EmailAddress())
+            new_email.user = new_user
+            DBSession.add(new_email)
+            new_collection = Collection()
+            new_collection.name = 'Default'
+            owner_role = DBSession.query(Role).filter(Role.id=='owner').one()
+            new_user.collections[new_collection] = owner_role
             return HTTPFound(location=self.request.route_url(
                 'account_verify_email', email=form.data['email']))
         return dict(form=FormRenderer(form), timezones=timezones)
@@ -146,19 +150,20 @@ class AccountView(BaseView):
         renderer='../templates/account/verify_email.pt')
     def verify_email(self):
         email = self.request.matchdict['email']
-        with transaction.manager:
-            new_verification = EmailVerification(email)
-            DBSession.add(new_verification)
-            user = new_verification.email.user
+        new_verification = EmailVerification(email)
+        DBSession.add(new_verification)
+        DBSession.flush()
+        user = new_verification.email.user
         mailer = self.request.registry['mailer']
         message = Message(
             recipients=[email],
             subject='%s email verification' % self.request.registry.settings['site_title'],
             body=render_template('../templates/account/verify_email.txt',
                 request=self.request,
-                user=new_verification.email.user,
+                user=user,
                 verification=new_verification))
-        return dict(email=email, timeout=VALIDATION_TIMEOUT)
+        mailer.send(message)
+        return dict(email=email, timeout=VERIFICATION_TIMEOUT)
 
     @view_config(
         route_name='account_verify_complete',

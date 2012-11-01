@@ -1,14 +1,14 @@
 Dear ${user.salutation} ${user.surname},
 
-You are receiving this e-mail because a request has been made to validate this
+You are receiving this e-mail because a request has been made to verify this
 email address by a user at ${request.registry.settings['site_title']}.
 
-${request.route_url('user_validate_complete', code=validation.id)}
+${request.route_url('account_verify_complete', code=verification.id)}
 
 If this email was sent in error, we would be grateful if you could click on
 the following link to inform us of the issue:
 
-${request.route_url('user_validate_cancel', code=validation.id)}
+${request.route_url('account_verify_cancel', code=verification.id)}
 
 
 Many thanks,
