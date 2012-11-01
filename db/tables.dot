@@ -5,19 +5,20 @@ digraph G {
 
   groups;
   users;
-  permissions;
   collections;
   roles;
   samples;
   user_collections;
   user_groups;
   user_limits;
-  group_permissions;
   sample_origins;
   sample_audits;
   sample_notes;
-  sample_images;
+  sample_attachments;
   email_addresses;
+  email_verifications;
+  password_reset;
+  label_templates;
 
   users->user_limits;
   user_collections->users;
@@ -25,9 +26,10 @@ digraph G {
   user_collections->roles;
   user_groups->users;
   user_groups->groups;
-  group_permissions->groups;
-  group_permissions->permissions;
+  email_verifications->email_addresses;
+  password_resets->users;
   email_addresses->users;
+  label_templates->users;
   samples->collections;
   samples->users;
   sample_origins->samples;
@@ -36,6 +38,6 @@ digraph G {
   sample_audits->users;
   sample_notes->samples;
   sample_notes->users;
-  sample_images->samples;
-  sample_images->users;
+  sample_attachments->samples;
+  sample_attachments->users;
 }
