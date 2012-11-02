@@ -2,34 +2,29 @@
 <!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
 <!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
 <!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en"
-  xmlns:tal="http://xml.zope.org/namespaces/tal"
-  xmlns:metal="http://xml.zope.org/namespaces/metal"
-  xmlns:i18n="http://xml.zope.org/namespaces/i18n">
-<!--<![endif]-->
-<head metal:use-macro="view.master.head">
-  <span tal:omit-tag="True" metal:fill-slot="title">My Collections</span>
-</head>
-<body>
-  <nav metal:use-macro="view.master.top_bar">
-    <span tal:omit-tag="True" metal:fill-slot="title">My Collections</span>
-  </nav>
-  <div class="row">
-    <p class="twelve columns"><a href="${request.route_url('collections_create')}">New Collection</a></p>
+<!--[if gt IE 8]><!--> <div metal:use-macro="view.layout">
+  <div tal:omit-tag="True" metal:fill-slot="title">My Collections</div>
+  <div tal:omit-tag="True" metal:fill-slot="content">
+    <div metal:use-macro="view.top_bar"></div>
+
+    <div class="row"><h1 class="twelve columns">My Collections</h1></div>
+
+    <div class="row">
+      <p class="twelve columns"><a href="${request.route_url('collections_create')}">New Collection</a></p>
+    </div>
+
+    <div class="row">
+      <ul class="block-grid four-up mobile-two-up">
+        <li class="collection" tal:repeat="collection view.user.collections">
+          <a href="${request.route_url('collections_view', collection_id=collection.id)}">
+            <img src="${request.static_url('samplesdb:static/empty_collection_optimized.svg')}" width="80" alt="Empty Collection" />
+            ${collection.name}<br />
+          </a>
+          (${len(collection.existing_samples)} samples)
+        </li>
+      </ul>
+    </div>
+
   </div>
-  <div class="row">
-    <ul class="block-grid four-up mobile-two-up">
-      <li class="collection" tal:repeat="collection view.user.collections">
-        <a href="${request.route_url('collections_view', collection_id=collection.id)}">
-          <img src="${request.static_url('samplesdb:static/empty_collection_optimized.svg')}" width="80" alt="Empty Collection" />
-          ${collection.name}<br />
-        </a>
-        (${len(collection.existing_samples)} samples)
-      </li>
-    </ul>
-  </div>
-  <span metal:use-macro="view.master.footer"></span>
-  <span metal:use-macro="view.master.scripts"></span>
-</body>
-</html>
+</div>
 

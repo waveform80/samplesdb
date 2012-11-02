@@ -56,7 +56,7 @@ class LoginSchema(BaseSchema):
     came_from = validators.UnicodeString()
 
 
-class SignUpSchema(BaseSchema):
+class AccountCreateSchema(BaseSchema):
     """Schema for account creation form"""
     email = validators.Email(
         not_empty=True, resolve_domain=True,
@@ -84,7 +84,12 @@ class SignUpSchema(BaseSchema):
 class AccountView(BaseView):
     """Handler for account related views"""
 
-    @view_config(route_name='account_login', renderer='../templates/account/login.pt')
+    def __init__(self, request):
+        self.request = request
+
+    @view_config(
+        route_name='account_login',
+        renderer='../templates/account/login.pt')
     @forbidden_view_config(renderer='../templates/account/login.pt')
     def login(self):
         referer = self.request.url
@@ -130,7 +135,7 @@ class AccountView(BaseView):
             for tz in pytz.common_timezones
             if tz != 'GMT'),
             key=lambda t: (pytz.timezone(t[0]).localize(now), t[0]))
-        form = Form(self.request, schema=SignUpSchema)
+        form = Form(self.request, schema=AccountCreateSchema)
         if form.validate():
             new_user = form.bind(User())
             DBSession.add(new_user)

@@ -30,13 +30,11 @@ import webhelpers.number
 import webhelpers.text
 import webhelpers.containers
 import webhelpers.constants
+from pyramid.decorator import reify
 from pyramid.renderers import get_renderer
 from pyramid.security import authenticated_userid
 
 from samplesdb.models import (
-    DBSession,
-    Collection,
-    Sample,
     User,
     )
 
@@ -44,10 +42,35 @@ from samplesdb.models import (
 class BaseView(object):
     """Abstract base class for view handlers"""
 
-    def __init__(self, request):
-        self.request = request
-        # Every handler needs the master template and the authenticated user
-        self.master = get_renderer('../templates/master.pt').implementation()
-        self.user = User.by_email(authenticated_userid(request))
-        self.helpers = webhelpers
+    @reify
+    def site_title(self):
+        return self.request.registry.settings['site_title']
+
+    @reify
+    def layout(self):
+        renderer = get_renderer('../templates/layout.pt')
+        return renderer.implementation().macros['layout']
+
+    @reify
+    def top_banner(self):
+        renderer = get_renderer('../templates/top_banner.pt')
+        return renderer.implementation().macros['top_banner']
+
+    @reify
+    def top_bar(self):
+        renderer = get_renderer('../templates/top_bar.pt')
+        return renderer.implementation().macros['top_bar']
+
+    @reify
+    def flashes(self):
+        renderer = get_renderer('../templates/flashes.pt')
+        return renderer.implementation().macros['flashes']
+
+    @reify
+    def user(self):
+        return User.by_email(authenticated_userid(self.request))
+
+    @reify
+    def helpers(self):
+        return webhelpers
 

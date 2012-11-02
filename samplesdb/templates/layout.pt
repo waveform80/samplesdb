@@ -1,0 +1,42 @@
+<!doctype html>
+<!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
+<!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
+<!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en"
+  metal:define-macro="layout"> <!--<![endif]-->
+<head>
+  <meta charset="utf-8" />
+  <!-- Use the .htaccess and remove these lines to avoid edge case issues.
+       More info: h5bp.com/b/378 -->
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+  <title><div metal:define-slot="title"></div> - ${view.site_title}</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <!-- Place favicon.ico and apple-touch-icon.png in the root directory: mathiasbynens.be/notes/touch-icons -->
+  <link rel="shortcut icon" href="${request.static_url('samplesdb:static/favicon.ico')}" />
+  <link rel="stylesheet" href="${request.static_url('samplesdb:static/foundation/css/foundation.css')}">
+  <link rel="stylesheet" href="${request.static_url('samplesdb:static/foundation/css/app.css')}">
+  <!-- More ideas for your <head> here: h5bp.com/d/head-Tips -->
+  <script src="${request.static_url('samplesdb:static/foundation/js/modernizr.foundation.js')}"></script>
+</head>
+
+<body>
+  <div metal:define-slot="content"></div>
+
+  <div class="row">
+    <div id="footer" class="twelve columns">
+      Copyright &copy; <a href="mailto:dave@waveform.org.uk">Dave Hughes</a>
+      2012. All rights reserved. <a
+        href="https://github.com/waveform80/samplesdb">Source code</a> for this
+      application is available from GitHub, licensed under the <a
+        href="http://www.gnu.org/licenses/gpl-3.0.html">GNU GPL v3</a>.
+    </div>
+  </div>
+
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+  <script>window.jQuery || document.write('<script src="${request.static_url("samplesdb:static/gumby/js/libs/jquery-1.7.2.min.js")}"><\/script>')</script>
+  <script src="${request.static_url('samplesdb:static/webforms2/webforms2-p.js')}"></script>
+  <script src="${request.static_url('samplesdb:static/foundation/js/foundation.min.js')}"></script>
+  <script src="${request.static_url('samplesdb:static/foundation/js/app.js')}"></script>
+</body>
+</html>

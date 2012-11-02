@@ -2,23 +2,20 @@
 <!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
 <!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
 <!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en"
-  xmlns:tal="http://xml.zope.org/namespaces/tal"
-  xmlns:metal="http://xml.zope.org/namespaces/metal"
-  xmlns:i18n="http://xml.zope.org/namespaces/i18n">
-<!--<![endif]-->
-<head metal:use-macro="master.head"></head>
-<body>
-  <nav metal:use-macro="master.top_bar"></nav>
-  <div class="row">
-    <div class="twelve columns">
-      <h1>${page_title}</h1>
-      <p>A validation e-mail has been sent to <strong>${email}</strong>. Before
-      you can use this email address to login you will need to receive this
-      email and click on the link within it.</p>
+<!--[if gt IE 8]><!--> <div metal:use-macro="view.layout">
+  <div tal:omit-tag="True" metal:fill-slot="title">Verification Sent</div>
+  <div tal:omit-tag="True" metal:fill-slot="content">
+    <div metal:use-macro="view.top_bar"></div>
+
+    <div class="row"><h1 class="twelve columns">Verification Sent</h1></div>
+
+    <div class="row">
+      <div class="twelve columns">
+        <p>A validation e-mail has been sent to <strong>${email}</strong>.
+        Before you can use this email address to login you will need to receive
+        this email and click on the link within it.</p>
+      </div>
     </div>
+
   </div>
-  <span metal:use-macro="master.footer"></span>
-  <span metal:use-macro="master.scripts"></span>
-</body>
-</html>
+</div>

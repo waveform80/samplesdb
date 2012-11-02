@@ -30,11 +30,48 @@ from formencode import validators
 
 from samplesdb.views import BaseView
 from samplesdb.forms import BaseSchema, Form, FormRenderer
-from samplesdb.models import Collection, Sample
+from samplesdb.security import (
+    CREATE_COLLECTION,
+    VIEW_COLLECTION,
+    EDIT_COLLECTION,
+    )
+from samplesdb.models import (
+    DBSession,
+    Collection,
+    Sample,
+    )
+
 
 class CollectionsView(BaseView):
     """Handler for collection related views"""
 
-    @view_config(route_name='collections_index', renderer='../templates/collections/index.pt')
+    def __init__(self, request):
+        self.request = request
+
+    @view_config(
+        route_name='collections_index',
+        renderer='../templates/collections/index.pt')
     def index(self):
         return {}
+
+    @view_config(
+        route_name='collections_create',
+        renderer='../templates/collections/create.pt',
+        permission=CREATE_COLLECTION)
+    def create(self):
+        return {}
+
+    @view_config(
+        route_name='collections_view',
+        renderer='../templates/collections/view.pt',
+        permission=VIEW_COLLECTION)
+    def view(self):
+        return {}
+
+    @view_config(
+        route_name='collections_edit',
+        renderer='../templates/collections/edit.pt',
+        permission=EDIT_COLLECTION)
+    def edit(self):
+        return {}
+

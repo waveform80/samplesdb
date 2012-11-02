@@ -2,14 +2,21 @@
 <!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
 <!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
 <!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en"
-  xmlns:tal="http://xml.zope.org/namespaces/tal"
-  xmlns:metal="http://xml.zope.org/namespaces/metal"
-  xmlns:i18n="http://xml.zope.org/namespaces/i18n">
-<!--<![endif]-->
-<head metal:use-macro="master.head"></head>
-<body>
-  <nav metal:use-macro="master.top_bar"></nav>
-  <span metal:use-macro="master.scripts"></span>
-</body>
-</html>
+<!--[if gt IE 8]><!--> <div metal:use-macro="view.layout">
+  <div tal:omit-tag="True" metal:fill-slot="title">Verification Sent</div>
+  <div tal:omit-tag="True" metal:fill-slot="content">
+    <div metal:use-macro="view.top_bar"></div>
+
+    <div class="row"><h1 class="twelve columns">Verification Complete</h1></div>
+
+    <div class="row">
+      <div class="twelve columns">
+        <p>Thank you! You e-mail address <strong>${email}</strong> has now been
+        verified and you can use it to <a
+          href="${request.route_url('account_login')}">login</a> to
+        ${view.site_title}.</p>
+      </div>
+    </div>
+
+  </div>
+</div>

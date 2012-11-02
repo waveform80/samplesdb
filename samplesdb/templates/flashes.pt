@@ -1,0 +1,5 @@
+<span metal:define-macro="flashes" tal:omit-tag="True">
+  <div class="alert-box alert" tal:repeat="flash request.session.pop_flash()">
+    ${flash}<a href="" class="close">&times;</a>
+  </div>
+</span>

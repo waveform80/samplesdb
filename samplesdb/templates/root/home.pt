@@ -2,80 +2,73 @@
 <!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
 <!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
 <!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en"
-  xmlns:tal="http://xml.zope.org/namespaces/tal"
-  xmlns:metal="http://xml.zope.org/namespaces/metal"
-  xmlns:i18n="http://xml.zope.org/namespaces/i18n">
-<!--<![endif]-->
-<head metal:use-macro="view.master.head">
-  <span tal:omit-tag="True" metal:fill-slot="title">Home</span>
-</head>
-<body>
-  <div metal:use-macro="view.master.top_banner"></div>
-  <div class="row">
-    <div class="five columns" tal:condition="not view.user">
-      <div metal:use-macro="view.master.flashes"></div>
-      ${form.begin(request.route_url('account_login'))}
-      ${form.hidden_tag('came_from')}
-      ${form.errorlist()}
-      <div class="row">
-        ${form.email('username', placeholder='E-mail Address')}
-      </div>
-      <div class="row">
-        ${form.password('password', placeholder='Password')}
-      </div>
-      <div class="row">
-        <div class="ten mobile-three columns">
-          <a href="${request.route_url('account_create')}">New user</a> |
-          <a href="${request.route_url('reset_password_request', email='')}">Forgotten password</a>
-        </div>
-        <div class="two mobile-one columns">
-          ${form.submit('submit', value='Login', class_='tiny right button')}
-        </div>
-      </div>
-      ${form.end()}
-    </div>
-    <div class="five columns" tal:condition="view.user">
-      <ul class="button-group even three-up radius">
-        <li><a class="small button" href="${request.route_url('collections_index')}">Collections</a></li>
-        <li><a class="small button" href="${request.route_url('account_index')}">Account</a></li>
-        <li><a class="small button" href="${request.route_url('account_logout')}">Logout</a></li>
-      </ul>
-      <p>You are logged in as ${view.user}. Please click on one of the buttons
-      above to view your collections (you currently have
-      ${len(view.user.collections)} of these, containing
-      ${len(view.user.owned_samples)} samples), control your account, or to
-      logout.</p>
-    </div>
-    <div class="seven columns">
-      <p>Welcome to the
-      <strong>${request.registry.settings['site_title']}</strong> project. This
-      is an open-source project designed to provide a flexible web-based
-      database to lab technicians wishing to keep track of their samples.
-      Features of the system include:</p>
+<!--[if gt IE 8]><!--> <div metal:use-macro="view.layout">
+  <div tal:omit-tag="True" metal:fill-slot="title">Home</div>
+  <div tal:omit-tag="True" metal:fill-slot="content">
+    <div metal:use-macro="view.top_banner"></div>
 
-      <ul class="disc">
-        <li>Multiple sample collections per user, including multiple images per
-        sample</li>
-        <li>Provenance of samples &ndash; visual history of splits and
-        combinations</li>
-        <li>Auditing of samples (optional) including e-mailed reminders</li>
-        <li>Downloadable copies of your collections in multiple formats (PDFs
-        for labelling, Excel files for offline copies of your database,
-        etc.)</li>
-      </ul>
+    <div class="row">
+      <div class="five columns" tal:condition="not view.user">
+        <div metal:use-macro="view.flashes"></div>
+        ${form.begin(request.route_url('account_login'))}
+        ${form.hidden_tag('came_from')}
+        ${form.errorlist()}
+        <div class="row">
+          ${form.email('username', placeholder='E-mail Address')}
+        </div>
+        <div class="row">
+          ${form.password('password', placeholder='Password')}
+        </div>
+        <div class="row">
+          <div class="ten mobile-three columns">
+            <a href="${request.route_url('account_create')}">New user</a> |
+            <a href="${request.route_url('reset_password_request', email='')}">Forgotten password</a>
+          </div>
+          <div class="two mobile-one columns">
+            ${form.submit('submit', value='Login', class_='tiny right button')}
+          </div>
+        </div>
+        ${form.end()}
+      </div>
+      <div class="five columns" tal:condition="view.user">
+        <ul class="button-group even three-up radius">
+          <li><a class="small button" href="${request.route_url('collections_index')}">Collections</a></li>
+          <li><a class="small button" href="${request.route_url('account_index')}">Account</a></li>
+          <li><a class="small button" href="${request.route_url('account_logout')}">Logout</a></li>
+        </ul>
+        <p>You are logged in as ${view.user}. Please click on one of the buttons
+        above to view your collections (you currently have
+        ${len(view.user.collections)} of these, containing
+        ${len(view.user.owned_samples)} samples), control your account, or to
+        logout.</p>
+      </div>
+      <div class="seven columns">
+        <p>Welcome to the <strong>${view.site_title}</strong> project. This is
+        an open-source project designed to provide a flexible web-based
+        database to lab technicians wishing to keep track of their samples.
+        Features of the system include:</p>
 
-      <p><em>Please note this is currently a beta-testing system</em>. We
-      currently make no guarantees about data persistence or system uptime. In
-      other words, though we have nightly backup procedures in place we cannot
-      guarantee that functional changes to the system won't invalidate existing
-      data.</p>
-      <p>If you have any questions, please peruse our <a
-        href="${request.route_url('faq')}">FAQ</a>.</p>
+        <ul class="disc">
+          <li>Multiple sample collections per user, including multiple images
+          per sample</li>
+          <li>Provenance of samples &ndash; visual history of splits and
+          combinations</li>
+          <li>Auditing of samples (optional) including e-mailed reminders</li>
+          <li>Downloadable copies of your collections in multiple formats (PDFs
+          for labelling, Excel files for offline copies of your database,
+          etc.)</li>
+        </ul>
+
+        <p><em>Please note this is currently a beta-testing system</em>. We
+        currently make no guarantees about data persistence or system uptime.
+        In other words, though we have nightly backup procedures in place we
+        cannot guarantee that functional changes to the system won't invalidate
+        existing data.</p>
+
+        <p>If you have any questions, please peruse our <a
+          href="${request.route_url('faq')}">FAQ</a>.</p>
+      </div>
     </div>
   </div>
-  <span metal:use-macro="view.master.footer"></span>
-  <span metal:use-macro="view.master.scripts"></span>
-</body>
-</html>
+</div>
 
