@@ -66,13 +66,14 @@ REQUIRES = [
     'pyramid_beaker',
     'pyramid_mailer',
     'pydns',
-    'nose',
-    'mock',
     'zope.sqlalchemy',
     'repoze.who>=2.0',
     'waitress',
     'pytz',
     'passlib>=1.6',
+    'nose',
+    'mock',
+    'WebTest',
     ]
 
 ENTRY_POINTS = """\
