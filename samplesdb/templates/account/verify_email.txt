@@ -1,16 +1,15 @@
-Dear ${user.salutation} ${user.surname},
+Dear ${verification.email.user.salutation} ${verification.email.user.surname},
 
 You are receiving this e-mail because a request has been made to verify this
-email address by a user at ${request.registry.settings['site_title']}.
+email address by this user at ${view.site_title}. If you are the owner of this
+account, please click on the following link to verify that you own this e-mail
+address:
 
 ${request.route_url('account_verify_complete', code=verification.id)}
 
-If this email was sent in error, we would be grateful if you could click on
-the following link to inform us of the issue:
-
-${request.route_url('account_verify_cancel', code=verification.id)}
+Please accept our apologies if this email was sent in error.
 
 
 Many thanks,
 
-The ${request.registry.settings['site_title']} Team.
+The ${view.site_title} Team.

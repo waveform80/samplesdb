@@ -11,7 +11,8 @@
 
     <div class="row">
       <div class="twelve columns">
-        <p>Thank you! You e-mail address <strong>${email}</strong> has now been
+        <p>Thank you, ${verification.email.user.given_name}! Your e-mail
+        address <strong>${verification.email.email}</strong> has now been
         verified and you can use it to <a
           href="${request.route_url('account_login')}">login</a> to
         ${view.site_title}.</p>
