@@ -104,11 +104,19 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
 
 
 class VerificationError(Exception):
-    """Class for e-mail verification errors"""
+    "Base class for e-mail verification errors"
+
+
+class VerificationTooMany(VerificationError):
+    "Error raised when too many active verifications exist already"
+
+
+class VerificationTooFast(VerificationError):
+    "Error raised when verifications are attempted without sufficient delay"
 
 
 class ResetError(Exception):
-    """Class for password reset errors"""
+    "Base class for password reset errors"
 
 
 class EmailVerification(Base):
@@ -126,16 +134,17 @@ class EmailVerification(Base):
     def __init__(self, email):
         super(EmailVerification, self).__init__()
         if DBSession.query(EmailVerification).\
-            filter(EmailVerification.email_ref==email).\
-            filter(EmailVerification.created>datetime.utcnow() + timedelta(seconds=VERIFICATION_INTERVAL)).first():
-                raise VerificationError('A verification was requested for that '
-                    'email address less than %d seconds ago' %
-                    VERIFICATION_INTERVAL)
+                filter(EmailVerification.email_ref == email).\
+                filter(EmailVerification.created > (datetime.utcnow() -
+                    timedelta(seconds=VERIFICATION_INTERVAL))).first():
+            raise VerificationTooFast('A verification was requested for that '
+                'email address less than %d seconds ago' %
+                VERIFICATION_INTERVAL)
         if DBSession.query(EmailVerification).\
-            filter(EmailVerification.email_ref==email).\
-            filter(EmailVerification.expiry<datetime.utcnow()).count() > VERIFICATION_LIMIT:
-                raise VerificationError('Too many active verifications '
-                    'currently exist for this account')
+                filter(EmailVerification.email_ref == email).\
+                filter(EmailVerification.expiry > datetime.utcnow()).count() >= VERIFICATION_LIMIT:
+            raise VerificationTooMany('Too many active verifications '
+                'currently exist for this account')
         self.email_ref = email
         self.expiry = datetime.utcnow() + timedelta(seconds=VERIFICATION_TIMEOUT)
         self.id = os.urandom(self.__table__.c.id.type.length // 2).encode('hex')
@@ -154,14 +163,12 @@ class EmailVerification(Base):
         """return the email verification record with id ``id``"""
         return DBSession.query(cls).filter_by(id=id).first()
 
-    def verify(self, user):
+    def verify(self):
         if datetime.utcnow() > self.expiry:
             raise VerificationError('Verification code has expired')
-        if user is not self.email.user:
-            raise VerificationError('Invalid user for verification code %s' % self.id)
         self.email.verified = datetime.utcnow()
         DBSession.query(EmailVerification).\
-            filter(EmailVerification.email_ref==self.email_ref).delete()
+            filter(EmailVerification.email_ref == self.email_ref).delete()
 
 
 class EmailAddress(Base):
@@ -209,13 +216,14 @@ class PasswordReset(Base):
     def __init__(self, user):
         super(PasswordReset, self).__init__(**kwargs)
         if DBSession.query(PasswordReset).\
-            filter(PasswordReset.user_id==user.id).\
-            filter(PasswordReset.created>datetime.utcnow() + timedelta(seconds=RESET_INTERVAL)).first():
+            filter(PasswordReset.user_id == user.id).\
+            filter(PasswordReset.created > (datetime.utcnow() -
+                    timedelta(seconds=RESET_INTERVAL))).first():
                 raise ResetError('A reset was requested for that '
                     'account less than %d seconds ago' % RESET_INTERVAL)
         if DBSession.query(PasswordReset).\
-            filter(PasswordReset.expiry<datetime.utcnow()).\
-            filter(PasswordReset.user_id==user.id).count() >= RESET_LIMIT:
+            filter(PasswordReset.expiry > datetime.utcnow()).\
+            filter(PasswordReset.user_id == user.id).count() >= RESET_LIMIT:
                 raise ResetError('Too many active resets currently '
                     'exist for this account')
         self.user_id = user.id
@@ -243,7 +251,7 @@ class PasswordReset(Base):
             raise ResetError('Invalid user for reset code %s' % self.id)
         self.user.password = new_password
         DBSession.query(PasswordReset).\
-            filter(PasswordReset.user_id==self.user_id).delete()
+            filter(PasswordReset.user_id == self.user_id).delete()
 
 
 class LabelTemplate(Base):
