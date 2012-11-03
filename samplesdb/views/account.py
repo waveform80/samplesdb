@@ -42,6 +42,8 @@ from samplesdb.models import (
     DBSession,
     EmailAddress,
     EmailVerification,
+    Collection,
+    Role,
     User,
     VERIFICATION_TIMEOUT,
     )
@@ -147,14 +149,14 @@ class AccountView(BaseView):
             owner_role = DBSession.query(Role).filter(Role.id=='owner').one()
             new_user.collections[new_collection] = owner_role
             return HTTPFound(location=self.request.route_url(
-                'account_verify_email', email=form.data['email']))
+                'account_verify_email', _query=dict(email=form.data['email'])))
         return dict(form=FormRenderer(form), timezones=timezones)
 
     @view_config(
         route_name='account_verify_email',
         renderer='../templates/account/verify_email.pt')
     def verify_email(self):
-        email = self.request.matchdict['email']
+        email = self.request.params['email']
         verification = EmailVerification(email)
         DBSession.add(verification)
         DBSession.flush()

@@ -24,6 +24,8 @@ from __future__ import (
     division,
     )
 
+from datetime import datetime
+
 import webhelpers.date
 import webhelpers.media
 import webhelpers.number
@@ -69,6 +71,10 @@ class BaseView(object):
     @reify
     def user(self):
         return User.by_email(authenticated_userid(self.request))
+
+    @reify
+    def now(self):
+        return datetime.utcnow()
 
     @reify
     def helpers(self):

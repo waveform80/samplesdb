@@ -100,7 +100,7 @@ class FormRenderer(pyramid_simpleform.renderers.FormRenderer):
             attrs['type'] = 'email'
         return self.text(name, value, id, **attrs)
 
-    def submit(self, name, value=None, id=None, **attrs):
+    def submit(self, name='submit', value='Submit', id=None, **attrs):
         if not 'class_' in attrs:
             attrs['class_'] = 'small button right'
         return super(FormRenderer, self).submit(name, value, id, **attrs)

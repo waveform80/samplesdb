@@ -57,8 +57,8 @@ ROUTES = {
     'account_remove_email':       '/account/remove-email',
     'account_verify_email':       '/account/verify',
     'account_verify_complete':    '/verify/{code}',
-    'reset_password_request':     '/reset/send/{email}',
-    'reset_password_complete':    '/reset/complete/{code}',
+    'account_reset_password':     '/account/reset',
+    'account_reset_complete':     '/reset/{code}',
     # views.collections
     'collections_index':          '/collections',
     'collections_create':         '/collections/new',
@@ -107,6 +107,7 @@ def main(global_config, **settings):
     config.scan()
     app = config.make_wsgi_app()
     # XXX Dirty horrid hack for functional testing
+    print(settings)
     if settings.get('testing', '0') == '1':
         app.engine = engine
     return app
