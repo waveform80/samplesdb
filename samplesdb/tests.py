@@ -7,16 +7,24 @@ from __future__ import (
 
 import transaction
 from mock import Mock
+from nose.tools import assert_raises
 from pyramid import testing
+from pyramid_mailer.mailer import Mailer
 
-from samplesdb.models import DBSession, Base, EmailAddress, User
+from samplesdb.models import DBSession, Base
 from samplesdb.scripts.initializedb import init_instances
 
-class TestViews(object):
+
+class UnitFixture(object):
+    """Fixture for unit-tests"""
+
     def setup(self):
         from samplesdb import ROUTES
         from sqlalchemy import create_engine
         self.config = testing.setUp()
+        self.mailer = Mock(Mailer)
+        self.config.registry['mailer'] = self.mailer
+        self.config.registry.settings['site_title'] = 'TESTING'
         for route_name, route_url in ROUTES.items():
             self.config.add_route(route_name, route_url)
         engine = create_engine('sqlite://')
@@ -28,134 +36,196 @@ class TestViews(object):
         DBSession.remove()
         testing.tearDown()
 
-    def test_root_home(self):
+
+class FunctionalFixture(object):
+    """Fixture for functional tests"""
+
+    def setup(self):
+        from samplesdb import main
+        from webtest import TestApp
+        settings = {
+            'sqlalchemy.url':              'sqlite://',
+            'site_title':                  'TESTING',
+            'session.type':                'memory',
+            'session.constant_csrf_token': '1234567890',
+            'testing':                     '1',
+            }
+        self.test = TestApp(main(None, **settings))
+        Base.metadata.create_all(self.test.app.engine)
+        init_instances()
+        self.test.app.registry['mailer'] = Mock(Mailer)
+
+    def teardown(self):
+        DBSession.remove()
+
+
+class RootViewUnitTests(UnitFixture):
+    def make_one(self):
         from samplesdb.views.root import RootView
+        request = testing.DummyRequest()
+        view = RootView(request)
+        return view
+
+    def test_root_home(self):
         from samplesdb.views.account import LoginSchema
         from samplesdb.forms import FormRenderer
-        request = testing.DummyRequest()
-        handler = RootView(request)
-        info = handler.home()
-        assert isinstance(info['form'], FormRenderer)
-        assert info['form'].form.schema == LoginSchema
+        view = self.make_one()
+        result = view.home()
+        assert isinstance(result['form'], FormRenderer)
+        assert result['form'].form.schema == LoginSchema
 
     def test_root_faq(self):
-        from samplesdb.views.root import RootView
-        request = testing.DummyRequest()
-        handler = RootView(request)
-        info = handler.faq()
+        view = self.make_one()
+        result = view.faq()
 
-    def test_account_login_form(self):
-        from samplesdb.views.account import AccountView, LoginSchema
-        from samplesdb.forms import FormRenderer
+
+class RootViewFunctionalTests(FunctionalFixture):
+    def test(self):
+        res = self.test.get('/')
+        # XXX Fill out login form badly
+        # XXX Fill out login form properly
+        res = self.test.get('/faq')
+
+
+
+class AccountViewUnitTests(UnitFixture):
+    def make_one(self):
+        from samplesdb.views.account import AccountView
         request = testing.DummyRequest()
-        handler = AccountView(request)
-        info = handler.login()
-        # TODO Test authenticate is called
-        # TODO Test authentication in a functional test?
-        # TODO With functional test, ensure remember headers are set
-        assert isinstance(info['form'], FormRenderer)
-        assert info['form'].form.schema == LoginSchema
-        assert info['form'].form.data['came_from'] == 'http://example.com'
+        view = AccountView(request)
+        return view
+    
+    def test_account_login_form(self):
+        from samplesdb.views.account import LoginSchema
+        from samplesdb.forms import FormRenderer
+        view = self.make_one()
+        result = view.login()
+        assert isinstance(result['form'], FormRenderer)
+        assert result['form'].form.schema == LoginSchema
+        assert result['form'].form.data['came_from'] == 'http://example.com'
 
     def test_account_login_redirect(self):
-        from samplesdb.views.account import AccountView, LoginSchema
+        from samplesdb.views.account import LoginSchema
         from samplesdb.forms import FormRenderer
-        request = testing.DummyRequest()
-        request.url = 'http://example.com/login'
-        handler = AccountView(request)
-        info = handler.login()
-        assert info['form'].form.data['came_from'] == 'http://example.com/collections'
+        view = self.make_one()
+        view.request.url = 'http://example.com/login'
+        result = view.login()
+        assert result['form'].form.data['came_from'] == 'http://example.com/collections'
 
     def test_account_logout(self):
-        from samplesdb.views.account import AccountView
         from pyramid.httpexceptions import HTTPFound
-        request = testing.DummyRequest()
-        handler = AccountView(request)
-        response = handler.logout()
-        assert isinstance(response, HTTPFound)
-        assert 'Location' in response.headers
+        view = self.make_one()
+        result = view.logout()
+        assert isinstance(result, HTTPFound)
+        assert 'Location' in result.headers
 
     def test_account_index(self):
-        from samplesdb.views.account import AccountView
-        request = testing.DummyRequest()
-        handler = AccountView(request)
-        info = handler.index()
+        view = self.make_one()
+        result = view.index()
 
     def test_account_create(self):
-        from samplesdb.views.account import AccountView, SignUpSchema
+        from samplesdb.views.account import AccountCreateSchema
         from samplesdb.forms import FormRenderer
-        request = testing.DummyRequest()
-        handler = AccountView(request)
-        info = handler.create()
-        assert isinstance(info['form'], FormRenderer)
-        assert info['form'].form.schema == SignUpSchema
-        assert len(info['timezones']) > 100
-        assert ('UTC', '(UTC+0000) UTC') in info['timezones']
+        view = self.make_one()
+        result = view.create()
+        assert isinstance(result['form'], FormRenderer)
+        assert result['form'].form.schema == AccountCreateSchema
+        assert len(result['timezones']) > 100
+        assert ('UTC', '(UTC+0000) UTC') in result['timezones']
 
     def test_account_verify_email(self):
-        from samplesdb.views.account import AccountView
-        from samplesdb.models import EmailVerification
-        from pyramid_mailer.mailer import Mailer
-        from pyramid_mailer.message import Message
+        from samplesdb.models import EmailAddress
         email = 'example@example.com'
         address = EmailAddress(email=email, user_id=1)
         DBSession.add(address)
         DBSession.flush()
-        verifications = DBSession.query(EmailVerification).all()
-        assert len(verifications) == 0
-        request = testing.DummyRequest()
-        request.registry.settings['site_title'] = 'Test'
-        mailer = Mock(Mailer)
-        request.registry['mailer'] = mailer
-        request.matchdict['email'] = email
-        handler = AccountView(request)
-        info = handler.verify_email()
-        assert info['email'] == email
-        assert info['timeout']
-        verifications = DBSession.query(EmailVerification).all()
-        assert len(verifications) == 1
-        assert mailer.send.call_count == 1
-        assert isinstance(mailer.send.call_args[0][0], Message)
-        # Make sure the verification code appears in the email
-        assert verifications[0].id in mailer.send.call_args[0][0].body
-        transaction.abort()
+        view = self.make_one()
+        view.request.matchdict['email'] = email
+        result = view.verify_email()
+        assert result['verification'].email.email == email
+
+    def test_account_verify_too_fast(self):
+        from samplesdb.models import EmailAddress, VerificationTooFast
+        email = 'example@example.com'
+        address = EmailAddress(email=email, user_id=1)
+        DBSession.add(address)
+        DBSession.flush()
+        # First verification attempt
+        view = self.make_one()
+        view.request.matchdict['email'] = email
+        view.verify_email()
+        # Make another one too quickly
+        view = self.make_one()
+        view.request.matchdict['email'] = email
+        assert_raises(VerificationTooFast, view.verify_email)
+
+    def test_account_verify_too_many(self):
+        from datetime import datetime, timedelta
+        from samplesdb.models import (
+            EmailAddress,
+            EmailVerification,
+            VerificationTooMany,
+            VERIFICATION_LIMIT,
+            VERIFICATION_INTERVAL,
+            )
+        email = 'example@example.com'
+        address = EmailAddress(email=email, user_id=1)
+        DBSession.add(address)
+        DBSession.flush()
+        # First verification attempt
+        for i in range(VERIFICATION_LIMIT):
+            view = self.make_one()
+            view.request.matchdict['email'] = email
+            view.verify_email()
+            # Re-write the new verification record to make it appear old in
+            # order to allow us to create a new one
+            new_created = datetime.utcnow() - timedelta(seconds=VERIFICATION_INTERVAL)
+            verification = DBSession.query(EmailVerification).\
+                filter(EmailVerification.email_ref == email).\
+                filter(EmailVerification.created > new_created).one()
+            verification.created = new_created - timedelta(seconds=1)
+            DBSession.flush()
+        view = self.make_one()
+        view.request.matchdict['email'] = email
+        assert_raises(VerificationTooMany, view.verify_email)
 
     def test_account_verify_complete(self):
-        from samplesdb.views.account import AccountView
-        from samplesdb.models import EmailVerification
+        from samplesdb.models import EmailAddress, EmailVerification
         email = 'example@example.com'
         address = EmailAddress(email=email, user_id=1)
         verification = EmailVerification(email)
         DBSession.add(address)
         DBSession.add(verification)
         DBSession.flush()
-        verifications = DBSession.query(EmailVerification).all()
-        assert len(verifications) == 1
-        request = testing.DummyRequest()
-        request.matchdict['code'] = verification.id
-        handler = AccountView(request)
-        info = handler.verify_complete()
-        verifications = DBSession.query(EmailVerification).all()
-        assert len(verifications) == 0
-        assert address.verified
-        transaction.abort()
+        view = self.make_one()
+        view.request.matchdict['code'] = verification.id
+        result = view.verify_complete()
+        assert result['verification'].email.email == email
 
-    def test_account_verify_cancel(self):
-        from samplesdb.views.account import AccountView
-        from samplesdb.models import EmailVerification
-        email = 'example@example.com'
-        address = EmailAddress(email=email, user_id=1)
-        verification = EmailVerification(email)
-        DBSession.add(address)
-        DBSession.add(verification)
-        DBSession.flush()
-        verifications = DBSession.query(EmailVerification).all()
-        assert len(verifications) == 1
-        request = testing.DummyRequest()
-        request.matchdict['code'] = verification.id
-        handler = AccountView(request)
-        info = handler.verify_complete()
-        verifications = DBSession.query(EmailVerification).all()
-        assert len(verifications) == 0
-        assert not address.verified
-        transaction.abort()
+    def test_account_verify_bad(self):
+        from pyramid.httpexceptions import HTTPNotFound
+        view = self.make_one()
+        view.request.matchdict['code'] = 'foo'
+        assert_raises(HTTPNotFound, view.verify_complete)
+
+
+class AccountViewFunctionalTests(FunctionalFixture):
+    def test(self):
+        from pyramid_mailer.message import Message
+        #verifications = DBSession.query(EmailVerification).all()
+        #assert len(verifications) == 0
+        res = self.test.get('/signup')
+        # XXX Fill out sign-up form badly (assert errors)
+        # XXX Fill out sign-up form properly
+        # XXX Test verification is created
+        #verifications = DBSession.query(EmailVerification).all()
+        #assert len(verifications) == 1
+        #assert self.mailer.send.call_count == 1
+        #assert isinstance(self.mailer.send.call_args[0][0], Message)
+        # Make sure the verification code appears in the email
+        #assert verifications[0].id in self.mailer.send.call_args[0][0].body
+        # XXX Call bad verification URL (assert 404)
+        # XXX Call correct verification URL
+        #verifications = DBSession.query(EmailVerification).all()
+        #assert len(verifications) == 0
+        #assert address.verified
