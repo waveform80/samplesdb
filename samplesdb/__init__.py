@@ -107,6 +107,9 @@ def main(global_config, **settings):
     for name, url in ROUTES.items():
         config.add_route(name, url)
     config.scan()
-
-    return config.make_wsgi_app()
+    app = config.make_wsgi_app()
+    # XXX Dirty horrid hack for functional testing
+    if settings.get('testing', '0') == '1':
+        app.engine = engine
+    return app
 
