@@ -57,10 +57,8 @@ ROUTES = {
     'account_remove_email':       '/account/remove-email',
     'account_verify_email':       '/account/verify',
     'account_verify_complete':    '/verify/{code}',
-    'account_verify_cancel':      '/cancel/{code}',
     'reset_password_request':     '/reset/send/{email}',
     'reset_password_complete':    '/reset/complete/{code}',
-    'reset_password_cancel':      '/reset/cancel/{code}',
     # views.collections
     'collections_index':          '/collections',
     'collections_create':         '/collections/new',
