@@ -30,7 +30,7 @@ from datetime import datetime
 import pytz
 from pyramid.view import view_config, forbidden_view_config
 from pyramid.security import remember, forget
-from pyramid.httpexceptions import HTTPFound
+from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 from pyramid.chameleon_text import render_template
 from pyramid_mailer.message import Message
 from formencode import validators
@@ -155,30 +155,29 @@ class AccountView(BaseView):
         renderer='../templates/account/verify_email.pt')
     def verify_email(self):
         email = self.request.matchdict['email']
-        new_verification = EmailVerification(email)
-        DBSession.add(new_verification)
+        verification = EmailVerification(email)
+        DBSession.add(verification)
         DBSession.flush()
-        user = new_verification.email.user
+        user = verification.email.user
         mailer = self.request.registry['mailer']
         message = Message(
             recipients=[email],
             subject='%s email verification' % self.request.registry.settings['site_title'],
             body=render_template('../templates/account/verify_email.txt',
+                view=self,
                 request=self.request,
-                user=user,
-                verification=new_verification))
+                verification=verification))
         mailer.send(message)
-        return dict(email=email, timeout=VERIFICATION_TIMEOUT)
+        return dict(verification=verification)
 
     @view_config(
         route_name='account_verify_complete',
         renderer='../templates/account/verify_complete.pt')
     def verify_complete(self):
-        return {}
-
-    @view_config(
-        route_name='account_verify_cancel',
-        renderer='../templates/account/verify_cancel.pt')
-    def verify_cancel(self):
-        return {}
+        code = self.request.matchdict['code']
+        verification = EmailVerification.by_id(code)
+        if verification is None:
+            raise HTTPNotFound()
+        verification.verify()
+        return dict(verification=verification)
 
