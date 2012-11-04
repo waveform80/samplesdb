@@ -31,11 +31,9 @@
         ${form.end()}
       </div>
       <div class="five columns" tal:condition="view.user">
-        <ul class="button-group even three-up radius">
-          <li><a class="small button" href="${request.route_url('collections_index')}">Collections</a></li>
-          <li><a class="small button" href="${request.route_url('account_index')}">Account</a></li>
-          <li><a class="small button" href="${request.route_url('account_logout')}">Logout</a></li>
-        </ul>
+        <p><a class="expand button" href="${request.route_url('collections_index')}">Collections</a></p>
+        <p><a class="expand button" href="${request.route_url('account_index')}">Account</a></p>
+        <p><a class="expand button" href="${request.route_url('account_logout')}">Logout</a></p>
         <p>You are logged in as ${view.user}. Please click on one of the buttons
         above to view your collections (you currently have
         ${len(view.user.collections)} of these, containing
