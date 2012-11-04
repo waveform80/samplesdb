@@ -12,16 +12,6 @@
     <div class="row"><h3 class="twelve columns subheader">Details</h3></div>
 
     <dl class="row">
-      <dt class="three mobile-one columns">Name</dt>
-      <dd class="nine mobile-three columns">${view.user.salutation} ${view.user.given_name} ${view.user.surname}</dd>
-    </dl>
-
-    <dl class="row">
-      <dt class="three mobile-one columns">Organization</dt>
-      <dd class="nine mobile-three columns">${view.user.organization}&nbsp;</dd>
-    </dl>
-
-    <dl class="row">
       <dt class="three mobile-one columns">E-mail Address(es)</dt>
       <dd class="nine mobile-three columns">
         <ul class="no-bullet">
@@ -34,9 +24,21 @@
       </dd>
     </dl>
 
+    <br />
+
     <dl class="row">
-      <dt class="three mobile-one columns">Account Created</dt>
-      <dd class="nine mobile-three columns">${view.helpers.date.time_ago_in_words(view.user.created, granularity='day')} ago</dd>
+      <dt class="three mobile-one columns">Name</dt>
+      <dd class="nine mobile-three columns">${view.user.salutation} ${view.user.given_name} ${view.user.surname}</dd>
+    </dl>
+
+    <dl class="row">
+      <dt class="three mobile-one columns">Organization</dt>
+      <dd class="nine mobile-three columns">${view.user.organization}&nbsp;</dd>
+    </dl>
+
+    <dl class="row">
+      <dt class="three mobile-one columns">Timezone</dt>
+      <dd class="nine mobile-three columns">${view.user.timezone_name.replace('_', ' ')}</dd>
     </dl>
 
     <dl class="row">
@@ -45,12 +47,12 @@
     </dl>
 
     <dl class="row">
-      <dt class="three mobile-one columns">Timezone</dt>
-      <dd class="nine mobile-three columns">${view.user.timezone.zone.replace('_', ' ')}</dd>
+      <dt class="three mobile-one columns">Account Created</dt>
+      <dd class="nine mobile-three columns">${view.helpers.date.time_ago_in_words(view.user.created, granularity='day')} ago</dd>
     </dl>
 
     <dl class="row">
-      <p class="twelve columns"><a href="${request.route_url('account_edit')}">Edit Details</a></p>
+      <p class="twelve columns"><a href="${request.route_url('account_edit')}">Edit Account Details</a></p>
     </dl>
 
     <div class="row"><h3 class="twelve columns subheader">Limits</h3></div>

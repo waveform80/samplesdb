@@ -42,6 +42,11 @@ from samplesdb.models import (
     )
 
 
+class CollectionSchema(BaseSchema):
+    name = validators.UnicodeString(
+        not_empty=True, max=Collection.__table__.c.name.type.length)
+
+
 class CollectionsView(BaseView):
     """Handler for collection related views"""
 

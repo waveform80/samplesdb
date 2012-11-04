@@ -29,6 +29,7 @@ from datetime import datetime
 
 import pytz
 from pyramid.view import view_config, forbidden_view_config
+from pyramid.decorator import reify
 from pyramid.security import remember, forget
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 from pyramid.chameleon_text import render_template
@@ -58,14 +59,8 @@ class LoginSchema(BaseSchema):
     came_from = validators.UnicodeString()
 
 
-class AccountCreateSchema(BaseSchema):
-    """Schema for account creation form"""
-    email = validators.Email(
-        not_empty=True, resolve_domain=True,
-        max=EmailAddress.__table__.c.email.type.length)
-    email_confirm = validators.UnicodeString()
-    password = validators.UnicodeString(not_empty=True, max=100)
-    password_confirm = validators.UnicodeString()
+class AccountEditSchema(BaseSchema):
+    """Schema for account editing form"""
     salutation = validators.OneOf([
         '', 'Mr.', 'Mrs.', 'Miss', 'Ms.', 'Dr.', 'Prof.'])
     given_name = validators.UnicodeString(
@@ -74,9 +69,24 @@ class AccountCreateSchema(BaseSchema):
         not_empty=True, max=User.__table__.c.surname.type.length)
     organization = validators.UnicodeString(
         max=User.__table__.c.organization.type.length)
+    timezone_name = validators.OneOf(pytz.all_timezones)
+    password_new = validators.UnicodeString(max=100)
+    password_new_confirm = validators.UnicodeString(max=100)
+    chained_validators = [
+        validators.FieldsMatch('password_new', 'password_new_confirm'),
+        ]
+
+
+class AccountCreateSchema(AccountEditSchema):
+    """Schema for account creation form"""
     limits_id = validators.OneOf([
         'academic', 'commercial'])
-    timezone = validators.OneOf(pytz.all_timezones)
+    password = validators.UnicodeString(not_empty=True, max=100)
+    password_confirm = validators.UnicodeString(not_empty=True, max=100)
+    email = validators.Email(
+        not_empty=True, resolve_domain=True,
+        max=EmailAddress.__table__.c.email.type.length)
+    email_confirm = validators.UnicodeString()
     chained_validators = [
         validators.FieldsMatch('email', 'email_confirm'),
         validators.FieldsMatch('password', 'password_confirm'),
@@ -88,6 +98,17 @@ class AccountView(BaseView):
 
     def __init__(self, request):
         self.request = request
+
+    @reify
+    def timezones(self):
+        # Build a nice sorted list of (timezone_id, description) for the 
+        now = datetime(2000, 1, 1, 0, 0, 0)
+        return list(sorted((
+            (tz, '(UTC%s) %s' % (
+                pytz.timezone(tz).localize(now).strftime('%z'), tz.replace('_', ' ')))
+            for tz in pytz.common_timezones
+            if tz != 'GMT'),
+            key=lambda t: (pytz.timezone(t[0]).localize(now), t[0])))
 
     @view_config(
         route_name='account_login',
@@ -125,18 +146,27 @@ class AccountView(BaseView):
         return {}
 
     @view_config(
+        route_name='account_edit',
+        renderer='../templates/account/edit.pt')
+    def edit(self):
+        user = self.user
+        form = Form(self.request, schema=AccountEditSchema, obj=user)
+        logging.warning('Validating form')
+        if form.validate():
+            logging.warning('Form validated')
+            form.bind(user)
+            if form.data['new_password']:
+                user.password = form.data['new_password']
+            return HTTPFound(location=self.request.route_url('account_index'))
+        else:
+            print(repr(form.errors))
+        return dict(form=FormRenderer(form))
+
+    @view_config(
         route_name='account_create',
         renderer='../templates/account/create.pt')
     def create(self):
         # TODO Determine user timezone as default
-        # Build a nice sorted list of (timezone_id, description) for the 
-        now = datetime(2000, 1, 1, 0, 0, 0)
-        timezones = sorted((
-            (tz, '(UTC%s) %s' % (
-                pytz.timezone(tz).localize(now).strftime('%z'), tz.replace('_', ' ')))
-            for tz in pytz.common_timezones
-            if tz != 'GMT'),
-            key=lambda t: (pytz.timezone(t[0]).localize(now), t[0]))
         form = Form(self.request, schema=AccountCreateSchema)
         if form.validate():
             new_user = form.bind(User())
@@ -150,7 +180,7 @@ class AccountView(BaseView):
             new_user.collections[new_collection] = owner_role
             return HTTPFound(location=self.request.route_url(
                 'account_verify_email', _query=dict(email=form.data['email'])))
-        return dict(form=FormRenderer(form), timezones=timezones)
+        return dict(form=FormRenderer(form))
 
     @view_config(
         route_name='account_verify_email',

@@ -135,12 +135,16 @@ class FormRenderer(pyramid_simpleform.renderers.FormRenderer):
             content.append(HTML(error))
             content.append(tags.BR)
         content = content[:-1]
-        return HTML.tag('small', *content, class_='error', **attrs)
+        class_ = 'error'
+        if 'cols' in attrs:
+            class_ = 'error %s' % COL_NAMES[attrs['cols']]
+            del attrs['cols']
+        return HTML.tag('small', *content, class_=class_, **attrs)
 
     def column(self, name, content, cols, errors=True):
         error_content = ''
         if errors:
-            error_content = self.error_small(name)
+            error_content = self.error_small(name, cols=cols)
         return HTML.tag(
             'div', tags.literal(content), error_content,
             class_='%s columns %s' % (

@@ -249,7 +249,7 @@ class AccountViewUnitTests(UnitFixture):
         assert_raises(HTTPNotFound, view.verify_complete)
 
 
-class SiteFunctionalTests(FunctionalFixture):
+class SiteFunctionalTest(FunctionalFixture):
     def test(self):
         from samplesdb.models import EmailVerification, EmailAddress
         from pyramid_mailer.message import Message

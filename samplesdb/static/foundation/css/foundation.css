@@ -343,7 +343,7 @@ input[type="time"]:focus,
 input[type="url"]:focus,
 textarea:focus,
 select:focus {
-  background: #eafaea;
+  background: #fafafa;
   outline: none !important;
   border-color: #b3b3b3;
 }

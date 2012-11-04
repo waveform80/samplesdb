@@ -328,7 +328,7 @@ class User(Base):
         PasswordReset, backref='user',
         cascade='all, delete-orphan', passive_deletes=True)
     created = Column(DateTime, default=datetime.utcnow, nullable=False)
-    _timezone = Column(
+    timezone_name = Column(
         'timezone', Unicode(max(len(t) for t in pytz.all_timezones)),
         default='UTC', nullable=False)
     emails = relationship(
@@ -372,15 +372,13 @@ class User(Base):
 
     def _get_timezone(self):
         """Return the timezone object corresponding to the name"""
-        return pytz.timezone(self._timezone)
+        return pytz.timezone(self.timezone_name)
 
     def _set_timezone(self, value):
         """Set the timezone to the name of the timezone object"""
-        if not hasattr(value, 'zone'):
-            value = pytz.timezone(value)
-        self._timezone = value.zone
+        self.timezone_name = value.zone
 
-    timezone = synonym('_timezone', descriptor=property(_get_timezone, _set_timezone))
+    timezone = synonym('timezone_name', descriptor=property(_get_timezone, _set_timezone))
 
     def _set_password(self, password):
         """Store a hashed version of password"""
@@ -398,7 +396,7 @@ class User(Base):
         # We call verify_and_update here in case we've defined any new
         # (hopefully stronger) algorithms in the context above. If so, this'll
         # take care of migrating users as they login
-        (result, new_password) = PASSWORD_CONTEXT.verify_and_update(password, self.password)
+        (result, new_password) = PASSWORD_CONTEXT.verify_and_update(password, self._password)
         if result and new_password:
             self._password = new_password
         return result

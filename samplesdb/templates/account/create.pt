@@ -11,11 +11,11 @@
 
     <div class="row">
       <div class="twelve columns">
-        <div metal:use-macro="view.flashes"></div>
-
         <p>Please make sure you fill out your e-mail address accurately. We'll
         send you a confirmation e-mail with a link to activate your account when
         you submit the form.</p>
+
+        <div metal:use-macro="view.flashes"></div>
 
         ${form.begin(request.route_url('account_create'))}
 
@@ -32,8 +32,8 @@
         </div>
 
         <div class="row">
-          ${form.col_label('timezone', 'Timezone')}
-          ${form.col_select('timezone', options=timezones, selected_value='UTC', class_='six')}
+          ${form.col_label('timezone_name', 'Timezone')}
+          ${form.col_select('timezone_name', options=view.timezones, selected_value='UTC', class_='six')}
         </div>
 
         <div class="row">
