@@ -41,6 +41,7 @@ ul li.collection a { display: block; }
 dl dt { color: #4d4d4d; }
 dl dd { margin-bottom: 0.5em; }
 
+fieldset { padding: 12px; }
 
 /* Make placeholder text lighter - no decent standards for this yet. See
  * <http://stackoverflow.com/questions/2610497/change-an-inputs-html5-placeholder-color-with-css>
