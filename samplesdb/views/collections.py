@@ -26,25 +26,43 @@ from __future__ import (
 
 import transaction
 from pyramid.view import view_config
-from formencode import validators
+from pyramid.decorator import reify
+from pyramid.httpexceptions import HTTPFound
+from formencode import validators, foreach
 
 from samplesdb.views import BaseView
 from samplesdb.forms import BaseSchema, Form, FormRenderer
 from samplesdb.security import (
+    OWNER_ROLE,
     CREATE_COLLECTION,
     VIEW_COLLECTION,
     EDIT_COLLECTION,
     )
 from samplesdb.models import (
     DBSession,
+    EmailAddress,
     Collection,
     Sample,
+    Role,
     )
+
+
+class CollectionUserSchema(BaseSchema):
+    email = validators.Email(
+        not_empty=True, resolve_domain=False,
+        max=EmailAddress.__table__.c.email.type.length)
+    role = validators.OneOf([
+        role.id for role in DBSession.query(Role)])
 
 
 class CollectionSchema(BaseSchema):
     name = validators.UnicodeString(
         not_empty=True, max=Collection.__table__.c.name.type.length)
+    users = foreach.ForEach(CollectionUserSchema())
+
+
+class CollectionCreateSchema(CollectionSchema):
+    pass
 
 
 class CollectionsView(BaseView):
@@ -52,6 +70,13 @@ class CollectionsView(BaseView):
 
     def __init__(self, request):
         self.request = request
+
+    @reify
+    def roles(self):
+        return [
+            (role.id, role.id.title())
+            for role in DBSession.query(Role)
+            ]
 
     @view_config(
         route_name='collections_index',
@@ -64,6 +89,22 @@ class CollectionsView(BaseView):
         renderer='../templates/collections/create.pt',
         permission=CREATE_COLLECTION)
     def create(self):
+        form = Form(
+            self.request, schema=CollectionSchema, variable_decode=True)
+        if form.validate():
+            new_collection = form.bind(new_collection)
+            # XXX Hard-code ownership to currently authenticated user
+            new_collection.users[self.user] = DBSession.query(Role).filter(Role.id==OWNER_ROLE).one()
+            DBSession.add(new_collection)
+            return HTTPFound(
+                location=self.request.route_url('collections_index'))
+        return dict(form=FormRenderer(form))
+
+    @view_config(
+        route_name='collections_edit',
+        renderer='../templates/collections/edit.pt',
+        permission=EDIT_COLLECTION)
+    def edit(self):
         return {}
 
     @view_config(
@@ -71,12 +112,5 @@ class CollectionsView(BaseView):
         renderer='../templates/collections/view.pt',
         permission=VIEW_COLLECTION)
     def view(self):
-        return {}
-
-    @view_config(
-        route_name='collections_edit',
-        renderer='../templates/collections/edit.pt',
-        permission=EDIT_COLLECTION)
-    def edit(self):
         return {}
 
