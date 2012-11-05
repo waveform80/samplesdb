@@ -59,8 +59,8 @@ class LoginSchema(BaseSchema):
     came_from = validators.UnicodeString()
 
 
-class AccountEditSchema(BaseSchema):
-    """Schema for account editing form"""
+class AccountSchema(BaseSchema):
+    """Common schema for account creation and editing"""
     salutation = validators.OneOf([
         '', 'Mr.', 'Mrs.', 'Miss', 'Ms.', 'Dr.', 'Prof.'])
     given_name = validators.UnicodeString(
@@ -70,6 +70,10 @@ class AccountEditSchema(BaseSchema):
     organization = validators.UnicodeString(
         max=User.__table__.c.organization.type.length)
     timezone_name = validators.OneOf(pytz.all_timezones)
+
+
+class AccountEditSchema(AccountSchema):
+    """Schema for account editing form"""
     password_new = validators.UnicodeString(max=100)
     password_new_confirm = validators.UnicodeString(max=100)
     chained_validators = [
@@ -77,7 +81,7 @@ class AccountEditSchema(BaseSchema):
         ]
 
 
-class AccountCreateSchema(AccountEditSchema):
+class AccountCreateSchema(AccountSchema):
     """Schema for account creation form"""
     limits_id = validators.OneOf([
         'academic', 'commercial'])
@@ -151,15 +155,11 @@ class AccountView(BaseView):
     def edit(self):
         user = self.user
         form = Form(self.request, schema=AccountEditSchema, obj=user)
-        logging.warning('Validating form')
         if form.validate():
-            logging.warning('Form validated')
             form.bind(user)
-            if form.data['new_password']:
-                user.password = form.data['new_password']
+            if form.data['password_new']:
+                user.password = form.data['password_new']
             return HTTPFound(location=self.request.route_url('account_index'))
-        else:
-            print(repr(form.errors))
         return dict(form=FormRenderer(form))
 
     @view_config(
@@ -178,8 +178,10 @@ class AccountView(BaseView):
             new_collection.name = 'Default'
             owner_role = DBSession.query(Role).filter(Role.id=='owner').one()
             new_user.collections[new_collection] = owner_role
-            return HTTPFound(location=self.request.route_url(
-                'account_verify_email', _query=dict(email=form.data['email'])))
+            return HTTPFound(
+                location=self.request.route_url(
+                    'account_verify_email',
+                    _query=dict(email=form.data['email'])))
         return dict(form=FormRenderer(form))
 
     @view_config(
