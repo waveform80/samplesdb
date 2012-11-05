@@ -1,0 +1,74 @@
+<!doctype html>
+<!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
+<!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
+<!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!--> <div metal:use-macro="view.layout">
+  <div tal:omit-tag="True" metal:fill-slot="title">My Account</div>
+  <div tal:omit-tag="True" metal:fill-slot="content">
+    <div metal:use-macro="view.top_bar"></div>
+
+    <div class="row"><h1 class="twelve columns">My Account</h1></div>
+
+    <div class="row">
+      <div class="twelve columns">
+        <dl class="row">
+          <dt class="two mobile-one columns">E-mail Address(es)</dt>
+          <dd class="ten mobile-three columns">
+            <ul class="no-bullet">
+              <li tal:repeat="email view.user.emails">${email.email}
+                <span class="round alert label" tal:condition="not email.verified">unverified</span>
+                <a tal:condition="not email.verified"
+                  href="${request.route_url('account_verify_email', _query={'email': email.email})}">Re-send verification code</a>
+                <a tal:condition="len(view.user.verified_emails) > 1"
+                  href="${request.route_url('account_remove_email', _query={'email': email.email})}">Remove</a>
+              </li>
+            </ul>
+            <a tal:condition="len(view.user.emails) < 5"
+              href="${request.route_url('account_add_email')}">Add address</a>
+          </dd>
+        </dl>
+
+        <hr />
+
+        <div metal:use-macro="view.flashes"></div>
+
+        ${form.begin(request.route_url('account_edit'))}
+
+        <div class="row">
+          ${form.col_label('salutation', 'Name')}
+          ${form.col_select('salutation', autofocus='autofocus', cols=1)}
+          ${form.col_text('given_name', placeholder='First Name', cols=4)}
+          ${form.col_text('surname', placeholder='Last Name', cols=5)}
+        </div>
+
+        <div class="row">
+          ${form.col_label('organization', 'Organization')}
+          ${form.col_text('organization')}
+        </div>
+
+        <div class="row">
+          ${form.col_label('timezone_name', 'Timezone')}
+          ${form.col_select('timezone_name', options=view.timezones, inner_cols=6)}
+        </div>
+
+        <div class="row">
+          ${form.col_label('password_new', 'New Password')}
+          ${form.col_password('password_new', value='', inner_cols=6)}
+        </div>
+
+        <div class="row">
+          ${form.col_label('password_new_confirm', 'Confirm Password')}
+          ${form.col_password('password_new_confirm', value='', inner_cols=6)}
+        </div>
+
+        <div class="row">
+          ${form.col_submit()}
+        </div>
+
+        ${form.end()}
+
+      </div>
+    </div>
+
+  </div>
+</div>

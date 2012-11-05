@@ -33,7 +33,7 @@
 
         <div class="row">
           ${form.col_label('timezone_name', 'Timezone')}
-          ${form.col_select('timezone_name', options=view.timezones, selected_value='UTC', class_='six')}
+          ${form.col_select('timezone_name', options=view.timezones, selected_value='UTC', inner_cols=6)}
         </div>
 
         <div class="row">
@@ -57,12 +57,12 @@
 
         <div class="row">
           ${form.col_label('password', 'Password')}
-          ${form.col_password('password', class_='six')}
+          ${form.col_password('password', inner_cols=6)}
         </div>
 
         <div class="row">
           ${form.col_label('password_confirm', 'Confirm Password')}
-          ${form.col_password('password_confirm', class_='six')}
+          ${form.col_password('password_confirm', inner_cols=6)}
         </div>
 
         <div class="row">
