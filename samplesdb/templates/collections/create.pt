@@ -1,0 +1,92 @@
+<!doctype html>
+<!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
+<!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
+<!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!--> <div metal:use-macro="view.layout">
+  <div tal:omit-tag="True" metal:fill-slot="title">New Collection</div>
+  <div tal:omit-tag="True" metal:fill-slot="content">
+    <div metal:use-macro="view.top_bar"></div>
+
+    <div class="row"><h1 class="twelve columns">New Collection</h1></div>
+
+    <div class="row" id="user" style="display: none">
+      ${form.col_label('email', 'E-mail', cols=1)}
+      ${form.col_email('email', placeholder='someone@somewhere.edu', cols=6)}
+      ${form.col_label('role', 'Role', cols=1)}
+      ${form.col_select('role', options=view.roles, selected_value='owner', cols=2)}
+      <div class="two columns">
+        <a href="#" class="secondary small button right" id="remove">Remove</a>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="twelve columns">
+        ${form.begin(request.route_url('collections_create'))}
+
+        <div class="row">
+          ${form.col_label('name', 'Name', cols=1)}
+          ${form.col_text('name', placeholder='Collection Name', cols=11)}
+        </div>
+
+        <fieldset>
+          <legend>Authorizations</legend>
+          <div class="row" id="user-0">
+            ${form.hidden('users-0.email', value=view.user.emails[0].email)}
+            ${form.hidden('users-0.role', value='owner')}
+            <span class="one columns">E-mail</span>
+            <span class="six columns">${view.user.emails[0].email}</span>
+            <span class="one columns">Role</span>
+            <span class="two columns end">Owner</span>
+          </div>
+          <hr />
+          <a href="#" class="secondary small button right" id="add">Add</a>
+        </fieldset>
+
+        ${form.col_submit()}
+
+        ${form.end()}
+      </div>
+    </div>
+  </div>
+
+  <div metal:fill-slot="scripts">
+    <script type="text/javascript">
+      /* Dupe a div within the form, using unique identifiers for each form
+       * element within
+       */
+
+(function() {
+    var count = 1;
+
+    $('#add').click(function() {
+        var source = $('#user'),
+            clone = source.clone(true);
+
+        clone.attr('id', function(i, val) { return 'users-' + count; });
+        clone.find('a').removeAttr('id');
+        clone.find(':input').attr('id', function(i, val) {
+            return 'users-' + count + '.' + val;
+        }).attr('name', function(i, val) {
+            return 'users-' + count + '.' + val;
+        });
+        clone.find('label').attr('for', function(i, val) {
+            return 'users-' + count + '.' + val;
+        });
+        clone.insertBefore(this).slideDown('fast');
+        count++;
+        return false;
+    });
+
+    $('#remove').click(function() {
+        $(this).parent().parent().slideUp('fast', function() {
+            $(this).remove();
+        });
+        return false;
+    });
+
+})();
+    </script>
+  </div>
+</div>
+
+
