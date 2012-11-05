@@ -45,44 +45,44 @@ __version__ = '0.1'
 
 ROUTES = {
     # views.root
-    'home':                       '/',
-    'faq':                        '/faq',
+    'home':                       r'/',
+    'faq':                        r'/faq',
     # views.account
-    'account_login':              '/login',
-    'account_logout':             '/logout',
-    'account_index':              '/account',
-    'account_create':             '/signup',
-    'account_edit':               '/account/edit',
-    'account_add_email':          '/account/add-email',
-    'account_remove_email':       '/account/remove-email',
-    'account_verify_email':       '/account/verify',
-    'account_verify_complete':    '/verify/{code}',
-    'account_reset_password':     '/account/reset',
-    'account_reset_complete':     '/reset/{code}',
+    'account_login':              r'/login',
+    'account_logout':             r'/logout',
+    'account_index':              r'/account',
+    'account_create':             r'/signup',
+    'account_edit':               r'/account/edit',
+    'account_add_email':          r'/account/add-email',
+    'account_remove_email':       r'/account/remove-email',
+    'account_verify_email':       r'/account/verify',
+    'account_verify_complete':    r'/verify/{code:[a-fA-f0-9]+}',
+    'account_reset_password':     r'/account/reset',
+    'account_reset_complete':     r'/reset/{code:[a-fA-F0-9]+}',
     # views.collections
-    'collections_index':          '/collections',
-    'collections_create':         '/collections/new',
-    'collections_view':           '/collections/{collection_id}',
-    'collections_edit':           '/collections/{collection_id}/edit',
-    'collections_destroy':        '/collections/{collection_id}/destroy',
-    'sample_view':                '/samples/{sample_id}',
-    'sample_edit':                '/samples/{sample_id}/edit',
-    'sample_split':               '/samples/{sample_id}/split',
-    'sample_destroy':             '/samples/{sample_id}/destroy',
-    'sample_remove':              '/samples/{sample_id}/remove',
-    'sample_combine':             '/samples/combine',
+    'collections_index':          r'/collections',
+    'collections_create':         r'/collections/new',
+    'collections_view':           r'/collections/{collection_id:\d+}',
+    'collections_edit':           r'/collections/{collection_id:\d+}/edit',
+    'collections_destroy':        r'/collections/{collection_id:\d+}/destroy',
+    'sample_view':                r'/samples/{sample_id:\d+}',
+    'sample_edit':                r'/samples/{sample_id:\d+}/edit',
+    'sample_split':               r'/samples/{sample_id:\d+}/split',
+    'sample_destroy':             r'/samples/{sample_id:\d+}/destroy',
+    'sample_remove':              r'/samples/{sample_id:\d+}/remove',
+    'sample_combine':             r'/samples/combine',
     # views.admin
-    'admin_home':              '/admin/',
-    'admin_users':             '/admin/users/',
-    'admin_user_create':       '/admin/users/new',
-    'admin_user_view':         '/admin/users/{id}',
-    'admin_user_edit':         '/admin/users/{id}/edit',
-    'admin_user_remove':       '/admin/users/{id}/remove',
-    'admin_groups':            '/admin/groups',
-    'admin_group_create':      '/admin/groups/new',
-    'admin_group_view':        '/admin/group/{id}',
-    'admin_group_edit':        '/admin/group/{id}/edit',
-    'admin_group_remove':      '/admin/group/{id}/remove',
+    'admin_home':                 r'/admin/',
+    'admin_users':                r'/admin/users/',
+    'admin_user_create':          r'/admin/users/new',
+    'admin_user_view':            r'/admin/users/{id:\d+}',
+    'admin_user_edit':            r'/admin/users/{id:\d+}/edit',
+    'admin_user_remove':          r'/admin/users/{id:\d+}/remove',
+    'admin_groups':               r'/admin/groups',
+    'admin_group_create':         r'/admin/groups/new',
+    'admin_group_view':           r'/admin/groups/{id}',
+    'admin_group_edit':           r'/admin/groups/{id}/edit',
+    'admin_group_remove':         r'/admin/groups/{id}/remove',
     }
 
 
@@ -107,7 +107,6 @@ def main(global_config, **settings):
     config.scan()
     app = config.make_wsgi_app()
     # XXX Dirty horrid hack for functional testing
-    print(settings)
     if settings.get('testing', '0') == '1':
         app.engine = engine
     return app
