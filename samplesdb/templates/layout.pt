@@ -38,5 +38,7 @@
   <script src="${request.static_url('samplesdb:static/webforms2/webforms2-p.js')}"></script>
   <script src="${request.static_url('samplesdb:static/foundation/js/foundation.min.js')}"></script>
   <script src="${request.static_url('samplesdb:static/foundation/js/app.js')}"></script>
+
+  <div metal:define-slot="scripts"></div>
 </body>
 </html>
