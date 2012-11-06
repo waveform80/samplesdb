@@ -31,8 +31,6 @@
         <fieldset>
           <legend>Authorizations</legend>
           <div class="row" id="user-0">
-            ${form.hidden('users-0.email', value=view.user.emails[0].email)}
-            ${form.hidden('users-0.role', value='owner')}
             <span class="one columns">E-mail</span>
             <span class="six columns">${view.user.emails[0].email}</span>
             <span class="one columns">Role</span>

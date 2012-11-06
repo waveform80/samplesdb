@@ -34,6 +34,9 @@ from samplesdb.views import BaseView
 from samplesdb.forms import BaseSchema, Form, FormRenderer
 from samplesdb.security import (
     OWNER_ROLE,
+    EDITOR_ROLE,
+    AUDITOR_ROLE,
+    VIEWER_ROLE,
     CREATE_COLLECTION,
     VIEW_COLLECTION,
     EDIT_COLLECTION,
@@ -51,8 +54,8 @@ class CollectionUserSchema(BaseSchema):
     email = validators.Email(
         not_empty=True, resolve_domain=False,
         max=EmailAddress.__table__.c.email.type.length)
-    role = validators.OneOf([
-        role.id for role in DBSession.query(Role)])
+    role = validators.OneOf((
+        OWNER_ROLE, EDITOR_ROLE, AUDITOR_ROLE, VIEWER_ROLE))
 
 
 class CollectionSchema(BaseSchema):
