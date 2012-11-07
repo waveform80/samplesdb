@@ -17,15 +17,37 @@
 # You should have received a copy of the GNU General Public License along with
 # samplesdb.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import (
+    unicode_literals,
+    print_function,
+    absolute_import,
+    division,
+    )
+
 import logging
 
+import pytz
 from webhelpers.html import tags
 from webhelpers.html.builder import HTML
-from formencode import Schema, validators
+from formencode import (
+    FancyValidator,
+    Schema,
+    Invalid,
+    validators,
+    variabledecode,
+    )
 from pyramid.events import NewRequest, subscriber
 from pyramid.httpexceptions import HTTPForbidden
 import pyramid_simpleform
 import pyramid_simpleform.renderers
+
+from samplesdb.models import EmailAddress, User, Collection, Role
+from samplesdb.security import (
+    OWNER_ROLE,
+    EDITOR_ROLE,
+    AUDITOR_ROLE,
+    VIEWER_ROLE,
+    )
 
 
 COL_NAMES = {
@@ -83,11 +105,28 @@ class BaseSchema(Schema):
 
 
 class Form(pyramid_simpleform.Form):
-    pass
+    "A refinement of Form to make decoded form variables accessible"
+
+    def validate(self):
+        super(Form, self).validate()
+        if self.method == 'POST':
+            params = self.request.POST
+        else:
+            params = self.request.params
+
+        if self.variable_decode:
+            self.data_decoded = variabledecode.variable_decode(
+                    params, self.dict_char, self.list_char)
+        else:
+            self.data_decoded = params
 
 
 class FormRenderer(pyramid_simpleform.renderers.FormRenderer):
-    "A refinement of the FormRenderer with additions for Foundation columns"
+    "A refinement of FormRenderer with additions for Foundation columns"
+
+    def __init__(self, form, csrf_field='_csrf'):
+        super(FormRenderer, self).__init__(form, csrf_field)
+        self.data_decoded = form.data_decoded
 
     def begin(self, url=None, **attrs):
         "Returns the opening tag for an HTML form"
@@ -245,4 +284,88 @@ class FormRenderer(pyramid_simpleform.renderers.FormRenderer):
         return self.column(
             name, self.submit(name, value, id, **attrs),
             cols, inner_cols, errors=False)
+
+
+# The following classes define validators for each of the fields in the
+# database that frequently appear on forms within the application. Centralizing
+# the attributes of these validators simplifies maintenance and also makes the
+# form schemas considerably less cluttered
+
+
+class ValidSalutation(validators.OneOf):
+    def __init__(self):
+        super(ValidSalutation, self).__init__([
+            'Mr.', 'Mrs.', 'Miss', 'Ms.', 'Dr.', 'Prof.'])
+
+
+class ValidGivenName(validators.UnicodeString):
+    def __init__(self):
+        super(ValidGivenName, self).__init__(
+            not_empty=True, max=User.__table__.c.given_name.type.length)
+
+
+class ValidSurname(validators.UnicodeString):
+    def __init__(self):
+        super(ValidSurname, self).__init__(
+            not_empty=True, max=User.__table__.c.surname.type.length)
+
+
+class ValidOrganization(validators.UnicodeString):
+    def __init__(self):
+        super(ValidOrganization, self).__init__(
+            max=User.__table__.c.organization.type.length)
+
+
+class ValidPassword(validators.UnicodeString):
+    def __init__(self, not_empty=True):
+        super(ValidPassword, self).__init__(not_empty=not_empty, max=100)
+
+
+
+class ValidAccountType(validators.OneOf):
+    def __init__(self):
+        super(ValidAccountType, self).__init__(['academic', 'commercial'])
+
+
+class ValidEmail(validators.Email):
+    def __init__(self, not_empty=True, resolve_domain=True):
+        super(ValidEmail, self).__init__(
+            not_empty=not_empty, resolve_domain=resolve_domain,
+            max=EmailAddress.__table__.c.email.type.length)
+
+
+class ValidCollectionName(validators.UnicodeString):
+    def __init__(self):
+        super(ValidCollectionName, self).__init__(
+            not_empty=True, max=Collection.__table__.c.name.type.length)
+
+
+class ValidTimezone(validators.OneOf):
+    def __init__(self):
+        super(ValidTimezone, self).__init__(pytz.all_timezones)
+
+
+class ValidRole(FancyValidator):
+    def _from_python(self, value, state):
+        assert isinstance(value, Role)
+        return value.id
+
+    def _to_python(self, value, state):
+        result = Role.by_id(value.strip())
+        if result is None:
+            raise Invalid('Invalid role', value, state)
+        return result
+
+
+class ValidUser(FancyValidator):
+    def _from_python(self, value, state):
+        assert isinstance(value, User)
+        return value.verified_emails[0].email
+
+    def _to_python(self, value, state):
+        result = User.by_email(value.strip())
+        if result is None:
+            raise Invalid('No users have address %s' % value, value, state)
+        return result
+
 
