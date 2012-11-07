@@ -7,7 +7,6 @@ from __future__ import (
 
 import logging
 
-import transaction
 from mock import Mock
 from nose.tools import assert_raises
 from pyramid import testing
@@ -58,6 +57,7 @@ class FunctionalFixture(object):
     """Fixture for functional tests"""
 
     def setup(self):
+        import DNS
         from samplesdb import main
         from webtest import TestApp
         settings = {
@@ -75,6 +75,7 @@ class FunctionalFixture(object):
         init_instances()
         self.mailer = Mock(Mailer)
         self.test.app.registry['mailer'] = self.mailer
+        DNS.DnsRequest = Mock(DNS.DnsRequest)
 
     def teardown(self):
         DBSession.remove()
@@ -345,7 +346,7 @@ class SiteFunctionalTest(FunctionalFixture):
     def test(self):
         from samplesdb.models import EmailVerification, EmailAddress, User
         from pyramid_mailer.message import Message
-        import transaction
+        import DNS
         # Visit the home page and FAQ
         res = self.test.get('/')
         res = res.click(href='/faq')
@@ -386,6 +387,7 @@ class SiteFunctionalTest(FunctionalFixture):
         # ... with an incorrect password confirmation
         res.form['password_confirm'] = 'quux'
         res = res.form.submit()
+        assert DNS.DnsRequest.called # XXX check manchester.ac.uk in call args
         assert 'Fields do not match' in res
         # ... correct the password and make sure an e-mail verification is sent
         res.form['password_confirm'] = 'baz'
