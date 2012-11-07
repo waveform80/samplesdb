@@ -107,8 +107,15 @@ class BaseSchema(Schema):
 class Form(pyramid_simpleform.Form):
     "A refinement of Form to make decoded form variables accessible"
 
+    def __init__(
+            self, request, schema, defaults=None, obj=None,
+            variable_decode=False):
+        super(Form, self).__init__(
+            request, schema=schema, defaults=defaults, obj=obj,
+            variable_decode=variable_decode)
+        self.data_decoded = {}
+
     def validate(self):
-        super(Form, self).validate()
         if self.method == 'POST':
             params = self.request.POST
         else:
@@ -119,6 +126,7 @@ class Form(pyramid_simpleform.Form):
                     params, self.dict_char, self.list_char)
         else:
             self.data_decoded = params
+        return super(Form, self).validate()
 
 
 class FormRenderer(pyramid_simpleform.renderers.FormRenderer):
