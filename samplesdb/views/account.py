@@ -37,7 +37,19 @@ from pyramid_mailer.message import Message
 from formencode import validators
 
 from samplesdb.views import BaseView
-from samplesdb.forms import BaseSchema, Form, FormRenderer
+from samplesdb.forms import (
+    BaseSchema,
+    Form,
+    FormRenderer,
+    ValidSalutation,
+    ValidGivenName,
+    ValidSurname,
+    ValidOrganization,
+    ValidTimezone,
+    ValidAccountType,
+    ValidEmail,
+    ValidPassword,
+    )
 from samplesdb.security import authenticate
 from samplesdb.models import (
     DBSession,
@@ -52,30 +64,24 @@ from samplesdb.models import (
 
 class LoginSchema(BaseSchema):
     """Schema for account login form"""
-    username = validators.Email(
-        not_empty=True, resolve_domain=False,
-        max=EmailAddress.__table__.c.email.type.length)
-    password = validators.UnicodeString(not_empty=True, max=100)
+    username = ValidEmail(resolve_domain=False)
+    password = ValidPassword()
     came_from = validators.UnicodeString()
 
 
 class AccountSchema(BaseSchema):
     """Common schema for account creation and editing"""
-    salutation = validators.OneOf([
-        '', 'Mr.', 'Mrs.', 'Miss', 'Ms.', 'Dr.', 'Prof.'])
-    given_name = validators.UnicodeString(
-        not_empty=True, max=User.__table__.c.given_name.type.length)
-    surname = validators.UnicodeString(
-        not_empty=True, max=User.__table__.c.surname.type.length)
-    organization = validators.UnicodeString(
-        max=User.__table__.c.organization.type.length)
-    timezone_name = validators.OneOf(pytz.all_timezones)
+    salutation = ValidSalutation()
+    given_name = ValidGivenName()
+    surname = ValidSurname()
+    organization = ValidOrganization()
+    timezone_name = ValidTimezone()
 
 
 class AccountEditSchema(AccountSchema):
     """Schema for account editing form"""
-    password_new = validators.UnicodeString(max=100)
-    password_new_confirm = validators.UnicodeString(max=100)
+    password_new = ValidPassword(not_empty=False)
+    password_new_confirm = validators.UnicodeString()
     chained_validators = [
         validators.FieldsMatch('password_new', 'password_new_confirm'),
         ]
@@ -83,14 +89,11 @@ class AccountEditSchema(AccountSchema):
 
 class AccountCreateSchema(AccountSchema):
     """Schema for account creation form"""
-    limits_id = validators.OneOf([
-        'academic', 'commercial'])
-    password = validators.UnicodeString(not_empty=True, max=100)
-    password_confirm = validators.UnicodeString(not_empty=True, max=100)
-    email = validators.Email(
-        not_empty=True, resolve_domain=True,
-        max=EmailAddress.__table__.c.email.type.length)
-    email_confirm = validators.UnicodeString()
+    limits_id = ValidAccountType()
+    password = ValidPassword()
+    password_confirm = validators.UnicodeString()
+    email = ValidEmail()
+    email_confirm = ValidEmail()
     chained_validators = [
         validators.FieldsMatch('email', 'email_confirm'),
         validators.FieldsMatch('password', 'password_confirm'),

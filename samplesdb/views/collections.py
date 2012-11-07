@@ -31,7 +31,14 @@ from pyramid.httpexceptions import HTTPFound
 from formencode import validators, foreach
 
 from samplesdb.views import BaseView
-from samplesdb.forms import BaseSchema, Form, FormRenderer
+from samplesdb.forms import (
+    BaseSchema,
+    Form,
+    FormRenderer,
+    ValidRole,
+    ValidUser,
+    ValidCollectionName,
+    )
 from samplesdb.security import (
     OWNER_ROLE,
     EDITOR_ROLE,
@@ -51,16 +58,12 @@ from samplesdb.models import (
 
 
 class CollectionUserSchema(BaseSchema):
-    email = validators.Email(
-        not_empty=True, resolve_domain=False,
-        max=EmailAddress.__table__.c.email.type.length)
-    role = validators.OneOf((
-        OWNER_ROLE, EDITOR_ROLE, AUDITOR_ROLE, VIEWER_ROLE))
+    user = ValidUser()
+    role = ValidRole()
 
 
 class CollectionSchema(BaseSchema):
-    name = validators.UnicodeString(
-        not_empty=True, max=Collection.__table__.c.name.type.length)
+    name = ValidCollectionName()
     users = foreach.ForEach(CollectionUserSchema())
 
 
@@ -95,9 +98,10 @@ class CollectionsView(BaseView):
         form = Form(
             self.request, schema=CollectionSchema, variable_decode=True)
         if form.validate():
-            new_collection = form.bind(new_collection)
-            # XXX Hard-code ownership to currently authenticated user
-            new_collection.users[self.user] = DBSession.query(Role).filter(Role.id==OWNER_ROLE).one()
+            new_collection = form.bind(Collection())
+            # Hard-code ownership to currently authenticated user
+            new_collection.users[self.user] = DBSession.query(Role).\
+                filter(Role.id==OWNER_ROLE).one()
             DBSession.add(new_collection)
             return HTTPFound(
                 location=self.request.route_url('collections_index'))
