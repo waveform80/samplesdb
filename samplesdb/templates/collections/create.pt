@@ -9,16 +9,6 @@
 
     <div class="row"><h1 class="twelve columns">New Collection</h1></div>
 
-    <div class="row" id="user" style="display: none">
-      ${form.col_label('email', 'E-mail', cols=1)}
-      ${form.col_email('email', placeholder='someone@somewhere.edu', cols=6)}
-      ${form.col_label('role', 'Role', cols=1)}
-      ${form.col_select('role', options=view.roles, selected_value='owner', cols=2)}
-      <div class="two columns">
-        <a href="#" class="secondary small button right" id="remove">Remove</a>
-      </div>
-    </div>
-
     <div class="row">
       <div class="twelve columns">
         ${form.begin(request.route_url('collections_create'))}
@@ -30,19 +20,41 @@
 
         <fieldset>
           <legend>Authorizations</legend>
-          <div class="row" id="user-0">
+
+          <div class="row">
             <span class="one columns">E-mail</span>
             <span class="six columns">${view.user.emails[0].email}</span>
             <span class="one columns">Role</span>
             <span class="two columns end">Owner</span>
           </div>
           <hr />
+
+          <div tal:repeat="item form.data_decoded.get('users', [])" class="row" id="users-${repeat.item.index}">
+            ${form.col_label('users-%d.user' % repeat.item.index, 'E-mail', cols=1)}
+            ${form.col_email('users-%d.user' % repeat.item.index, value=item['user'], placeholder='someone@somewhere.edu', cols=6)}
+            ${form.col_label('users-%d.role' % repeat.item.index, 'Role', cols=1)}
+            ${form.col_select('users-%d.role' % repeat.item.index, selected_value=item['role'], options=view.roles, cols=2)}
+            <div class="two columns">
+              <a href="#" class="secondary small button right remove-button">Remove</a>
+            </div>
+          </div>
+
           <a href="#" class="secondary small button right" id="add">Add</a>
         </fieldset>
 
         ${form.col_submit()}
-
         ${form.end()}
+
+        <div class="row" id="template" style="display: none">
+          ${form.col_label('user', 'E-mail', cols=1)}
+          ${form.col_email('user', placeholder='someone@somewhere.edu', cols=6)}
+          ${form.col_label('role', 'Role', cols=1)}
+          ${form.col_select('role', options=view.roles, selected_value='owner', cols=2)}
+          <div class="two columns">
+            <a href="#" class="secondary small button right remove-button">Remove</a>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -54,10 +66,10 @@
        */
 
 (function() {
-    var count = 1;
+    var count = ${len(form.data_decoded.get('users', []))};
 
     $('#add').click(function() {
-        var source = $('#user'),
+        var source = $('#template'),
             clone = source.clone(true);
 
         clone.attr('id', function(i, val) { return 'users-' + count; });
@@ -75,7 +87,7 @@
         return false;
     });
 
-    $('#remove').click(function() {
+    $('.remove-button').click(function() {
         $(this).parent().parent().slideUp('fast', function() {
             $(this).remove();
         });
