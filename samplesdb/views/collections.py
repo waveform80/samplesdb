@@ -47,6 +47,7 @@ from samplesdb.security import (
     CREATE_COLLECTION,
     VIEW_COLLECTION,
     EDIT_COLLECTION,
+    MANAGE_COLLECTIONS,
     )
 from samplesdb.models import (
     DBSession,
@@ -86,7 +87,8 @@ class CollectionsView(BaseView):
 
     @view_config(
         route_name='collections_index',
-        renderer='../templates/collections/index.pt')
+        renderer='../templates/collections/index.pt',
+        permission=MANAGE_COLLECTIONS)
     def index(self):
         return {}
 

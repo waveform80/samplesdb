@@ -50,7 +50,7 @@ from samplesdb.forms import (
     ValidEmail,
     ValidPassword,
     )
-from samplesdb.security import authenticate
+from samplesdb.security import authenticate, MANAGE_ACCOUNT
 from samplesdb.models import (
     DBSession,
     EmailAddress,
@@ -148,13 +148,15 @@ class AccountView(BaseView):
 
     @view_config(
         route_name='account_index',
-        renderer='../templates/account/index.pt')
+        renderer='../templates/account/index.pt',
+        permission=MANAGE_ACCOUNT)
     def index(self):
         return {}
 
     @view_config(
         route_name='account_edit',
-        renderer='../templates/account/edit.pt')
+        renderer='../templates/account/edit.pt',
+        permission=MANAGE_ACCOUNT)
     def edit(self):
         user = self.user
         form = Form(self.request, schema=AccountEditSchema, obj=user)
