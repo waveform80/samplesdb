@@ -506,6 +506,31 @@ class SampleAudit(Base):
         return '%d at %s' % (self.sample_id, self.audited.isoformat())
 
 
+class SampleLogEntry(Base):
+    __tablename__ = 'sample_logs'
+
+    sample_id = Column(
+        Integer, ForeignKey(
+            'samples.id', onupdate='RESTRICT', ondelete='CASCADE'),
+        primary_key=True)
+    # sample defined as backref on Sample
+    created = Column(DateTime, default=datetime.utcnow, primary_key=True)
+    creator_id = Column(
+        Integer, ForeignKey(
+            'users.id', onupdate='RESTRICT', ondelete='SET NULL'))
+    creator = relationship(User)
+    activity = Column(Unicode(200), nullable=False)
+
+    def __repr__(self):
+        return ('<SampleLogEntry: activity="%s">' % self.activity).encode('utf-8')
+
+    def __str__(self):
+        return unicode(self).encode('utf-8')
+
+    def __unicode__(self):
+        return self.activity
+
+
 class SampleAttachment(Base):
     __tablename__ = 'sample_attachments'
 
@@ -639,6 +664,9 @@ class Sample(Base):
         cascade='all, delete-orphan', passive_deletes=True)
     audits = relationship(
         SampleAudit, backref='sample',
+        cascade='all, delete-orphan', passive_deletes=True)
+    log_entries = relationship(
+        SampleLogEntry, backref='sample',
         cascade='all, delete-orphan', passive_deletes=True)
     # sample_codes defined as backref on SampleCode
     codes = association_proxy('sample_codes', 'value',
