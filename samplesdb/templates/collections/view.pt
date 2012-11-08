@@ -1,0 +1,44 @@
+<!doctype html>
+<!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
+<!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
+<!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!--> <div metal:use-macro="view.layout">
+  <div tal:omit-tag="True" metal:fill-slot="title">Collection ${context.collection.name}</div>
+  <div tal:omit-tag="True" metal:fill-slot="content">
+    <div metal:use-macro="view.top_bar"></div>
+
+    <div class="row"><h1 class="twelve columns">${context.collection.name}</h1></div>
+
+    <div class="row">
+      <p class="eight columns"><a href="${request.route_url('collections_create')}">New Sample</a></p>
+      <dl class="four columns sub-nav">
+        <dt>Filter</dt>
+        <dd
+        class="${'active' if filter == 'all' else None}"><a 
+          href="${request.current_route_url(_query={'filter': 'all'})}">All</a></dd>
+        <dd
+        class="${'active' if filter == 'existing' else None}"><a
+          href="${request.current_route_url(_query={'filter': 'existing'})}">Existing</a></dd>
+        <dd
+        class="${'active' if filter == 'destroyed' else None}"><a
+          href="${request.current_route_url(_query={'filter': 'destroyed'})}">Destroyed</a></dd>
+      </dl>
+    </div>
+
+    <div class="row">
+      <ul class="block-grid four-up mobile-two-up">
+        <li class="collection" tal:repeat="sample samples">
+          <a href="${request.route_url('samples_view', sample_id=sample.id)}">
+            <img src="${request.static_url('samplesdb:static/unknown_mime_type_optimized.svg')}" width="80" alt="" />
+            ${sample.description}<br />
+          </a>
+          Something useful???
+        </li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+
+
