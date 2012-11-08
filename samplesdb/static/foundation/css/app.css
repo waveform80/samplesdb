@@ -38,6 +38,8 @@ ul li.collection img {
 ul li.collection { text-align: center; }
 ul li.collection a { display: block; }
 
+dl.sub-nav { padding-top: 8px; }
+
 dl dt { color: #4d4d4d; }
 dl dd { margin-bottom: 0.5em; }
 
