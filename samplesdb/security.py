@@ -29,6 +29,7 @@ from pyramid.security import (
     Allow,
     Everyone,
     Authenticated,
+    unauthenticated_userid,
     )
 
 
@@ -42,25 +43,23 @@ EDIT_GROUP         = 'edit_group'
 CREATE_LIMIT       = 'create_limit'
 DESTROY_LIMIT      = 'destroy_limit'
 EDIT_LIMIT         = 'edit_limit'
+MANAGE_ACCOUNT     = 'manage_account'
+VIEW_COLLECTIONS   = 'view_collections'
 CREATE_COLLECTION  = 'create_collection'
 DESTROY_COLLECTION = 'destroy_collection'
-RENAME_COLLECTION  = 'rename_collection'
-EDIT_MEMBERS       = 'edit_members'
+MANAGE_COLLECTION  = 'manage_collection'
 EDIT_COLLECTION    = 'edit_collection'
 AUDIT_COLLECTION   = 'audit_collection'
 VIEW_COLLECTION    = 'view_collection'
-MANAGE_COLLECTIONS = 'manage_collections'
-MANAGE_ACCOUNT     = 'manage_account'
 
 # Permission groups
-AUTHENTICATED_PERMISSIONS = (MANAGE_COLLECTIONS, MANAGE_ACCOUNT, CREATE_COLLECTION)
+AUTHENTICATED_PERMISSIONS = (VIEW_COLLECTIONS, MANAGE_ACCOUNT, CREATE_COLLECTION)
 VIEWER_PERMISSIONS        = AUTHENTICATED_PERMISSIONS + (VIEW_COLLECTION,)
 AUDITOR_PERMISSIONS       = VIEWER_PERMISSIONS + (AUDIT_COLLECTION,)
 EDITOR_PERMISSIONS        = AUDITOR_PERMISSIONS + (EDIT_COLLECTION,)
 OWNER_PERMISSIONS         = EDITOR_PERMISSIONS + (
     DESTROY_COLLECTION,
-    RENAME_COLLECTION,
-    EDIT_MEMBERS,
+    MANAGE_COLLECTION,
     )
 ADMIN_PERMISSIONS = OWNER_PERMISSIONS + (
     CREATE_USER,
@@ -95,13 +94,15 @@ OWNER_PRINCIPAL   = ROLE_PREFIX + 'owner'
 ADMINS_PRINCIPAL  = GROUP_PREFIX + 'admins'
 
 
-def user_finder(email_address):
-    "Returns the User object with the specified email address or None"
-    return User.by_email(email_address)
+def get_user(request):
+    "Returns the User object based on a request's unauth'ed user"
+    email_address = unauthenticated_userid(request)
+    if email_address is not None:
+        return User.by_email(email_address)
 
 def group_finder(email_address, request):
     "Returns the set of principals for a user in the current context"
-    user = user_finder(email_address)
+    user = request.user
     principals = []
     if user is not None:
         # Each group the user belongs to is added as a principal
@@ -111,9 +112,8 @@ def group_finder(email_address, request):
                 isinstance(request.context, SampleContextFactory)):
             # Each role the user holds in the current context's collection
             # is added as a principal
-            principals.extend(
-                ROLE_PREFIX + role
-                for role in user.collections[request.context.collection])
+            principals.append(
+                ROLE_PREFIX + request.context.collection.users[user].id)
     return principals
 
 def authenticate(email_address, password):
@@ -121,7 +121,7 @@ def authenticate(email_address, password):
     # Need a transaction as User.authenticate can potentially write to the
     # database in the event of hash transitions
     with transaction.manager:
-        user = user_finder(email_address)
+        user = User.by_email(email_address)
         if user is not None:
             return user.authenticate(password)
         else:

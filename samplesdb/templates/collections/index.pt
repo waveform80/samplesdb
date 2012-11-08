@@ -15,7 +15,7 @@
 
     <div class="row">
       <ul class="block-grid four-up mobile-two-up">
-        <li class="collection" tal:repeat="collection view.user.collections">
+        <li class="collection" tal:repeat="collection request.user.collections">
           <a href="${request.route_url('collections_view', collection_id=collection.id)}">
             <img src="${request.static_url('samplesdb:static/empty_collection_optimized.svg')}" width="80" alt="Empty Collection" />
             ${collection.name}<br />

@@ -37,8 +37,14 @@ from pyramid_beaker import session_factory_from_settings
 from pyramid_mailer import mailer_factory_from_settings
 from sqlalchemy import engine_from_config
 
-from samplesdb.security import group_finder, RootContextFactory
 from samplesdb.models import DBSession
+from samplesdb.security import (
+    get_user,
+    group_finder,
+    RootContextFactory,
+    CollectionContextFactory,
+    SampleContextFactory,
+    )
 
 
 __version__ = '0.1'
@@ -101,9 +107,16 @@ def main(global_config, **settings):
     config.set_authorization_policy(authz_policy)
     config.registry['mailer'] = mailer_factory
     config.set_session_factory(session_factory)
+    config.set_request_property(get_user, b'user', reify=True)
     config.add_static_view('static', 'static', cache_max_age=3600)
     for name, url in ROUTES.items():
-        config.add_route(name, url)
+        if '{collection_id:' in url:
+            factory = CollectionContextFactory
+        elif '{sample_id:' in url:
+            factory = SampleContextFactory
+        else:
+            factory = RootContextFactory
+        config.add_route(name, url, factory=factory)
     config.scan()
     app = config.make_wsgi_app()
     # XXX Dirty horrid hack for functional testing

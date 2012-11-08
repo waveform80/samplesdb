@@ -69,10 +69,6 @@ class BaseView(object):
         return renderer.implementation().macros['flashes']
 
     @reify
-    def user(self):
-        return User.by_email(authenticated_userid(self.request))
-
-    @reify
     def now(self):
         return datetime.utcnow()
 

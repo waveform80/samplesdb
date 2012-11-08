@@ -8,7 +8,7 @@
     <div metal:use-macro="view.top_banner"></div>
 
     <div class="row">
-      <div class="five columns" tal:condition="not view.user">
+      <div class="five columns" tal:condition="not request.user">
         <div metal:use-macro="view.flashes"></div>
         ${form.begin(request.route_url('account_login'))}
         ${form.hidden_tag('came_from')}
@@ -30,14 +30,14 @@
         </div>
         ${form.end()}
       </div>
-      <div class="five columns" tal:condition="view.user">
+      <div class="five columns" tal:condition="request.user">
         <p><a class="expand button" href="${request.route_url('collections_index')}">Collections</a></p>
         <p><a class="expand button" href="${request.route_url('account_index')}">Account</a></p>
         <p><a class="expand button" href="${request.route_url('account_logout')}">Logout</a></p>
-        <p>You are logged in as ${view.user}. Please click on one of the buttons
+        <p>You are logged in as ${request.user}. Please click on one of the buttons
         above to view your collections (you currently have
-        ${len(view.user.collections)} of these, containing
-        ${len(view.user.owned_samples)} samples), control your account, or to
+        ${len(request.user.collections)} of these, containing
+        ${len(request.user.owned_samples)} samples), control your account, or to
         logout.</p>
       </div>
       <div class="seven columns">

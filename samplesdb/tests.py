@@ -85,6 +85,7 @@ class RootViewUnitTests(UnitFixture):
     def make_one(self):
         from samplesdb.views.root import RootView
         request = testing.DummyRequest()
+        request.user = Mock()
         view = RootView(request)
         return view
 
@@ -104,6 +105,7 @@ class AccountViewUnitTests(UnitFixture):
     def make_one(self):
         from samplesdb.views.account import AccountView
         request = testing.DummyRequest()
+        request.user = Mock()
         view = AccountView(request)
         return view
     
@@ -231,8 +233,7 @@ class AccountViewUnitTests(UnitFixture):
 
     def test_account_edit_good(self):
         view = self.make_one()
-        view.user = Mock()
-        view.user.password = 'foo'
+        view.request.user.password = 'foo'
         view.request.method = 'POST'
         view.request.POST['salutation'] = 'Mr.'
         view.request.POST['given_name'] = 'Foo'
@@ -244,13 +245,12 @@ class AccountViewUnitTests(UnitFixture):
         result = view.edit()
         assert isinstance(result, HTTPFound)
         assert 'Location' in result.headers
-        assert view.user.surname == 'Baz'
-        assert view.user.password == 'foo'
+        assert view.request.user.surname == 'Baz'
+        # Ensure password is unchanged
+        assert view.request.user.password == 'foo'
 
     def test_account_change_pass(self):
         view = self.make_one()
-        view.user = Mock()
-        view.user.password = 'foo'
         view.request.method = 'POST'
         view.request.POST['salutation'] = 'Mr.'
         view.request.POST['given_name'] = 'Foo'
@@ -262,7 +262,7 @@ class AccountViewUnitTests(UnitFixture):
         result = view.edit()
         assert isinstance(result, HTTPFound)
         assert 'Location' in result.headers
-        assert view.user.password == 'bar'
+        assert view.request.user.password == 'bar'
 
     def test_account_verify_email(self):
         from samplesdb.models import EmailAddress
@@ -455,3 +455,7 @@ class SiteFunctionalTest(FunctionalFixture):
         res = res.form.submit()
         res = res.follow()
         assert 'My Collections' in res
+        res = res.click(href='/collections/new')
+        res.form['name'] = 'Flibbles'
+        res = res.form.submit()
+        res = res.follow()

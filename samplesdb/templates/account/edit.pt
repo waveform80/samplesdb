@@ -15,15 +15,15 @@
           <dt class="two mobile-one columns">E-mail Address(es)</dt>
           <dd class="ten mobile-three columns">
             <ul class="no-bullet">
-              <li tal:repeat="email view.user.emails">${email.email}
+              <li tal:repeat="email request.user.emails">${email.email}
                 <span class="round alert label" tal:condition="not email.verified">unverified</span>
                 <a tal:condition="not email.verified"
                   href="${request.route_url('account_verify_email', _query={'email': email.email})}">Re-send verification code</a>
-                <a tal:condition="len(view.user.verified_emails) > 1"
+                <a tal:condition="len(request.user.verified_emails) > 1"
                   href="${request.route_url('account_remove_email', _query={'email': email.email})}">Remove</a>
               </li>
             </ul>
-            <a tal:condition="len(view.user.emails) < 5"
+            <a tal:condition="len(request.user.emails) < 5"
               href="${request.route_url('account_add_email')}">Add address</a>
           </dd>
         </dl>

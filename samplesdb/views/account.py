@@ -158,7 +158,7 @@ class AccountView(BaseView):
         renderer='../templates/account/edit.pt',
         permission=MANAGE_ACCOUNT)
     def edit(self):
-        user = self.user
+        user = self.request.user
         form = Form(self.request, schema=AccountEditSchema, obj=user)
         if form.validate():
             form.bind(user)

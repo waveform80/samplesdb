@@ -24,7 +24,6 @@ from __future__ import (
     division,
     )
 
-import transaction
 from pyramid.view import view_config
 from pyramid.decorator import reify
 from pyramid.httpexceptions import HTTPFound
@@ -41,13 +40,10 @@ from samplesdb.forms import (
     )
 from samplesdb.security import (
     OWNER_ROLE,
-    EDITOR_ROLE,
-    AUDITOR_ROLE,
-    VIEWER_ROLE,
     CREATE_COLLECTION,
     VIEW_COLLECTION,
     EDIT_COLLECTION,
-    MANAGE_COLLECTIONS,
+    VIEW_COLLECTIONS,
     )
 from samplesdb.models import (
     DBSession,
@@ -88,7 +84,7 @@ class CollectionsView(BaseView):
     @view_config(
         route_name='collections_index',
         renderer='../templates/collections/index.pt',
-        permission=MANAGE_COLLECTIONS)
+        permission=VIEW_COLLECTIONS)
     def index(self):
         return {}
 
@@ -102,7 +98,7 @@ class CollectionsView(BaseView):
         if form.validate():
             new_collection = form.bind(Collection())
             # Hard-code ownership to currently authenticated user
-            new_collection.users[self.user] = DBSession.query(Role).\
+            new_collection.users[self.request.user] = DBSession.query(Role).\
                 filter(Role.id==OWNER_ROLE).one()
             DBSession.add(new_collection)
             return HTTPFound(
@@ -121,5 +117,14 @@ class CollectionsView(BaseView):
         renderer='../templates/collections/view.pt',
         permission=VIEW_COLLECTION)
     def view(self):
-        return {}
+        filter = self.request.params.get('filter', 'existing')
+        # XXX Construct a query instead (better performance than retrieving
+        # everything and doing filtering in Python)
+        samples = (
+            sample
+            for sample in self.request.context.collection.samples
+            if filter == 'all'
+            or (filter == 'existing' and not sample.destroyed)
+            or (filter == 'destroyed' and sample.destroyed))
+        return dict(filter=filter, samples=samples)
 
