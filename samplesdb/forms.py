@@ -354,24 +354,36 @@ class ValidTimezone(validators.OneOf):
 
 
 class ValidRole(FancyValidator):
+    def __init__(self):
+        super(ValidRole, self).__init__(not_empty=True, strip=True)
+
+    def validate_python(self, value, state):
+        if not isinstance(value, Role):
+            raise Invalid('value is not a Role', value, state)
+
     def _from_python(self, value, state):
-        assert isinstance(value, Role)
         return value.id
 
     def _to_python(self, value, state):
-        result = Role.by_id(value.strip())
+        result = Role.by_id(value)
         if result is None:
             raise Invalid('Invalid role', value, state)
         return result
 
 
 class ValidUser(FancyValidator):
+    def __init__(self, not_empty=True):
+        super(ValidUser, self).__init__(not_empty=not_empty, strip=True)
+
+    def validate_python(self, value, state):
+        if not isinstance(value, User):
+            raise Invalid('value is not a User', value, state)
+
     def _from_python(self, value, state):
-        assert isinstance(value, User)
         return value.verified_emails[0].email
 
     def _to_python(self, value, state):
-        result = User.by_email(value.strip())
+        result = User.by_email(value)
         if result is None:
             raise Invalid('No users have address %s' % value, value, state)
         return result
