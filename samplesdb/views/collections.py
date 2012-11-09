@@ -69,7 +69,7 @@ class CollectionCreateSchema(CollectionSchema):
 
 
 class CollectionsView(BaseView):
-    """Handler for collection related views"""
+    """Handlers for collection related views"""
 
     def __init__(self, request):
         self.request = request
@@ -94,7 +94,7 @@ class CollectionsView(BaseView):
         permission=CREATE_COLLECTION)
     def create(self):
         form = Form(
-            self.request, schema=CollectionSchema, variable_decode=True)
+            self.request, schema=CollectionCreateSchema, variable_decode=True)
         if form.validate():
             new_collection = form.bind(Collection())
             # Hard-code ownership to currently authenticated user
@@ -122,7 +122,7 @@ class CollectionsView(BaseView):
         # everything and doing filtering in Python)
         samples = (
             sample
-            for sample in self.request.context.collection.samples
+            for sample in self.request.context.collection.all_samples
             if filter == 'all'
             or (filter == 'existing' and not sample.destroyed)
             or (filter == 'destroyed' and sample.destroyed))

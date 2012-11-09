@@ -403,6 +403,7 @@ class User(Base):
 
     @property
     def verified_emails(self):
+        # XXX Do this with a query
         return [
             email
             for email in self.emails
@@ -410,14 +411,16 @@ class User(Base):
 
     @property
     def owned_samples(self):
+        # XXX Do this with a query
         return [
             sample
             for collection, role in self.collections.items()
-            for sample in collection.samples
+            for sample in collection.all_samples
             if role.id in ('editor', 'owner')]
 
     @property
     def storage_used(self):
+        # XXX Do this with a query
         return sum(
             attachment.size
             for sample in self.owned_samples
@@ -514,21 +517,34 @@ class SampleLogEntry(Base):
             'samples.id', onupdate='RESTRICT', ondelete='CASCADE'),
         primary_key=True)
     # sample defined as backref on Sample
-    created = Column(DateTime, default=datetime.utcnow, primary_key=True)
+    _created = Column(
+        'created', DateTime, default=datetime.utcnow, primary_key=True)
     creator_id = Column(
         Integer, ForeignKey(
             'users.id', onupdate='RESTRICT', ondelete='SET NULL'))
     creator = relationship(User)
-    activity = Column(Unicode(200), nullable=False)
+    message = Column(UnicodeText, nullable=False)
 
     def __repr__(self):
-        return ('<SampleLogEntry: activity="%s">' % self.activity).encode('utf-8')
+        return ('<SampleLogEntry: sample_id=%d, created="%s", message="%s">' % (
+            self.sample_id, self.created.strftime(), self.message)).encode('utf-8')
 
     def __str__(self):
         return unicode(self).encode('utf-8')
 
     def __unicode__(self):
-        return self.activity
+        return self.message
+
+    def _get_created(self):
+        return pytz.utc.localize(self._created)
+
+    def _set_created(self, value):
+        if value.tzinfo is None:
+            self._created = value
+        else:
+            self._created = value.astimezone(pytz.utc)
+
+    created = synonym('_created', descriptor=property(_get_created, _set_created))
 
 
 class SampleAttachment(Base):
@@ -538,13 +554,9 @@ class SampleAttachment(Base):
         Integer, ForeignKey(
             'samples.id', onupdate='RESTRICT', ondelete='CASCADE'),
         primary_key=True)
+    # sample defined as backref on Sample
     name = Column(Unicode(200), primary_key=True)
     mime_type = Column(Unicode(50), nullable=False)
-    # sample defined as backref on Sample
-    creator_id = Column(
-        Integer, ForeignKey(
-            'users.id', onupdate='RESTRICT', ondelete='SET NULL'))
-    creator = relationship(User)
 
     def __repr__(self):
         return ('<SampleAttachment: sample_id=%d, filename="%s">' % (
@@ -641,11 +653,10 @@ class Sample(Base):
 
     id = Column(Integer, primary_key=True)
     description = Column(Unicode(200), nullable=False)
-    creator_id = Column(Integer, ForeignKey(
-        'users.id', onupdate='RESTRICT', ondelete='SET NULL'))
-    creator = relationship(User)
-    created = Column(DateTime, default=datetime.utcnow, nullable=False)
-    destroyed = Column(DateTime)
+    _created = Column(
+        'created', DateTime, default=datetime.utcnow, nullable=False)
+    _destroyed = Column('destroyed', DateTime)
+    location = Column(Unicode(200), default='', nullable=False)
     notes = Column(UnicodeText, default='', nullable=False)
     collection_id = Column(Integer, ForeignKey(
         'collections.id', onupdate='RESTRICT', ondelete='CASCADE'),
@@ -665,12 +676,38 @@ class Sample(Base):
     audits = relationship(
         SampleAudit, backref='sample',
         cascade='all, delete-orphan', passive_deletes=True)
-    log_entries = relationship(
+    log = relationship(
         SampleLogEntry, backref='sample',
         cascade='all, delete-orphan', passive_deletes=True)
     # sample_codes defined as backref on SampleCode
     codes = association_proxy('sample_codes', 'value',
         creator=lambda k, v: SampleCode(name=k, value=v))
+
+    def _get_created(self):
+        return pytz.utc.localize(self._created)
+
+    def _set_created(self, value):
+        if value.tzinfo is None:
+            self._created = value
+        else:
+            self._created = value.astimezone(pytz.utc)
+
+    created = synonym('_created', descriptor=property(_get_created, _set_created))
+
+    def _get_destroyed(self):
+        return pytz.utc.localize(self._destroyed)
+
+    def _set_destroyed(self, value):
+        if value.tzinfo is None:
+            self._destroyed = value
+        else:
+            self._destroyed = value.astimezone(pytz.utc)
+
+    destroyed = synonym('_destroyed', descriptor=property(_get_destroyed, _set_destroyed))
+
+    @property
+    def status(self):
+        return 'Destroyed' if self.destroyed else 'Existing'
 
     def __repr__(self):
         return ('<Sample: description="%s">' % self.description).encode('utf-8')
@@ -685,6 +722,63 @@ class Sample(Base):
     def by_id(cls, id):
         """return the permission object with id ``id``"""
         return DBSession.query(cls).filter_by(id=id).first()
+
+    @classmethod
+    def create(cls, creator, collection, **kwargs):
+        """create a new sample"""
+        assert collection.users[creator].id in ('owner', 'editor')
+        sample = cls(
+            collection_id=collection.id,
+            **kwargs)
+        sample.log.append(SampleLogEntry(
+            sample_id=sample.id,
+            creator_id=creator.id,
+            message='Sample created'))
+        return sample
+
+    def destroy(self, destroyer):
+        """mark the sample as destroyed"""
+        assert not self.destroyed
+        self.log.append(SampleLogEntry(
+            sample_id=self.id,
+            creator_id=destroyer.id,
+            message='Sample destroyed'))
+        self.destroyed = datetime.utcnow()
+
+    @classmethod
+    def combine(cls, creator, collection, *aliquots, **kwargs):
+        """generate a sample out of several aliquots"""
+        sample = cls.create(
+            creator, collection, **kwargs)
+        for aliquot in aliquots:
+            aliquot.log.append(SampleLogEntry(
+                sample_id=aliquot.id,
+                creator_id=creator.id,
+                message='Sample combined into new sample'))
+            aliquot.destroy(creator)
+            sample.parents.append(aliquot)
+        return sample
+
+    def split(self, creator, segments, destroyed=True):
+        """split this sample into several aliquots"""
+        assert segments > 1
+        self.log.append(SampleLogEntry(
+            sample_id=self.id,
+            creator_id=creator.id,
+            message='Sample split into %d' % segments))
+        aliquots = [
+            Sample.create(
+                creator, self.collection,
+                description='Aliquot of sample %d' % self.id,
+                location=self.location)
+            for i in range(segments)]
+        for aliquot in aliquots:
+            aliquot.parents.append(self)
+        if destroyed:
+            self.destroy(creator)
+        else:
+            self.description = 'Aliquant of %s' % self.description
+        return aliquots
 
 
 class SampleCode(Base):
@@ -718,11 +812,11 @@ class Collection(Base):
     id = Column(Integer, primary_key=True)
     name = Column(Unicode(200), nullable=False)
     created = Column(DateTime, default=datetime.utcnow, nullable=False)
-    samples = relationship(Sample, backref='collection')
     # collection_users defined as backref on UserCollection
     users = association_proxy(
         'collection_users', 'role',
         creator=lambda k, v: UserCollection(user=k, role=v))
+    all_samples = relationship(Sample, backref='collection')
 
     def __repr__(self):
         return ('<Collection: name="%s">' % self.name).encode('utf-8')
@@ -740,10 +834,13 @@ class Collection(Base):
 
     @property
     def existing_samples(self):
+        # XXX Do this with a query
         return [
             sample
-            for sample in self.samples
+            for sample in self.all_samples
             if not sample.destroyed]
+
+    # XXX Add destroyed_samples property
 
 
 class Role(Base):

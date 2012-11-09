@@ -14,8 +14,12 @@ from pyramid.httpexceptions import HTTPFound
 from pyramid_mailer.mailer import Mailer
 
 from samplesdb.forms import css_add_class, css_del_class, FormRenderer
-from samplesdb.models import DBSession, Base
 from samplesdb.scripts.initializedb import init_instances
+from samplesdb.models import *
+from samplesdb.views.root import *
+from samplesdb.views.account import *
+from samplesdb.views.collections import *
+from samplesdb.views.samples import *
 
 
 def test_css_add_class():
@@ -83,14 +87,12 @@ class FunctionalFixture(object):
 
 class RootViewUnitTests(UnitFixture):
     def make_one(self):
-        from samplesdb.views.root import RootView
         request = testing.DummyRequest()
         request.user = Mock()
         view = RootView(request)
         return view
 
     def test_root_home(self):
-        from samplesdb.views.account import LoginSchema
         view = self.make_one()
         result = view.home()
         assert isinstance(result['form'], FormRenderer)
@@ -103,14 +105,12 @@ class RootViewUnitTests(UnitFixture):
 
 class AccountViewUnitTests(UnitFixture):
     def make_one(self):
-        from samplesdb.views.account import AccountView
         request = testing.DummyRequest()
         request.user = Mock()
         view = AccountView(request)
         return view
-    
+
     def test_account_login_form(self):
-        from samplesdb.views.account import LoginSchema
         view = self.make_one()
         result = view.login()
         assert 'form' in result
@@ -119,7 +119,6 @@ class AccountViewUnitTests(UnitFixture):
         assert result['form'].form.data['came_from'] == 'http://example.com'
 
     def test_account_login_redirect(self):
-        from samplesdb.views.account import LoginSchema
         view = self.make_one()
         view.request.url = 'http://example.com/login'
         result = view.login()
@@ -165,7 +164,6 @@ class AccountViewUnitTests(UnitFixture):
         assert ('UTC', '(UTC+0000) UTC') in view.timezones
 
     def test_account_create(self):
-        from samplesdb.views.account import AccountCreateSchema
         view = self.make_one()
         result = view.create()
         assert 'form' in result
@@ -209,7 +207,6 @@ class AccountViewUnitTests(UnitFixture):
         assert 'Location' in result.headers
 
     def test_account_edit(self):
-        from samplesdb.views.account import AccountEditSchema
         view = self.make_one()
         result = view.edit()
         assert 'form' in result
@@ -265,7 +262,6 @@ class AccountViewUnitTests(UnitFixture):
         assert view.request.user.password == 'bar'
 
     def test_account_verify_email(self):
-        from samplesdb.models import EmailAddress
         email = 'example@example.com'
         address = EmailAddress(email=email, user_id=1)
         DBSession.add(address)
@@ -277,7 +273,6 @@ class AccountViewUnitTests(UnitFixture):
         assert result['verification'].email.email == email
 
     def test_account_verify_too_fast(self):
-        from samplesdb.models import EmailAddress, VerificationTooFast
         email = 'example@example.com'
         address = EmailAddress(email=email, user_id=1)
         DBSession.add(address)
@@ -293,13 +288,6 @@ class AccountViewUnitTests(UnitFixture):
 
     def test_account_verify_too_many(self):
         from datetime import datetime, timedelta
-        from samplesdb.models import (
-            EmailAddress,
-            EmailVerification,
-            VerificationTooMany,
-            VERIFICATION_LIMIT,
-            VERIFICATION_INTERVAL,
-            )
         email = 'example@example.com'
         address = EmailAddress(email=email, user_id=1)
         DBSession.add(address)
@@ -322,7 +310,6 @@ class AccountViewUnitTests(UnitFixture):
         assert_raises(VerificationTooMany, view.verify_email)
 
     def test_account_verify_complete(self):
-        from samplesdb.models import EmailAddress, EmailVerification
         email = 'example@example.com'
         address = EmailAddress(email=email, user_id=1)
         verification = EmailVerification(email)
@@ -342,9 +329,51 @@ class AccountViewUnitTests(UnitFixture):
         assert_raises(HTTPNotFound, view.verify_complete)
 
 
+class CollectionsViewUnitTests(UnitFixture):
+    def make_one(self):
+        request = testing.DummyRequest()
+        request.user = User.by_email('admin@example.com')
+        view = CollectionsView(request)
+        return view
+
+    def test_collections_index(self):
+        view = self.make_one()
+        result = view.index()
+        # XXX Nothing to test here?
+
+    def test_collections_create(self):
+        view = self.make_one()
+        result = view.create()
+        assert 'form' in result
+        assert isinstance(result['form'], FormRenderer)
+        assert result['form'].form.schema == CollectionCreateSchema
+
+    def test_collections_create_bad(self):
+        view = self.make_one()
+        view.request.method = 'POST'
+        view.request.POST['name'] = 'New Collection'
+        view.request.POST['users-0.user'] = 'i-dont-exist@nowhere.org'
+        view.request.POST['users-0.role'] = 'owner'
+        result = view.create()
+        assert 'form' in result
+        assert isinstance(result['form'], FormRenderer)
+        assert 'users-0.user' in result['form'].form.errors
+        assert 'name' not in result['form'].form.errors
+
+    def test_collections_create_good(self):
+        view = self.make_one()
+        view.request.method = 'POST'
+        view.request.POST['name'] = 'New Collection'
+        result = view.create()
+        assert isinstance(result, HTTPFound)
+        assert 'Location' in result.headers
+        assert DBSession.query(Collection).join(UserCollection).\
+                filter(UserCollection.user_id==view.request.user.id).\
+                filter(Collection.name=='New Collection').first()
+
+    
 class SiteFunctionalTest(FunctionalFixture):
     def test(self):
-        from samplesdb.models import EmailVerification, EmailAddress, User
         from pyramid_mailer.message import Message
         import DNS
         # Visit the home page and FAQ
@@ -459,3 +488,6 @@ class SiteFunctionalTest(FunctionalFixture):
         res.form['name'] = 'Flibbles'
         res = res.form.submit()
         res = res.follow()
+        assert DBSession.query(Collection).filter(Collection.name=='Flibbles').first()
+        assert 'Flibbles' in res
+        res = res.click('Flibbles')

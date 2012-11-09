@@ -41,7 +41,7 @@ from pyramid.httpexceptions import HTTPForbidden
 import pyramid_simpleform
 import pyramid_simpleform.renderers
 
-from samplesdb.models import EmailAddress, User, Collection, Role
+from samplesdb.models import EmailAddress, User, Collection, Role, Sample
 from samplesdb.security import (
     OWNER_ROLE,
     EDITOR_ROLE,
@@ -348,6 +348,23 @@ class ValidCollectionName(validators.UnicodeString):
             not_empty=True, max=Collection.__table__.c.name.type.length)
 
 
+class ValidSampleDescription(validators.UnicodeString):
+    def __init__(self):
+        super(ValidSampleDescription, self).__init__(
+            not_empty=True, max=Sample.__table__.c.description.type.length)
+
+
+class ValidSampleLocation(validators.UnicodeString):
+    def __init__(self):
+        super(ValidSampleLocation, self).__init__(
+            not_empty=False, max=Sample.__table__.c.location.type.length)
+
+
+class ValidSampleNotes(validators.UnicodeString):
+    def __init__(self):
+        super(ValidSampleNotes, self).__init__(not_empty=False)
+
+
 class ValidTimezone(validators.OneOf):
     def __init__(self):
         super(ValidTimezone, self).__init__(pytz.all_timezones)
@@ -386,6 +403,42 @@ class ValidUser(FancyValidator):
         result = User.by_email(value)
         if result is None:
             raise Invalid('No users have address %s' % value, value, state)
+        return result
+
+
+class ValidCollection(FancyValidator):
+    def __init__(self):
+        super(ValidCollection, self).__init__(not_empty=True, strip=True)
+
+    def validate_python(self, value, state):
+        if not isinstance(value, Collection):
+            raise Invalid('value is not a Collection', value, state)
+
+    def _from_python(self, value, state):
+        return value.id
+
+    def _to_python(self, value, state):
+        result = Collection.by_id(value)
+        if result is None:
+            raise Invalid('Invalid collection', value, state)
+        return result
+
+
+class ValidSample(FancyValidator):
+    def __init__(self):
+        super(ValidSample, self).__init__(not_empty=True, strip=True)
+
+    def validate_python(self, value, state):
+        if not isinstance(value, Sample):
+            raise Invalid('value is not a Sample', value, state)
+
+    def _from_python(self, value, state):
+        return value.id
+
+    def _to_python(self, value, state):
+        result = Sample.by_id(value)
+        if result is None:
+            raise Invalid('Invalid collection', value, state)
         return result
 
 

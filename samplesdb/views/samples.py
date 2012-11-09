@@ -33,8 +33,13 @@ from samplesdb.forms import (
     BaseSchema,
     Form,
     FormRenderer,
+    ValidCollection,
+    ValidSampleDescription,
+    ValidSampleLocation,
+    ValidSampleNotes,
     )
 from samplesdb.security import (
+    VIEW_COLLECTION,
     EDIT_COLLECTION,
     )
 from samplesdb.models import (
@@ -42,4 +47,37 @@ from samplesdb.models import (
     Sample,
     )
 
+
+class SampleSchema(BaseSchema):
+    collection = ValidCollection()
+    description = ValidSampleDescription()
+    location = ValidSampleLocation()
+    notes = ValidSampleNotes()
+
+
+class SampleCreateSchema(SampleSchema):
+    pass
+
+
+class SamplesView(BaseView):
+    """Handlers for sample related views"""
+
+    def __init__(self, request):
+        self.request = request
+
+    @view_config(
+        route_name='samples_view',
+        renderer='../templates/samples/view.pt',
+        permission=VIEW_COLLECTION)
+    def view(self):
+        filter = self.request.params.get('filter', 'existing')
+        # XXX Construct a query instead (better performance than retrieving
+        # everything and doing filtering in Python)
+        samples = (
+            sample
+            for sample in self.request.context.collection.all_samples
+            if filter == 'all'
+            or (filter == 'existing' and not sample.destroyed)
+            or (filter == 'destroyed' and sample.destroyed))
+        return dict(filter=filter, samples=samples)
 
