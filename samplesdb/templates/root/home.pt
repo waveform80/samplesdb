@@ -57,11 +57,14 @@
           etc.)</li>
         </ul>
 
-        <p><em>Please note this is currently a beta-testing system</em>. We
+        <p><em>Please note this is currently a alpha-testing system</em>. We
         currently make no guarantees about data persistence or system uptime.
         In other words, though we have nightly backup procedures in place we
-        cannot guarantee that functional changes to the system won't invalidate
-        existing data.</p>
+        cannot guarantee that functional changes to the system won't completely
+        destroy existing data.</p>
+
+        <p>In other words, feel free to play with the system but please don't
+        use it as your only sample log!</p>
 
         <p>If you have any questions, please peruse our <a
           href="${request.route_url('faq')}">FAQ</a>.</p>

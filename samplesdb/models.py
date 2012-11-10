@@ -123,8 +123,9 @@ class EmailVerification(Base):
     __tablename__ = 'email_verifications'
 
     id = Column(String(32), primary_key=True)
-    created = Column(DateTime, default=datetime.utcnow, nullable=False)
-    expiry = Column(DateTime, nullable=False)
+    _created = Column(
+        'created', DateTime, default=datetime.utcnow, nullable=False)
+    _expiry = Column('expiry', DateTime, nullable=False)
     email_ref = Column(
         Unicode(200), ForeignKey(
             'email_addresses.email', onupdate='RESTRICT', ondelete='CASCADE'),
@@ -158,6 +159,32 @@ class EmailVerification(Base):
     def __unicode__(self):
         return self.id
 
+    def _get_created(self):
+        if self._created is None:
+            return None
+        return pytz.utc.localize(self._created)
+
+    def _set_created(self, value):
+        if value.tzinfo is None:
+            self._created = value
+        else:
+            self._created = value.astimezone(pytz.utc)
+
+    created = synonym('_created', descriptor=property(_get_created, _set_created))
+
+    def _get_expiry(self):
+        if self._expiry is None:
+            return None
+        return pytz.utc.localize(self._expiry)
+
+    def _set_expiry(self, value):
+        if value.tzinfo is None:
+            self._expiry = value
+        else:
+            self._expiry = value.astimezone(pytz.utc)
+
+    expiry = synonym('_expiry', descriptor=property(_get_expiry, _set_expiry))
+
     @classmethod
     def by_id(cls, id):
         """return the email verification record with id ``id``"""
@@ -180,8 +207,9 @@ class EmailAddress(Base):
             'users.id', onupdate='RESTRICT', ondelete='CASCADE'),
         nullable=False)
     # user defined as backref on Users
-    created = Column(DateTime, default=datetime.utcnow, nullable=False)
-    verified = Column(DateTime)
+    _created = Column(
+        'created', DateTime, default=datetime.utcnow, nullable=False)
+    _verified = Column('verified', DateTime)
     verifications = relationship(
         EmailVerification, backref='email',
         cascade='all, delete-orphan', passive_deletes=True)
@@ -195,6 +223,32 @@ class EmailAddress(Base):
     def __unicode__(self):
         return self.email
 
+    def _get_created(self):
+        if self._created is None:
+            return None
+        return pytz.utc.localize(self._created)
+
+    def _set_created(self, value):
+        if value.tzinfo is None:
+            self._created = value
+        else:
+            self._created = value.astimezone(pytz.utc)
+
+    created = synonym('_created', descriptor=property(_get_created, _set_created))
+
+    def _get_verified(self):
+        if self._verified is None:
+            return None
+        return pytz.utc.localize(self._verified)
+
+    def _set_verified(self, value):
+        if value.tzinfo is None:
+            self._verified = value
+        else:
+            self._verified = value.astimezone(pytz.utc)
+
+    verified = synonym('_verified', descriptor=property(_get_verified, _set_verified))
+
     @classmethod
     def by_email(cls, email):
         """return the address with email ``email``"""
@@ -205,8 +259,9 @@ class PasswordReset(Base):
     __tablename__ = 'password_resets'
 
     id = Column(String(32), primary_key=True)
-    created = Column(DateTime, default=datetime.utcnow, nullable=False)
-    expiry = Column(DateTime, nullable=False)
+    _created = Column(
+        'created', DateTime, default=datetime.utcnow, nullable=False)
+    _expiry = Column('expiry', DateTime, nullable=False)
     user_id = Column(
         Integer, ForeignKey(
             'users.id', onupdate='RESTRICT', ondelete='CASCADE'),
@@ -238,6 +293,32 @@ class PasswordReset(Base):
 
     def __unicode__(self):
         return self.id
+
+    def _get_created(self):
+        if self._created is None:
+            return None
+        return pytz.utc.localize(self._created)
+
+    def _set_created(self, value):
+        if value.tzinfo is None:
+            self._created = value
+        else:
+            self._created = value.astimezone(pytz.utc)
+
+    created = synonym('_created', descriptor=property(_get_created, _set_created))
+
+    def _get_expiry(self):
+        if self._expiry is None:
+            return None
+        return pytz.utc.localize(self._expiry)
+
+    def _set_expiry(self, value):
+        if value.tzinfo is None:
+            self._expiry = value
+        else:
+            self._expiry = value.astimezone(pytz.utc)
+
+    expiry = synonym('_expiry', descriptor=property(_get_expiry, _set_expiry))
 
     @classmethod
     def by_id(cls, id):
@@ -323,11 +404,12 @@ class User(Base):
     surname = Column(Unicode(200), nullable=False)
     organization = Column(Unicode(200), default='', nullable=False)
     _password = Column('password', String(200))
-    password_changed = Column(DateTime)
+    _password_changed = Column('password_changed', DateTime)
     resets = relationship(
         PasswordReset, backref='user',
         cascade='all, delete-orphan', passive_deletes=True)
-    created = Column(DateTime, default=datetime.utcnow, nullable=False)
+    _created = Column(
+        'created', DateTime, default=datetime.utcnow, nullable=False)
     timezone_name = Column(
         'timezone', Unicode(max(len(t) for t in pytz.all_timezones)),
         default='UTC', nullable=False)
@@ -357,6 +439,19 @@ class User(Base):
     def __unicode__(self):
         return ' '.join((
             self.salutation, self.given_name, self.surname))
+
+    def _get_created(self):
+        if self._created is None:
+            return None
+        return pytz.utc.localize(self._created)
+
+    def _set_created(self, value):
+        if value.tzinfo is None:
+            self._created = value
+        else:
+            self._created = value.astimezone(pytz.utc)
+
+    created = synonym('_created', descriptor=property(_get_created, _set_created))
 
     @classmethod
     def by_id(cls, id):
@@ -410,13 +505,20 @@ class User(Base):
             if email.verified]
 
     @property
+    def editable_collections(self):
+        # XXX Do this with a query
+        return [
+            collection
+            for collection, role in self.collections.items()
+            if role.id in ('editor', 'owner')]
+
+    @property
     def owned_samples(self):
         # XXX Do this with a query
         return [
             sample
-            for collection, role in self.collections.items()
-            for sample in collection.all_samples
-            if role.id in ('editor', 'owner')]
+            for collection in self.editable_collections
+            for sample in collection.all_samples]
 
     @property
     def storage_used(self):
@@ -483,32 +585,6 @@ class Group(Base):
         return DBSession.query(cls).filter_by(id=id).first()
 
 
-class SampleAudit(Base):
-    __tablename__ = 'sample_audits'
-
-    sample_id = Column(
-        Integer, ForeignKey(
-            'samples.id', onupdate='RESTRICT', ondelete='CASCADE'),
-        primary_key=True)
-    # sample defined as backref on Sample
-    audited = Column(DateTime, default=datetime.utcnow, primary_key=True)
-    auditor_id = Column(
-        Integer, ForeignKey(
-            'users.id', onupdate='RESTRICT', ondelete='RESTRICT'),
-        nullable=False)
-    auditor = relationship(User)
-
-    def __repr__(self):
-        return ('<SampleAudit: sample_id=%d, audited="%s">' % (
-            self.sample_id, self.audited.isoformat())).encode('utf-8')
-
-    def __str__(self):
-        return unicode(self).encode('utf-8')
-
-    def __unicode__(self):
-        return '%d at %s' % (self.sample_id, self.audited.isoformat())
-
-
 class SampleLogEntry(Base):
     __tablename__ = 'sample_logs'
 
@@ -523,11 +599,15 @@ class SampleLogEntry(Base):
         Integer, ForeignKey(
             'users.id', onupdate='RESTRICT', ondelete='SET NULL'))
     creator = relationship(User)
+    kind = Column(
+        Unicode(10),
+        CheckConstraint("kind IN ('create', 'destroy', 'audit', 'change', 'user')"),
+        default='user', nullable=False)
     message = Column(UnicodeText, nullable=False)
 
     def __repr__(self):
         return ('<SampleLogEntry: sample_id=%d, created="%s", message="%s">' % (
-            self.sample_id, self.created.strftime(), self.message)).encode('utf-8')
+            self.sample_id, self.created, self.message)).encode('utf-8')
 
     def __str__(self):
         return unicode(self).encode('utf-8')
@@ -536,6 +616,8 @@ class SampleLogEntry(Base):
         return self.message
 
     def _get_created(self):
+        if self._created is None:
+            return None
         return pytz.utc.localize(self._created)
 
     def _set_created(self, value):
@@ -602,6 +684,7 @@ class SampleAttachment(Base):
     def thumb(self):
         THUMB_MAXWIDTH = 200
         THUMB_MAXHEIGHT = 200
+        # XXX check MIME-type is image/(png|gif|jpeg|something-bitmappy)
         if os.path.exists(self.filename) and (
                 not os.path.exists(self.thumb_filename) or
                 self.thumb_updated < self.updated):
@@ -673,17 +756,17 @@ class Sample(Base):
     attachments = relationship(
         SampleAttachment, backref='sample',
         cascade='all, delete-orphan', passive_deletes=True)
-    audits = relationship(
-        SampleAudit, backref='sample',
-        cascade='all, delete-orphan', passive_deletes=True)
     log = relationship(
         SampleLogEntry, backref='sample',
-        cascade='all, delete-orphan', passive_deletes=True)
+        cascade='all, delete-orphan', passive_deletes=True,
+        order_by=SampleLogEntry._created)
     # sample_codes defined as backref on SampleCode
     codes = association_proxy('sample_codes', 'value',
         creator=lambda k, v: SampleCode(name=k, value=v))
 
     def _get_created(self):
+        if self._created is None:
+            return None
         return pytz.utc.localize(self._created)
 
     def _set_created(self, value):
@@ -695,6 +778,8 @@ class Sample(Base):
     created = synonym('_created', descriptor=property(_get_created, _set_created))
 
     def _get_destroyed(self):
+        if self._destroyed is None:
+            return None
         return pytz.utc.localize(self._destroyed)
 
     def _set_destroyed(self, value):
@@ -720,64 +805,67 @@ class Sample(Base):
 
     @classmethod
     def by_id(cls, id):
-        """return the permission object with id ``id``"""
+        """Return the permission object with id ``id``"""
         return DBSession.query(cls).filter_by(id=id).first()
 
     @classmethod
     def create(cls, creator, collection, **kwargs):
-        """create a new sample"""
+        """Create a new sample"""
         assert collection.users[creator].id in ('owner', 'editor')
-        sample = cls(
-            collection_id=collection.id,
-            **kwargs)
+        sample = cls(collection_id=collection.id, **kwargs)
         sample.log.append(SampleLogEntry(
-            sample_id=sample.id,
             creator_id=creator.id,
-            message='Sample created'))
+            kind='create', message='Sample created'))
         return sample
 
     def destroy(self, destroyer):
-        """mark the sample as destroyed"""
+        """Mark the sample as destroyed"""
         assert not self.destroyed
         self.log.append(SampleLogEntry(
-            sample_id=self.id,
             creator_id=destroyer.id,
-            message='Sample destroyed'))
+            kind='destroy', message='Sample destroyed'))
         self.destroyed = datetime.utcnow()
 
     @classmethod
     def combine(cls, creator, collection, *aliquots, **kwargs):
-        """generate a sample out of several aliquots"""
+        """Generate a new sample out of several aliquots"""
         sample = cls.create(
             creator, collection, **kwargs)
         for aliquot in aliquots:
             aliquot.log.append(SampleLogEntry(
-                sample_id=aliquot.id,
                 creator_id=creator.id,
-                message='Sample combined into new sample'))
+                kind='change', message='Sample combined into new sample'))
             aliquot.destroy(creator)
             sample.parents.append(aliquot)
         return sample
 
-    def split(self, creator, segments, destroyed=True):
-        """split this sample into several aliquots"""
-        assert segments > 1
+    def split(self, creator, aliquots, aliquant=False, **kwargs):
+        """Split this sample into several aliquots"""
+        assert aliquots > 0
         self.log.append(SampleLogEntry(
-            sample_id=self.id,
             creator_id=creator.id,
-            message='Sample split into %d' % segments))
+            kind='change', message='Sample split into %d' % aliquots))
+        aliargs = kwargs.copy()
+        if not 'description' in aliargs:
+            aliargs['description'] = 'Aliquot of sample %d' % self.id
+        if not 'location' in aliargs:
+            aliargs['location'] = self.location
         aliquots = [
-            Sample.create(
-                creator, self.collection,
-                description='Aliquot of sample %d' % self.id,
-                location=self.location)
-            for i in range(segments)]
+            Sample.create(creator, self.collection, **aliargs)
+            for i in range(aliquots)
+            ]
         for aliquot in aliquots:
             aliquot.parents.append(self)
-        if destroyed:
-            self.destroy(creator)
-        else:
-            self.description = 'Aliquant of %s' % self.description
+        if aliquant:
+            aliargs = kwargs.copy()
+            if not 'description' in aliargs:
+                aliargs['description'] = 'Aliquant of sample %d' % self.id
+            if not 'location' in aliargs:
+                aliargs['location'] = self.location
+            aliquant = Sample.create(creator, self.collection, **aliargs)
+            aliquant.parents.append(self)
+            aliquots.append(aliquant)
+        self.destroy(creator)
         return aliquots
 
 
@@ -811,7 +899,8 @@ class Collection(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(Unicode(200), nullable=False)
-    created = Column(DateTime, default=datetime.utcnow, nullable=False)
+    _created = Column(
+        'created', DateTime, default=datetime.utcnow, nullable=False)
     # collection_users defined as backref on UserCollection
     users = association_proxy(
         'collection_users', 'role',
@@ -827,6 +916,19 @@ class Collection(Base):
     def __unicode__(self):
         return self.id
 
+    def _get_created(self):
+        if self._created is None:
+            return None
+        return pytz.utc.localize(self._created)
+
+    def _set_created(self, value):
+        if value.tzinfo is None:
+            self._created = value
+        else:
+            self._created = value.astimezone(pytz.utc)
+
+    created = synonym('_created', descriptor=property(_get_created, _set_created))
+
     @classmethod
     def by_id(cls, id):
         """return the collection with id ``id``"""
@@ -840,7 +942,13 @@ class Collection(Base):
             for sample in self.all_samples
             if not sample.destroyed]
 
-    # XXX Add destroyed_samples property
+    @property
+    def destroyed_samples(self):
+        # XXX Do this with a query
+        return [
+            sample
+            for sample in self.all_samples
+            if sample.destroyed]
 
 
 class Role(Base):
@@ -848,7 +956,8 @@ class Role(Base):
 
     id = Column(Unicode(20), primary_key=True)
     description = Column(Unicode(200), nullable=False)
-    created = Column(DateTime, default=datetime.utcnow, nullable=False)
+    _created = Column(
+        'created', DateTime, default=datetime.utcnow, nullable=False)
 
     def __repr__(self):
         return ('<Role: id="%s">' % self.id).encode('utf-8')
@@ -858,6 +967,19 @@ class Role(Base):
 
     def __unicode__(self):
         return self.id
+
+    def _get_created(self):
+        if self._created is None:
+            return None
+        return pytz.utc.localize(self._created)
+
+    def _set_created(self, value):
+        if value.tzinfo is None:
+            self._created = value
+        else:
+            self._created = value.astimezone(pytz.utc)
+
+    created = synonym('_created', descriptor=property(_get_created, _set_created))
 
     @classmethod
     def by_id(cls, id):

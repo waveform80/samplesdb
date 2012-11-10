@@ -27,7 +27,7 @@ from __future__ import (
 from pyramid.view import view_config
 from pyramid.decorator import reify
 from pyramid.httpexceptions import HTTPFound
-from formencode import validators, foreach
+from formencode import foreach
 
 from samplesdb.views import BaseView
 from samplesdb.forms import (
@@ -71,7 +71,8 @@ class CollectionCreateSchema(CollectionSchema):
 class CollectionsView(BaseView):
     """Handlers for collection related views"""
 
-    def __init__(self, request):
+    def __init__(self, context, request):
+        self.context = context
         self.request = request
 
     @reify
@@ -101,8 +102,10 @@ class CollectionsView(BaseView):
             new_collection.users[self.request.user] = DBSession.query(Role).\
                 filter(Role.id==OWNER_ROLE).one()
             DBSession.add(new_collection)
+            DBSession.flush()
             return HTTPFound(
-                location=self.request.route_url('collections_index'))
+                location=self.request.route_url(
+                    'collections_view', collection_id=new_collection.id))
         return dict(form=FormRenderer(form))
 
     @view_config(
@@ -122,7 +125,7 @@ class CollectionsView(BaseView):
         # everything and doing filtering in Python)
         samples = (
             sample
-            for sample in self.request.context.collection.all_samples
+            for sample in self.context.collection.all_samples
             if filter == 'all'
             or (filter == 'existing' and not sample.destroyed)
             or (filter == 'destroyed' and sample.destroyed))

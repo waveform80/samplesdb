@@ -7,10 +7,11 @@
   <div tal:omit-tag="True" metal:fill-slot="content">
     <div metal:use-macro="view.top_bar"></div>
 
-    <div class="row"><h1 class="twelve columns">${context.collection.name}</h1></div>
+    <div class="row"><h1 class="twelve columns">${context.collection.name} Collection</h1></div>
 
     <div class="row">
-      <p class="eight columns"><a href="${request.route_url('collections_create')}">New Sample</a></p>
+      <p class="eight columns"><a href="${request.route_url('samples_create',
+        collection_id=context.collection.id)}">New Sample</a></p>
       <dl class="four columns sub-nav">
         <dt>Filter</dt>
         <dd
@@ -29,7 +30,7 @@
       <ul class="block-grid four-up mobile-two-up">
         <li class="collection" tal:repeat="sample samples">
           <a href="${request.route_url('samples_view', sample_id=sample.id)}">
-            <img src="${request.static_url('samplesdb:static/unknown_mime_type_optimized.svg')}" width="80" alt="" />
+            <img src="${request.static_url('samplesdb:static/unknown_mime_type_optimized.svg')}" class="thumb" alt="" />
             ${sample.description}<br />
           </a>
           Something useful???

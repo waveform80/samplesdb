@@ -26,19 +26,11 @@ from __future__ import (
 
 from datetime import datetime
 
-import webhelpers.date
-import webhelpers.media
-import webhelpers.number
-import webhelpers.text
-import webhelpers.containers
-import webhelpers.constants
 from pyramid.decorator import reify
 from pyramid.renderers import get_renderer
 from pyramid.security import authenticated_userid
 
-from samplesdb.models import (
-    User,
-    )
+from samplesdb import helpers
 
 
 class BaseView(object):
@@ -69,10 +61,6 @@ class BaseView(object):
         return renderer.implementation().macros['flashes']
 
     @reify
-    def now(self):
-        return datetime.utcnow()
-
-    @reify
     def helpers(self):
-        return webhelpers
+        return helpers
 

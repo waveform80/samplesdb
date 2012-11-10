@@ -1476,7 +1476,7 @@ ul.orbit-bullets li.active.has-thumb { background-position: 0 0; border-top: 2px
 
 /* Tabs ---------------------- */
 
-dl.tabs { border-bottom: solid 1px #e6e6e6; display: block; height: 40px; padding: 0; margin-bottom: 20px; }
+dl.tabs { border-bottom: solid 1px #e6e6e6; display: block; height: 40px; padding: 0; margin-top: 20px; margin-bottom: 20px; }
 dl.tabs.contained { margin-bottom: 0; }
 dl.tabs dt { color: #b3b3b3; cursor: default; display: block; float: left; font-size: 14px; height: 40px; line-height: 40px; padding: 0; padding-right: 9px; padding-left: 20px; width: auto; text-transform: uppercase; }
 dl.tabs dt:first-child { padding: 0; padding-right: 9px; }

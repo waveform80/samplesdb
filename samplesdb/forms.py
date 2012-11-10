@@ -293,6 +293,16 @@ class FormRenderer(pyramid_simpleform.renderers.FormRenderer):
             name, self.submit(name, value, id, **attrs),
             cols, inner_cols, errors=False)
 
+    def col_textarea(
+            self, name, content='', id=None,
+            errors=True, cols=10, inner_cols=None, **attrs):
+        "Return a textarea element within a column"
+        if inner_cols:
+            attrs = css_add_class(attrs, COL_NAMES[inner_cols])
+        return self.column(
+            name, self.textarea(name, content, id, **attrs),
+            cols, inner_cols, errors=False)
+
 
 # The following classes define validators for each of the fields in the
 # database that frequently appear on forms within the application. Centralizing
@@ -408,7 +418,7 @@ class ValidUser(FancyValidator):
 
 class ValidCollection(FancyValidator):
     def __init__(self):
-        super(ValidCollection, self).__init__(not_empty=True, strip=True)
+        super(ValidCollection, self).__init__(not_empty=True)
 
     def validate_python(self, value, state):
         if not isinstance(value, Collection):
@@ -426,7 +436,7 @@ class ValidCollection(FancyValidator):
 
 class ValidSample(FancyValidator):
     def __init__(self):
-        super(ValidSample, self).__init__(not_empty=True, strip=True)
+        super(ValidSample, self).__init__(not_empty=True)
 
     def validate_python(self, value, state):
         if not isinstance(value, Sample):

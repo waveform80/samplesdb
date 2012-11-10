@@ -71,6 +71,7 @@ ROUTES = {
     'collections_view':           r'/collections/{collection_id:\d+}',
     'collections_edit':           r'/collections/{collection_id:\d+}/edit',
     'collections_destroy':        r'/collections/{collection_id:\d+}/destroy',
+    'samples_create':             r'/collections/{collection_id:\d+}/new',
     'samples_view':               r'/samples/{sample_id:\d+}',
     'samples_edit':               r'/samples/{sample_id:\d+}/edit',
     'samples_split':              r'/samples/{sample_id:\d+}/split',

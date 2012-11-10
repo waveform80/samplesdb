@@ -26,7 +26,7 @@ from __future__ import (
 
 from pyramid.view import view_config
 from pyramid.httpexceptions import HTTPFound
-from formencode import validators, foreach
+from formencode import foreach
 
 from samplesdb.views import BaseView
 from samplesdb.forms import (
@@ -62,22 +62,33 @@ class SampleCreateSchema(SampleSchema):
 class SamplesView(BaseView):
     """Handlers for sample related views"""
 
-    def __init__(self, request):
+    def __init__(self, context, request):
+        self.context = context
         self.request = request
+
+    @view_config(
+        route_name='samples_create',
+        renderer='../templates/samples/create.pt',
+        permission=EDIT_COLLECTION)
+    def create(self):
+        form = Form(self.request, schema=SampleCreateSchema)
+        if form.validate():
+            new_sample = form.bind(
+                Sample.create(self.request.user, self.context.collection))
+            DBSession.add(new_sample)
+            DBSession.flush()
+            return HTTPFound(
+                location=self.request.route_url(
+                    'samples_view', sample_id=new_sample.id))
+        else:
+            print(repr(form.data))
+            print(repr(form.errors))
+        return dict(form=FormRenderer(form))
 
     @view_config(
         route_name='samples_view',
         renderer='../templates/samples/view.pt',
         permission=VIEW_COLLECTION)
     def view(self):
-        filter = self.request.params.get('filter', 'existing')
-        # XXX Construct a query instead (better performance than retrieving
-        # everything and doing filtering in Python)
-        samples = (
-            sample
-            for sample in self.request.context.collection.all_samples
-            if filter == 'all'
-            or (filter == 'existing' and not sample.destroyed)
-            or (filter == 'destroyed' and sample.destroyed))
-        return dict(filter=filter, samples=samples)
+        return {}
 
