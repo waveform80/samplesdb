@@ -29,14 +29,20 @@ from datetime import datetime, timedelta
 import pytz
 import webhelpers
 import webhelpers.date
+import webhelpers.number
+
+
+format_data_size = webhelpers.number.format_data_size
 
 
 def distance_of_time_in_words(
-        from_time, to_time=0, granularity='second', round=False):
+        from_time, to_time=None, granularity='second', round=False):
     "Timezone aware version of webhelpers.date.distance_of_time_in_words"
     if isinstance(from_time, datetime) and from_time.tzinfo is None:
         if isinstance(to_time, datetime) and not to_time.tzinfo is None:
             from_time = pytz.utc.localize(from_time)
+    if to_time is None:
+        to_time = datetime.utcnow()
     if isinstance(to_time, datetime) and to_time.tzinfo is None:
         if isinstance(from_time, datetime) and not from_time.tzinfo is None:
             to_time = pytz.utc.localize(to_time)

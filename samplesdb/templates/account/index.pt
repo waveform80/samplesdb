@@ -43,12 +43,12 @@
 
     <dl class="row">
       <dt class="three mobile-one columns">Password Changed</dt>
-      <dd class="nine mobile-three columns">${view.helpers.date.time_ago_in_words(request.user.password_changed, granularity='day')} ago</dd>
+      <dd class="nine mobile-three columns">${view.helpers.time_ago_in_words(request.user.password_changed, granularity='day')} ago</dd>
     </dl>
 
     <dl class="row">
       <dt class="three mobile-one columns">Account Created</dt>
-      <dd class="nine mobile-three columns">${view.helpers.date.time_ago_in_words(request.user.created, granularity='day')} ago</dd>
+      <dd class="nine mobile-three columns">${view.helpers.time_ago_in_words(request.user.created, granularity='day')} ago</dd>
     </dl>
 
     <dl class="row">
@@ -59,22 +59,34 @@
 
     <dl class="row">
       <dt class="three mobile-one columns">Collections</dt>
-      <dd class="nine mobile-three columns">${request.user.limits.collections_limit} (${len(request.user.collections)} currently used)</dd>
+      <dd class="nine mobile-three columns">
+      <div class="progress eight"><span class="meter" style="width: ${len(request.user.collections) * 100 / request.user.limits.collections_limit}%"></span></div>
+      ${len(request.user.collections)} /
+      ${request.user.limits.collections_limit}</dd>
     </dl>
 
     <dl class="row">
       <dt class="three mobile-one columns">Samples</dt>
-      <dd class="nine mobile-three columns">${request.user.limits.samples_limit} (${len(list(request.user.owned_samples))} currently used)</dd>
+      <dd class="nine mobile-three columns">
+      <div class="progress eight"><span class="meter" style="width: ${len(list(request.user.owned_samples)) * 100 / request.user.limits.samples_limit}%"></span></div>
+      ${len(list(request.user.owned_samples))} /
+      ${request.user.limits.samples_limit}</dd>
     </dl>
 
     <dl class="row">
       <dt class="three mobile-one columns">Templates</dt>
-      <dd class="nine mobile-three columns">${request.user.limits.templates_limit} (${len(request.user.templates)} currently used)</dd>
+      <dd class="nine mobile-three columns">
+      <div class="progress eight"><span class="meter" style="width: ${len(request.user.templates) * 100 / request.user.limits.templates_limit}%"></span></div>
+      ${len(request.user.templates)} /
+      ${request.user.limits.templates_limit}</dd>
     </dl>
 
     <dl class="row">
       <dt class="three mobile-one columns">Attachment Storage</dt>
-      <dd class="nine mobile-three columns">${view.helpers.number.format_data_size(request.user.limits.storage_limit, 'B')} (${view.helpers.number.format_data_size(request.user.storage_used, 'B')} currently used)</dd>
+      <dd class="nine mobile-three columns">
+      <div class="progress eight"><span class="meter" style="width: ${request.user.storage_used * 100 / request.user.limits.storage_limit}%"></span></div>
+      ${view.helpers.format_data_size(request.user.storage_used, 'B')} /
+      ${view.helpers.format_data_size(request.user.limits.storage_limit, 'B')}</dd>
     </dl>
 
   </div>

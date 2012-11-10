@@ -404,7 +404,8 @@ class User(Base):
     surname = Column(Unicode(200), nullable=False)
     organization = Column(Unicode(200), default='', nullable=False)
     _password = Column('password', String(200))
-    _password_changed = Column('password_changed', DateTime)
+    _password_changed = Column(
+        'password_changed', DateTime, default=datetime.utcnow, nullable=False)
     resets = relationship(
         PasswordReset, backref='user',
         cascade='all, delete-orphan', passive_deletes=True)
@@ -452,6 +453,21 @@ class User(Base):
             self._created = value.astimezone(pytz.utc)
 
     created = synonym('_created', descriptor=property(_get_created, _set_created))
+
+    def _get_password_changed(self):
+        if self._password_changed is None:
+            return None
+        return pytz.utc.localize(self._password_changed)
+
+    def _set_password_changed(self, value):
+        if value.tzinfo is None:
+            self._password_changed = value
+        else:
+            self._password_changed = value.astimezone(pytz.utc)
+
+    password_changed = synonym(
+        '_password_changed',
+        descriptor=property(_get_password_changed, _set_password_changed))
 
     @classmethod
     def by_id(cls, id):

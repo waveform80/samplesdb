@@ -33,7 +33,6 @@
             <img src="${request.static_url('samplesdb:static/unknown_mime_type_optimized.svg')}" class="thumb" alt="" />
             ${sample.description}<br />
           </a>
-          Something useful???
         </li>
       </ul>
     </div>
