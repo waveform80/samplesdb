@@ -14,7 +14,7 @@ from pyramid import testing
 from pyramid.httpexceptions import HTTPFound
 from pyramid_mailer.mailer import Mailer
 
-from samplesdb.image import can_resize, resize_image, IMAGE_API
+from samplesdb.image import can_resize, resize_image
 from samplesdb.forms import css_add_class, css_del_class, FormRenderer
 from samplesdb.scripts.initializedb import init_instances
 from samplesdb.models import *
@@ -25,12 +25,11 @@ from samplesdb.views.samples import *
 
 
 def test_can_resize():
-    if IMAGE_API:
-        assert can_resize('image/png')
-        assert can_resize('image/jpeg')
-        assert not can_resize('application/octet-stream')
-        assert not can_resize('image/svg+xml')
-        assert not can_resize('text/html')
+    assert can_resize('image/png')
+    assert can_resize('image/jpeg')
+    assert not can_resize('application/octet-stream')
+    assert not can_resize('image/svg+xml')
+    assert not can_resize('text/html')
 
 
 def test_image_resize():
