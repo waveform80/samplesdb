@@ -72,6 +72,8 @@ REQUIRES = [
     'pytz',
     'passlib<2.0dev',
     'Pillow<2.0dev',
+    'markdown<3.0dev',
+    'bleach<2.0dev',
     'nose',
     'mock',
     'WebTest',

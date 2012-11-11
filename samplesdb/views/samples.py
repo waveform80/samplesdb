@@ -30,9 +30,11 @@ from formencode import foreach
 
 from samplesdb.views import BaseView
 from samplesdb.forms import (
-    BaseSchema,
     Form,
     FormRenderer,
+    )
+from samplesdb.validators import (
+    BaseSchema,
     ValidCollection,
     ValidSampleDescription,
     ValidSampleLocation,
@@ -59,6 +61,10 @@ class SampleCreateSchema(SampleSchema):
     pass
 
 
+class SampleEditSchema(SampleSchema):
+    pass
+
+
 class SamplesView(BaseView):
     """Handlers for sample related views"""
 
@@ -80,9 +86,20 @@ class SamplesView(BaseView):
             return HTTPFound(
                 location=self.request.route_url(
                     'samples_view', sample_id=new_sample.id))
-        else:
-            print(repr(form.data))
-            print(repr(form.errors))
+        return dict(form=FormRenderer(form))
+
+    @view_config(
+        route_name='samples_edit',
+        renderer='../templates/samples/edit.pt',
+        permission=EDIT_COLLECTION)
+    def edit(self):
+        sample = self.context.sample
+        form = Form(self.request, schema=SampleEditSchema, obj=sample)
+        if form.validate():
+            form.bind(sample)
+            return HTTPFound(
+                location=self.request.route_url(
+                    'samples_view', sample_id=sample.id))
         return dict(form=FormRenderer(form))
 
     @view_config(

@@ -28,7 +28,7 @@ from pyramid.view import view_config
 
 from samplesdb.views import BaseView
 from samplesdb.views.account import LoginSchema
-from samplesdb.forms import BaseSchema, Form, FormRenderer
+from samplesdb.forms import Form, FormRenderer
 
 class RootView(BaseView):
     """Handler for root (mostly static) views"""

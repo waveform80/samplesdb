@@ -676,6 +676,7 @@ class SampleAttachment(Base):
         primary_key=True)
     # sample defined as backref on Sample
     name = Column(Unicode(200), primary_key=True)
+    _default = Column('default', Boolean, default=False, nullable=False)
 
     def __repr__(self):
         return ('<SampleAttachment: sample_id=%d, filename="%s">' % (
@@ -688,17 +689,21 @@ class SampleAttachment(Base):
         return self.data_filename
 
     def _get_default(self):
-        return self.sample.image is self
+        return self._default
 
     def _set_default(self, value):
         if value:
             if not self.mime_type.startswith('image/'):
                 raise ValueError('Default attachment must be an image')
-            self.sample.image = self
-        else:
-            self.sample.image = None
+            # Unset any existing default
+            current_default = DBSession.query(SampleAttachment).\
+                    filter(SampleAttachment.sample_id==self.sample_id).\
+                    filter(SampleAttachment.default==True).first()
+            if current_default:
+                current_default.default = False
+        self._default = value
 
-    default = property(_get_default, _set_default)
+    default = synonym('_default', descriptor=property(_get_default, _set_default))
 
     @property
     def mime_type(self):
@@ -785,12 +790,6 @@ class SampleAttachment(Base):
 
 class Sample(Base):
     __tablename__ = 'samples'
-    __table_args__ = (
-        ForeignKeyConstraint(
-            ['id', 'image_name'],
-            ['sample_attachments.sample_id', 'sample_attachments.name'],
-            use_alter=True, name='default_attachment_fk'),
-        )
 
     id = Column(Integer, primary_key=True)
     description = Column(Unicode(200), nullable=False)
@@ -798,13 +797,11 @@ class Sample(Base):
         'created', DateTime, default=datetime.utcnow, nullable=False)
     _destroyed = Column('destroyed', DateTime)
     location = Column(Unicode(200), default='', nullable=False)
+    notes_markup = Column(
+        Unicode(8),
+        CheckConstraint("notes_markup IN ('text', 'html', 'md', 'rst')"),
+        default='text', nullable=False)
     notes = Column(UnicodeText, default='', nullable=False)
-    image_name = Column(Unicode(200))
-    image = relationship(
-        SampleAttachment, uselist=False, post_update=True,
-        primaryjoin=
-            'samples.c.id==sample_attachments.c.sample_id and '
-            'samples.c.image_name==sample_attachments.c.name')
     collection_id = Column(Integer, ForeignKey(
         'collections.id', onupdate='RESTRICT', ondelete='CASCADE'),
         nullable=False)
@@ -819,8 +816,7 @@ class Sample(Base):
         secondaryjoin='sample_origins.c.sample_id==samples.c.id')
     attachments = relationship(
         SampleAttachment, backref='sample',
-        cascade='all, delete-orphan', passive_deletes=True,
-        primaryjoin='samples.c.id==sample_attachments.c.sample_id')
+        cascade='all, delete-orphan', passive_deletes=True)
     log = relationship(
         SampleLogEntry, backref='sample',
         cascade='all, delete-orphan', passive_deletes=True,
@@ -828,6 +824,25 @@ class Sample(Base):
     # sample_codes defined as backref on SampleCode
     codes = association_proxy('sample_codes', 'value',
         creator=lambda k, v: SampleCode(name=k, value=v))
+
+    @property
+    def status(self):
+        return 'Destroyed' if self.destroyed else 'Existing'
+
+    def __repr__(self):
+        return ('<Sample: description="%s">' % self.description).encode('utf-8')
+
+    def __str__(self):
+        return unicode(self).encode('utf-8')
+
+    def __unicode__(self):
+        return self.description
+
+    @property
+    def image(self):
+        return DBSession.query(SampleAttachment).\
+                filter(SampleAttachment.sample_id==self.id).\
+                filter(SampleAttachment.default==True).first()
 
     def _get_created(self):
         if self._created is None:
@@ -860,19 +875,6 @@ class Sample(Base):
             self._destroyed = value.astimezone(pytz.utc).replace(tzinfo=None)
 
     destroyed = synonym('_destroyed', descriptor=property(_get_destroyed, _set_destroyed))
-
-    @property
-    def status(self):
-        return 'Destroyed' if self.destroyed else 'Existing'
-
-    def __repr__(self):
-        return ('<Sample: description="%s">' % self.description).encode('utf-8')
-
-    def __str__(self):
-        return unicode(self).encode('utf-8')
-
-    def __unicode__(self):
-        return self.description
 
     @classmethod
     def by_id(cls, id):

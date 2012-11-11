@@ -1,0 +1,60 @@
+<!doctype html>
+<!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
+<!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
+<!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!--> <div metal:use-macro="view.layout">
+  <div tal:omit-tag="True" metal:fill-slot="title">Editing Sample #${context.sample.id}</div>
+  <div tal:omit-tag="True" metal:fill-slot="content">
+    <div metal:use-macro="view.top_bar"></div>
+
+    <div class="row"><h1 class="twelve columns">Editing Sample #${context.sample.id}</h1></div>
+
+    <div class="row">
+      <div class="twelve columns">
+
+        <div metal:use-macro="view.flashes"></div>
+
+        ${form.begin(request.route_url('samples_create', collection_id=context.collection.id))}
+
+        <div class="row">
+          ${form.col_label('collection', 'Collection')}
+          ${form.col_select('collection',
+            options=[(c.id, c.name) for c in request.user.editable_collections],
+            inner_cols=6)}
+        </div>
+
+        <hr />
+
+        <div class="row">
+          ${form.col_label('description', 'Description')}
+          ${form.col_text('description', autofocus='autofocus', placeholder='Sample Description')}
+        </div>
+
+        <div class="row">
+          ${form.col_label('location', 'Location')}
+          ${form.col_text('location', placeholder='Sample Location', inner_cols=6)}
+        </div>
+
+        <div class="row">
+          ${form.col_label('notes_markup', 'Notes Markup')}
+          ${form.col_select('notes_markup', options=view.helpers.MARKUP_LANGUAGES, selected_value='text', inner_cols=6)}
+        </div>
+
+        <div class="row">
+          ${form.col_label('notes', 'Notes')}
+          ${form.col_textarea('notes')}
+        </div>
+
+        <div class="row">
+          ${form.submit()}
+        </div>
+
+        ${form.end()}
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+

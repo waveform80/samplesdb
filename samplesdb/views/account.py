@@ -37,10 +37,13 @@ from pyramid_mailer.message import Message
 from formencode import validators
 
 from samplesdb.views import BaseView
+from samplesdb.security import authenticate, MANAGE_ACCOUNT
 from samplesdb.forms import (
-    BaseSchema,
     Form,
     FormRenderer,
+    )
+from samplesdb.validators import (
+    BaseSchema,
     ValidSalutation,
     ValidGivenName,
     ValidSurname,
@@ -50,7 +53,6 @@ from samplesdb.forms import (
     ValidEmail,
     ValidPassword,
     )
-from samplesdb.security import authenticate, MANAGE_ACCOUNT
 from samplesdb.models import (
     DBSession,
     EmailAddress,

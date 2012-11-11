@@ -31,9 +31,11 @@ from formencode import foreach
 
 from samplesdb.views import BaseView
 from samplesdb.forms import (
-    BaseSchema,
     Form,
     FormRenderer,
+    )
+from samplesdb.validators import (
+    BaseSchema,
     ValidRole,
     ValidUser,
     ValidCollectionName,
