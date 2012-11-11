@@ -28,11 +28,14 @@ import os
 import tempfile
 from contextlib import closing
 
-# Try and import some 3rd party library for image handling
-try:
-    from PIL import Image
-    IMAGE_API = 'PIL'
-    CAN_RESIZE = [
+from PIL import Image
+
+__all__ = ['can_resize', 'resize_image']
+
+
+def can_resize(mime_type):
+    "Returns True if the specified MIME type can be resized by this library"
+    return mime_type in set((
         'image/gif',
         'image/jpeg',
         'image/pcx',
@@ -43,39 +46,7 @@ try:
         'image/x-portable-graymap',
         'image/x-portable-pixmap',
         'image/x-xbitmap',
-    ]
-except ImportError:
-    try:
-        from pgmagick import Image
-        IMAGE_API = 'pgmagick'
-        CAN_RESIZE = [
-            'image/gif',
-            'image/jpeg',
-            'image/pcx',
-            'image/pict',
-            'image/png',
-            'image/tiff',
-            'image/vnd.wap.wbmp',
-            'image/x-jng',
-            'image/x-photoshop',
-            'image/x-portable-anymap',
-            'image/x-portable-bitmap',
-            'image/x-portable-graymap',
-            'image/x-portable-pixmap',
-            'image/x-xbitmap',
-            'image/x-xwindowdump',
-        ]
-    except ImportError:
-        IMAGE_API = None
-        CAN_RESIZE = []
-
-__all__ = ['can_resize', 'resize_image', 'IMAGE_API']
-
-
-def can_resize(mime_type):
-    "Returns True if the specified MIME type can be resized by this library"
-    return mime_type in CAN_RESIZE
-
+        ))
 
 def resize_image(source_filename, target_filename, maxw, maxh=None):
     "Resizes source image to target with specified maximum width and/or height"
@@ -99,3 +70,4 @@ def resize_image(source_filename, target_filename, maxw, maxh=None):
         os.unlink(temppath)
         raise
     os.rename(temppath, target_filename)
+
