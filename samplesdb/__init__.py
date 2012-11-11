@@ -30,6 +30,8 @@ from __future__ import (
     division,
     )
 
+import mimetypes
+
 from pyramid.config import Configurator
 from pyramid.authentication import AuthTktAuthenticationPolicy
 from pyramid.authorization import ACLAuthorizationPolicy
@@ -95,6 +97,7 @@ ROUTES = {
 
 def main(global_config, **settings):
     """Returns the Pyramid WSGI application"""
+    mimetypes.init()
     session_factory = session_factory_from_settings(settings)
     mailer_factory = mailer_factory_from_settings(settings)
     engine = engine_from_config(settings, 'sqlalchemy.')

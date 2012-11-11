@@ -5,6 +5,7 @@ from __future__ import (
     division,
     )
 
+import os
 import logging
 
 from mock import Mock
@@ -13,6 +14,7 @@ from pyramid import testing
 from pyramid.httpexceptions import HTTPFound
 from pyramid_mailer.mailer import Mailer
 
+from samplesdb.image import can_resize, resize_image, IMAGE_API
 from samplesdb.forms import css_add_class, css_del_class, FormRenderer
 from samplesdb.scripts.initializedb import init_instances
 from samplesdb.models import *
@@ -20,6 +22,27 @@ from samplesdb.views.root import *
 from samplesdb.views.account import *
 from samplesdb.views.collections import *
 from samplesdb.views.samples import *
+
+
+def test_can_resize():
+    if IMAGE_API:
+        assert can_resize('image/png')
+        assert can_resize('image/jpeg')
+        assert not can_resize('application/octet-stream')
+        assert not can_resize('image/svg+xml')
+        assert not can_resize('text/html')
+
+
+def test_image_resize():
+    test_img = os.path.join(os.path.dirname(__file__), 'static', 'pyramid.png')
+    test_out = os.path.join(os.path.dirname(__file__), 'static', 'test.png')
+    assert os.path.exists(test_img)
+    if os.path.exists(test_out):
+        os.unlink(test_out)
+    assert not os.path.exists(test_out)
+    resize_image(test_img, test_out, 200)
+    assert os.path.exists(test_out)
+    os.unlink(test_out)
 
 
 def test_css_add_class():
@@ -333,7 +356,8 @@ class CollectionsViewUnitTests(UnitFixture):
     def make_one(self):
         request = testing.DummyRequest()
         request.user = User.by_email('admin@example.com')
-        view = CollectionsView(request)
+        context = Mock()
+        view = CollectionsView(context, request)
         return view
 
     def test_collections_index(self):
@@ -490,4 +514,4 @@ class SiteFunctionalTest(FunctionalFixture):
         res = res.follow()
         assert DBSession.query(Collection).filter(Collection.name=='Flibbles').first()
         assert 'Flibbles' in res
-        res = res.click('Flibbles')
+        #res = res.click('Flibbles')

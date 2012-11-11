@@ -19,7 +19,7 @@
     padding: 1em;
     font-size: 9pt;
 	border-radius: 8px;
-    margin-top: 2em;
+    margin: 2em 0;
 }
 
 .top-bar ul li a.active { background: #444; }

@@ -17,16 +17,7 @@
 # You should have received a copy of the GNU General Public License along with
 # samplesdb.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Declares the database model for the samplesdb application.
-
-This module declares the ORM classes for the samplesdb application. The
-SQLAlchemy declarative extension is used to simplify the definitions. Please
-note that the production schema is NOT completely specified by these
-declarations as we rely on triggers to maintain certain tables. Thus SQLALchemy
-is not capable of generating the database structure solely from these
-declarations. Instead, see the create_db.*.sql scripts under the samplesdb/sql
-directory.
-"""
+"""Declares the database model for the samplesdb application."""
 
 from __future__ import (
     unicode_literals,
@@ -36,10 +27,9 @@ from __future__ import (
     )
 
 import os
+import mimetypes
 import tempfile
-from contextlib import closing
-from datetime import datetime, timedelta, date
-from itertools import izip_longest
+from datetime import datetime, timedelta
 
 import pytz
 from passlib.context import CryptContext
@@ -47,6 +37,7 @@ from sqlalchemy import (
     Table,
     Column,
     ForeignKey,
+    ForeignKeyConstraint,
     CheckConstraint,
     func,
     event,
@@ -75,6 +66,10 @@ from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.engine import Engine
 from zope.sqlalchemy import ZopeTransactionExtension
 from pyramid.threadlocal import get_current_registry
+
+from samplesdb.image import can_resize, resize_image
+from samplesdb.helpers import utcnow
+
 
 DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
 Base = declarative_base()
@@ -136,18 +131,18 @@ class EmailVerification(Base):
         super(EmailVerification, self).__init__()
         if DBSession.query(EmailVerification).\
                 filter(EmailVerification.email_ref == email).\
-                filter(EmailVerification.created > (datetime.utcnow() -
+                filter(EmailVerification.created > (utcnow() -
                     timedelta(seconds=VERIFICATION_INTERVAL))).first():
             raise VerificationTooFast('A verification was requested for that '
                 'email address less than %d seconds ago' %
                 VERIFICATION_INTERVAL)
         if DBSession.query(EmailVerification).\
                 filter(EmailVerification.email_ref == email).\
-                filter(EmailVerification.expiry > datetime.utcnow()).count() >= VERIFICATION_LIMIT:
+                filter(EmailVerification.expiry > utcnow()).count() >= VERIFICATION_LIMIT:
             raise VerificationTooMany('Too many active verifications '
                 'currently exist for this account')
         self.email_ref = email
-        self.expiry = datetime.utcnow() + timedelta(seconds=VERIFICATION_TIMEOUT)
+        self.expiry = utcnow() + timedelta(seconds=VERIFICATION_TIMEOUT)
         self.id = os.urandom(self.__table__.c.id.type.length // 2).encode('hex')
 
     def __repr__(self):
@@ -162,26 +157,32 @@ class EmailVerification(Base):
     def _get_created(self):
         if self._created is None:
             return None
-        return pytz.utc.localize(self._created)
+        if self._created.tzinfo is None:
+            return pytz.utc.localize(self._created)
+        else:
+            return self._created.astimezone(pytz.utc)
 
     def _set_created(self, value):
         if value.tzinfo is None:
             self._created = value
         else:
-            self._created = value.astimezone(pytz.utc)
+            self._created = value.astimezone(pytz.utc).replace(tzinfo=None)
 
     created = synonym('_created', descriptor=property(_get_created, _set_created))
 
     def _get_expiry(self):
         if self._expiry is None:
             return None
-        return pytz.utc.localize(self._expiry)
+        if self._expiry.tzinfo is None:
+            return pytz.utc.localize(self._expiry)
+        else:
+            return self._expiry.astimezone(pytz.utc)
 
     def _set_expiry(self, value):
         if value.tzinfo is None:
             self._expiry = value
         else:
-            self._expiry = value.astimezone(pytz.utc)
+            self._expiry = value.astimezone(pytz.utc).replace(tzinfo=None)
 
     expiry = synonym('_expiry', descriptor=property(_get_expiry, _set_expiry))
 
@@ -191,9 +192,9 @@ class EmailVerification(Base):
         return DBSession.query(cls).filter_by(id=id).first()
 
     def verify(self):
-        if datetime.utcnow() > self.expiry:
+        if utcnow() > self.expiry:
             raise VerificationError('Verification code has expired')
-        self.email.verified = datetime.utcnow()
+        self.email.verified = utcnow()
         DBSession.query(EmailVerification).\
             filter(EmailVerification.email_ref == self.email_ref).delete()
 
@@ -226,26 +227,32 @@ class EmailAddress(Base):
     def _get_created(self):
         if self._created is None:
             return None
-        return pytz.utc.localize(self._created)
+        if self._created.tzinfo is None:
+            return pytz.utc.localize(self._created)
+        else:
+            return self._created.astimezone(pytz.utc)
 
     def _set_created(self, value):
         if value.tzinfo is None:
             self._created = value
         else:
-            self._created = value.astimezone(pytz.utc)
+            self._created = value.astimezone(pytz.utc).replace(tzinfo=None)
 
     created = synonym('_created', descriptor=property(_get_created, _set_created))
 
     def _get_verified(self):
         if self._verified is None:
             return None
-        return pytz.utc.localize(self._verified)
+        if self._verified.tzinfo is None:
+            return pytz.utc.localize(self._verified)
+        else:
+            return self._verified.astimezone(pytz.utc)
 
     def _set_verified(self, value):
         if value.tzinfo is None:
             self._verified = value
         else:
-            self._verified = value.astimezone(pytz.utc)
+            self._verified = value.astimezone(pytz.utc).replace(tzinfo=None)
 
     verified = synonym('_verified', descriptor=property(_get_verified, _set_verified))
 
@@ -272,17 +279,17 @@ class PasswordReset(Base):
         super(PasswordReset, self).__init__(**kwargs)
         if DBSession.query(PasswordReset).\
             filter(PasswordReset.user_id == user.id).\
-            filter(PasswordReset.created > (datetime.utcnow() -
+            filter(PasswordReset.created > (utcnow() -
                     timedelta(seconds=RESET_INTERVAL))).first():
                 raise ResetError('A reset was requested for that '
                     'account less than %d seconds ago' % RESET_INTERVAL)
         if DBSession.query(PasswordReset).\
-            filter(PasswordReset.expiry > datetime.utcnow()).\
+            filter(PasswordReset.expiry > utcnow()).\
             filter(PasswordReset.user_id == user.id).count() >= RESET_LIMIT:
                 raise ResetError('Too many active resets currently '
                     'exist for this account')
         self.user_id = user.id
-        self.expiry = datetime.utcnow() + timedelta(seconds=RESET_TIMEOUT)
+        self.expiry = utcnow() + timedelta(seconds=RESET_TIMEOUT)
         self.id = os.urandom(self.__table__.c.id.type.length // 2).encode('hex')
 
     def __repr__(self):
@@ -297,26 +304,32 @@ class PasswordReset(Base):
     def _get_created(self):
         if self._created is None:
             return None
-        return pytz.utc.localize(self._created)
+        if self._created.tzinfo is None:
+            return pytz.utc.localize(self._created)
+        else:
+            return self._created.astimezone(pytz.utc)
 
     def _set_created(self, value):
         if value.tzinfo is None:
             self._created = value
         else:
-            self._created = value.astimezone(pytz.utc)
+            self._created = value.astimezone(pytz.utc).replace(tzinfo=None)
 
     created = synonym('_created', descriptor=property(_get_created, _set_created))
 
     def _get_expiry(self):
         if self._expiry is None:
             return None
-        return pytz.utc.localize(self._expiry)
+        if self._expiry.tzinfo is None:
+            return pytz.utc.localize(self._expiry)
+        else:
+            return self._expiry.astimezone(pytz.utc)
 
     def _set_expiry(self, value):
         if value.tzinfo is None:
             self._expiry = value
         else:
-            self._expiry = value.astimezone(pytz.utc)
+            self._expiry = value.astimezone(pytz.utc).replace(tzinfo=None)
 
     expiry = synonym('_expiry', descriptor=property(_get_expiry, _set_expiry))
 
@@ -326,7 +339,7 @@ class PasswordReset(Base):
         return DBSession.query(cls).filter_by(id=id).first()
 
     def reset_password(self, user, new_password):
-        if datetime.utcnow() > self.expiry:
+        if utcnow() > self.expiry:
             raise ResetError('Reset code has expired')
         if user is not self.user:
             raise ResetError('Invalid user for reset code %s' % self.id)
@@ -444,26 +457,32 @@ class User(Base):
     def _get_created(self):
         if self._created is None:
             return None
-        return pytz.utc.localize(self._created)
+        if self._created.tzinfo is None:
+            return pytz.utc.localize(self._created)
+        else:
+            return self._created.astimezone(pytz.utc)
 
     def _set_created(self, value):
         if value.tzinfo is None:
             self._created = value
         else:
-            self._created = value.astimezone(pytz.utc)
+            self._created = value.astimezone(pytz.utc).replace(tzinfo=None)
 
     created = synonym('_created', descriptor=property(_get_created, _set_created))
 
     def _get_password_changed(self):
         if self._password_changed is None:
             return None
-        return pytz.utc.localize(self._password_changed)
+        if self._password_changed.tzinfo is None:
+            return pytz.utc.localize(self._password_changed)
+        else:
+            return self._password_changed.astimezone(pytz.utc)
 
     def _set_password_changed(self, value):
         if value.tzinfo is None:
             self._password_changed = value
         else:
-            self._password_changed = value.astimezone(pytz.utc)
+            self._password_changed = value.astimezone(pytz.utc).replace(tzinfo=None)
 
     password_changed = synonym(
         '_password_changed',
@@ -494,7 +513,7 @@ class User(Base):
     def _set_password(self, password):
         """Store a hashed version of password"""
         self._password = PASSWORD_CONTEXT.encrypt(password)
-        self.password_changed = datetime.utcnow()
+        self.password_changed = utcnow()
 
     def _get_password(self):
         """Return the hashed version of the password"""
@@ -634,13 +653,16 @@ class SampleLogEntry(Base):
     def _get_created(self):
         if self._created is None:
             return None
-        return pytz.utc.localize(self._created)
+        if self._created.tzinfo is None:
+            return pytz.utc.localize(self._created)
+        else:
+            return self._created.astimezone(pytz.utc)
 
     def _set_created(self, value):
         if value.tzinfo is None:
             self._created = value
         else:
-            self._created = value.astimezone(pytz.utc)
+            self._created = value.astimezone(pytz.utc).replace(tzinfo=None)
 
     created = synonym('_created', descriptor=property(_get_created, _set_created))
 
@@ -654,20 +676,40 @@ class SampleAttachment(Base):
         primary_key=True)
     # sample defined as backref on Sample
     name = Column(Unicode(200), primary_key=True)
-    mime_type = Column(Unicode(50), nullable=False)
 
     def __repr__(self):
         return ('<SampleAttachment: sample_id=%d, filename="%s">' % (
-            self.sample_id, self.filename)).encode('utf-8')
+            self.sample_id, self.data_filename)).encode('utf-8')
 
     def __str__(self):
         return unicode(self).encode('utf-8')
 
     def __unicode__(self):
-        return self.filename
+        return self.data_filename
+
+    def _get_default(self):
+        return self.sample.image is self
+
+    def _set_default(self, value):
+        if value:
+            if not self.mime_type.startswith('image/'):
+                raise ValueError('Default attachment must be an image')
+            self.sample.image = self
+        else:
+            self.sample.image = None
+
+    default = property(_get_default, _set_default)
 
     @property
-    def filename(self):
+    def mime_type(self):
+        return mimetypes.guess_type(self.name, strict=False)[0] or 'application/octet-stream'
+
+    @property
+    def content_encoding(self):
+        return mimetypes.guess_type(self.name, strict=False)[1]
+
+    @property
+    def data_filename(self):
         return os.path.join(
             get_current_registry().settings['sample_attachments_dir'],
             self.sample_id,
@@ -683,72 +725,72 @@ class SampleAttachment(Base):
 
     @property
     def updated(self):
-        if os.path.exists(self.filename):
-            return datetime.fromtimestamp(os.stat(self.filename).st_mtime)
+        if os.path.exists(self.data_filename):
+            return datetime.fromtimestamp(os.stat(self.data_filename).st_mtime)
 
     @property
     def size(self):
-        if os.path.exists(self.filename):
-            return os.stat(self.filename).st_size
+        if os.path.exists(self.data_filename):
+            return os.stat(self.data_filename).st_size
 
     @property
     def thumb_updated(self):
         if os.path.exists(self.thumb_filename):
             return datetime.fromtimestamp(os.stat(self.thumb_filename).st_mtime)
 
-    @property
-    def thumb(self):
+    def open_thumb(self):
+        """Returns the attachment's thumbnail image as a file-like object"""
         THUMB_MAXWIDTH = 200
         THUMB_MAXHEIGHT = 200
-        # XXX check MIME-type is image/(png|gif|jpeg|something-bitmappy)
-        if os.path.exists(self.filename) and (
+        # Regenerate the thumbnail if it's stale
+        if os.path.exists(self.data_filename) and can_resize(self.mime_type) and (
                 not os.path.exists(self.thumb_filename) or
                 self.thumb_updated < self.updated):
-            im = Image.open(self.filename)
-            (w, h) = im.size
-            if w > THUMB_MAXWIDTH or h > THUMB_MAXHEIGHT:
-                scale = min(float(THUMB_MAXWIDTH) / w, float(THUMB_MAXHEIGHT) / h)
-                w = int(round(w * scale))
-                h = int(round(h * scale))
-                im = im.convert('RGB').resize((w, h), Image.ANTIALIAS)
-                tempfd, temppath = tempfile.mkstemp(
-                    dir=os.path.dirname(self.thumb_filename))
-                try:
-                    with closing(os.fdopen(tempfd, 'wb')) as f:
-                        im.save(f, 'JPEG')
-                except:
-                    os.unlink(temppath)
-                    raise
-                os.rename(temppath, self.thumb_filename)
+            resize_image(
+                self.data_filename, self.thumb_filename,
+                THUMB_MAXWIDTH, THUMB_MAXHEIGHT)
         if os.path.exists(self.thumb_filename):
-            with open(self.thumb_filename, 'rb') as f:
-                return f.read()
-
-    def _get_data(self):
-        if os.path.exists(self.filename):
-            with open(self.filename, 'rb') as f:
-                return f.read()
-
-    def _set_data(self, value):
-        if value is None:
-            if os.path.exists(self.filename):
-                os.unlink(self.filename)
+            return open(self.thumb_filename, 'rb')
         else:
+            # XXX Return some generic thumbnail?
+            return None
+
+    def open_data(self):
+        """Returns the attachment as a file-like object"""
+        # Caller is responsible for closing
+        if os.path.exists(self.data_filename):
+            return open(self.data_filename, 'rb')
+
+    def replace_data(self, source):
+        """Replaces the attachment's content from a file-like object"""
+        if value is None:
+            if os.path.exists(self.data_filename):
+                os.unlink(self.data_filename)
+        else:
+            source.seek(0)
             tempfd, temppath = tempfile.mkstemp(
-                dir=os.path.dirname(self.filename))
+                dir=os.path.dirname(self.data_filename))
             try:
                 with closing(os.fdopen(tempfd, 'wb')) as f:
-                    f.write(value)
+                    while True:
+                        data = source.read(1024**2)
+                        if not data:
+                            break
+                        f.write(data)
             except:
                 os.unlink(temppath)
                 raise
-            os.rename(temppath, self.filename)
-
-    data = property(_get_data, _set_data)
+            os.rename(temppath, self.data_filename)
 
 
 class Sample(Base):
     __tablename__ = 'samples'
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ['id', 'image_name'],
+            ['sample_attachments.sample_id', 'sample_attachments.name'],
+            use_alter=True, name='default_attachment_fk'),
+        )
 
     id = Column(Integer, primary_key=True)
     description = Column(Unicode(200), nullable=False)
@@ -757,6 +799,12 @@ class Sample(Base):
     _destroyed = Column('destroyed', DateTime)
     location = Column(Unicode(200), default='', nullable=False)
     notes = Column(UnicodeText, default='', nullable=False)
+    image_name = Column(Unicode(200))
+    image = relationship(
+        SampleAttachment, uselist=False, post_update=True,
+        primaryjoin=
+            'samples.c.id==sample_attachments.c.sample_id and '
+            'samples.c.image_name==sample_attachments.c.name')
     collection_id = Column(Integer, ForeignKey(
         'collections.id', onupdate='RESTRICT', ondelete='CASCADE'),
         nullable=False)
@@ -771,7 +819,8 @@ class Sample(Base):
         secondaryjoin='sample_origins.c.sample_id==samples.c.id')
     attachments = relationship(
         SampleAttachment, backref='sample',
-        cascade='all, delete-orphan', passive_deletes=True)
+        cascade='all, delete-orphan', passive_deletes=True,
+        primaryjoin='samples.c.id==sample_attachments.c.sample_id')
     log = relationship(
         SampleLogEntry, backref='sample',
         cascade='all, delete-orphan', passive_deletes=True,
@@ -783,26 +832,32 @@ class Sample(Base):
     def _get_created(self):
         if self._created is None:
             return None
-        return pytz.utc.localize(self._created)
+        if self._created.tzinfo is None:
+            return pytz.utc.localize(self._created)
+        else:
+            return self._created.astimezone(pytz.utc)
 
     def _set_created(self, value):
         if value.tzinfo is None:
             self._created = value
         else:
-            self._created = value.astimezone(pytz.utc)
+            self._created = value.astimezone(pytz.utc).replace(tzinfo=None)
 
     created = synonym('_created', descriptor=property(_get_created, _set_created))
 
     def _get_destroyed(self):
         if self._destroyed is None:
             return None
-        return pytz.utc.localize(self._destroyed)
+        if self._destroyed.tzinfo is None:
+            return pytz.utc.localize(self._destroyed)
+        else:
+            return self._destroyed.astimezone(pytz.utc)
 
     def _set_destroyed(self, value):
         if value.tzinfo is None:
             self._destroyed = value
         else:
-            self._destroyed = value.astimezone(pytz.utc)
+            self._destroyed = value.astimezone(pytz.utc).replace(tzinfo=None)
 
     destroyed = synonym('_destroyed', descriptor=property(_get_destroyed, _set_destroyed))
 
@@ -840,7 +895,7 @@ class Sample(Base):
         self.log.append(SampleLogEntry(
             creator_id=destroyer.id,
             kind='destroy', message='Sample destroyed'))
-        self.destroyed = datetime.utcnow()
+        self.destroyed = utcnow()
 
     @classmethod
     def combine(cls, creator, collection, *aliquots, **kwargs):
@@ -935,13 +990,16 @@ class Collection(Base):
     def _get_created(self):
         if self._created is None:
             return None
-        return pytz.utc.localize(self._created)
+        if self._created.tzinfo is None:
+            return pytz.utc.localize(self._created)
+        else:
+            return self._created.astimezone(pytz.utc)
 
     def _set_created(self, value):
         if value.tzinfo is None:
             self._created = value
         else:
-            self._created = value.astimezone(pytz.utc)
+            self._created = value.astimezone(pytz.utc).replace(tzinfo=None)
 
     created = synonym('_created', descriptor=property(_get_created, _set_created))
 
@@ -987,13 +1045,16 @@ class Role(Base):
     def _get_created(self):
         if self._created is None:
             return None
-        return pytz.utc.localize(self._created)
+        if self._created.tzinfo is None:
+            return pytz.utc.localize(self._created)
+        else:
+            return self._created.astimezone(pytz.utc)
 
     def _set_created(self, value):
         if value.tzinfo is None:
             self._created = value
         else:
-            self._created = value.astimezone(pytz.utc)
+            self._created = value.astimezone(pytz.utc).replace(tzinfo=None)
 
     created = synonym('_created', descriptor=property(_get_created, _set_created))
 

@@ -34,6 +34,10 @@ import webhelpers.number
 
 format_data_size = webhelpers.number.format_data_size
 
+def utcnow():
+    "Returns the current UTC timestamp with the UTC timezone"
+    return pytz.utc.localize(datetime.utcnow())
+
 
 def distance_of_time_in_words(
         from_time, to_time=None, granularity='second', round=False):

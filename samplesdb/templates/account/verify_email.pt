@@ -15,7 +15,7 @@
         <strong>${verification.email.email}</strong>.  Before you can use this
         address to login you will need to receive this e-mail and click on the
         link within it. You have
-        ${view.helpers.date.distance_of_time_in_words(view.now, verification.expiry,
+        ${view.helpers.distance_of_time_in_words(view.helpers.utcnow(), verification.expiry,
         granularity='hour')} hours to act upon the e-mail before the link
         within it expires.</p>
       </div>

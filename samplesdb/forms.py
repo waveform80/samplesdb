@@ -263,6 +263,16 @@ class FormRenderer(pyramid_simpleform.renderers.FormRenderer):
             name, self.text(name, value, id, **attrs),
             cols, inner_cols, errors)
 
+    def col_file(
+            self, name, value=None, id=None,
+            errors=True, cols=10, inner_cols=None, **attrs):
+        "Return a file input within a column"
+        if inner_cols:
+            attrs = css_add_class(attrs, COL_NAMES[inner_cols])
+        return self.column(
+            name, self.file(name, value, id, **attrs),
+            cols, inner_cols, errors)
+
     def col_email(
             self, name, value=None, id=None,
             errors=True, cols=10, inner_cols=None, **attrs):
