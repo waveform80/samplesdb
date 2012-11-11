@@ -39,12 +39,26 @@ literal = webhelpers.html.builder.literal
 format_data_size = webhelpers.number.format_data_size
 
 
-MARKUP_LANGUAGES = (
-    ('text'    , 'Plain Text')     ,
-    ('html'    , 'HTML')           ,
-    ('textile' , 'Textile Markup') ,
-    ('md'      , 'Markdown')       ,
-    )
+MARKUP_LANGUAGES = {
+    'text'    : 'Plain Text',
+    'html'    : 'HTML',
+    'textile' : 'Textile Markup',
+    'md'      : 'Markdown',
+    }
+
+try:
+    import docutils
+    import docutils.core
+    MARKUP_LANGUAGES['rst'] = 'reStructuredText'
+except ImportError:
+    pass
+
+try:
+    import creole
+    import creole.html_emitter
+    MARKUP_LANGUAGES['creole'] = 'Creole Markup'
+except ImportError:
+    pass
 
 ALLOWED_TAGS = set((
     'a', 'abbr', 'acronym', 'address', 'b', 'big', 'blockquote', 'br',
@@ -124,21 +138,34 @@ ALLOWED_ATTRS = {
 
 
 def render_markup(language, source):
+    if not language in MARKUP_LANGUAGES:
+        raise ValueError('Unknown markup language %s' % language)
     if language == 'text':
-        html = webhelpers.html.converters.format_paragraphs(source)
+        html = bleach.linkify(
+            webhelpers.html.converters.format_paragraphs(source))
     elif language == 'html':
         html = source
     elif language == 'md':
         html = webhelpers.html.converters.markdown(source)
     elif language == 'textile':
         html = webhelpers.html.converters.textilize(source)
-    else:
-        raise ValueError('Unknown markup language %s' % language)
+    elif language == 'rst':
+        overrides = {
+            'input_encoding'       : 'unicode',
+            'doctitle_xform'       : False,
+            'initial_header_level' : 2,
+            }
+        result = docutils.core.public_parts(
+            source=source, writer_name='html',
+            settings_overrides=overrides)['fragment']
+    elif language == 'creole':
+        result = creole.html_emitter.HtmlEmitter(
+                creole.Parser(source).parse()).emit()
     # Sanitize all HTML output with bleach (don't rely on safe-mode of
     # converters above as they're not necessarily as good and sometimes disable
     # useful features like embedding HTML in MarkDown)
-    return literal(bleach.linkify(bleach.clean(
-        html, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRS)))
+    return literal(bleach.clean(
+        html, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRS))
 
 
 def utcnow():
