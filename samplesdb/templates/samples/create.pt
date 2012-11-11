@@ -17,8 +17,8 @@
         ${form.begin(request.route_url('samples_create', collection_id=context.collection.id))}
 
         <div class="row">
-          ${form.col_label('collection', 'Collection')}
-          ${form.col_select('collection',
+          ${form.label('collection', 'Collection')}
+          ${form.select('collection',
             options=((c.id, c.name) for c in request.user.editable_collections),
             selected_value=context.collection.id,
             inner_cols=6)}
@@ -27,32 +27,40 @@
         <hr />
 
         <div class="row">
-          ${form.col_label('description', 'Description')}
-          ${form.col_text('description', autofocus='autofocus', placeholder='Sample Description')}
+          ${form.label('description', 'Description')}
+          ${form.text('description',
+            autofocus='autofocus',
+            placeholder='Sample Description')}
         </div>
 
         <div class="row">
-          ${form.col_label('location', 'Location')}
-          ${form.col_text('location', placeholder='Sample Location', inner_cols=6)}
+          ${form.label('location', 'Location')}
+          ${form.text('location',
+            placeholder='Sample Location',
+            inner_cols=6)}
         </div>
 
         <div class="row">
-          ${form.col_label('notes_markup', 'Notes Markup')}
-          ${form.col_select('notes_markup', options=view.helpers.MARKUP_LANGUAGES, selected_value='text', inner_cols=6)}
+          ${form.label('attachments', 'Attachments')}
+          ${form.file('attachments', multiple='multiple')}
+        </div>
+
+        <hr />
+
+        <div class="row">
+          ${form.label('notes_markup', 'Markup')}
+          ${form.select('notes_markup',
+            options=sorted(view.helpers.MARKUP_LANGUAGES.items()),
+            selected_value='text', inner_cols=3)}
         </div>
 
         <div class="row">
-          ${form.col_label('notes', 'Notes')}
-          ${form.col_textarea('notes')}
+          ${form.label('notes', 'Notes')}
+          ${form.textarea('notes')}
         </div>
 
         <div class="row">
-          ${form.col_label('attachments', 'Attachments')}
-          ${form.col_file('attachments', multiple='multiple')}
-        </div>
-
-        <div class="row">
-          ${form.submit()}
+          ${form.submit(class_='small right')}
         </div>
 
         ${form.end()}

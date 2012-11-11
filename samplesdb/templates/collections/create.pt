@@ -14,8 +14,8 @@
         ${form.begin(request.current_route_url())}
 
         <div class="row">
-          ${form.col_label('name', 'Name', cols=1)}
-          ${form.col_text('name', placeholder='Collection Name', cols=11)}
+          ${form.label('name', 'Name', cols=1)}
+          ${form.text('name', placeholder='Collection Name', cols=11)}
         </div>
 
         <fieldset>
@@ -30,10 +30,10 @@
           <hr />
 
           <div tal:repeat="item form.data_decoded.get('users', [])" class="row form-template">
-            ${form.col_label('users-%d.user' % repeat.item.index, 'E-mail', cols=1)}
-            ${form.col_email('users-%d.user' % repeat.item.index, value=item['user'], placeholder='someone@somewhere.edu', cols=6)}
-            ${form.col_label('users-%d.role' % repeat.item.index, 'Role', cols=1)}
-            ${form.col_select('users-%d.role' % repeat.item.index, selected_value=item['role'], options=view.roles, cols=2)}
+            ${form.label('users-%d.user' % repeat.item.index, 'E-mail', cols=1)}
+            ${form.email('users-%d.user' % repeat.item.index, value=item['user'], placeholder='someone@somewhere.edu', cols=6)}
+            ${form.label('users-%d.role' % repeat.item.index, 'Role', cols=1)}
+            ${form.select('users-%d.role' % repeat.item.index, selected_value=item['role'], options=view.roles, cols=2)}
             <div class="two columns">
               <a href="#" class="secondary small button right remove-button">Remove</a>
             </div>
@@ -42,14 +42,14 @@
           <a href="#" class="secondary small button right" id="add-button">Add</a>
         </fieldset>
 
-        ${form.col_submit()}
+        ${form.submit(class_='small right')}
         ${form.end()}
 
         <div class="row" id="form-template" style="display: none">
-          ${form.col_label('user', 'E-mail', cols=1)}
-          ${form.col_email('user', placeholder='someone@somewhere.edu', cols=6)}
-          ${form.col_label('role', 'Role', cols=1)}
-          ${form.col_select('role', options=view.roles, selected_value='owner', cols=2)}
+          ${form.label('user', 'E-mail', cols=1)}
+          ${form.email('user', placeholder='someone@somewhere.edu', cols=6)}
+          ${form.label('role', 'Role', cols=1)}
+          ${form.select('role', options=view.roles, selected_value='owner', cols=2)}
           <div class="two columns">
             <a href="#" class="secondary small button right remove-button">Remove</a>
           </div>

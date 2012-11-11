@@ -14,10 +14,10 @@
         ${form.hidden_tag('came_from')}
         ${form.errorlist()}
         <div class="row">
-          ${form.email('username', placeholder='E-mail Address')}
+          ${form.email('username', placeholder='E-mail Address', cols=None)}
         </div>
         <div class="row">
-          ${form.password('password', placeholder='Password')}
+          ${form.password('password', placeholder='Password', cols=None)}
         </div>
         <div class="row">
           <div class="ten mobile-three columns">

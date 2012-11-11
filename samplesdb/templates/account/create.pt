@@ -20,34 +20,34 @@
         ${form.begin(request.route_url('account_create'))}
 
         <div class="row">
-          ${form.col_label('salutation', 'Name')}
-          ${form.col_select('salutation', autofocus='autofocus', cols=1)}
-          ${form.col_text('given_name', placeholder='First Name', cols=4)}
-          ${form.col_text('surname', placeholder='Last Name', cols=5)}
+          ${form.label('salutation', 'Name')}
+          ${form.select('salutation', autofocus='autofocus', cols=1)}
+          ${form.text('given_name', placeholder='First Name', cols=4)}
+          ${form.text('surname', placeholder='Last Name', cols=5)}
         </div>
 
         <div class="row">
-          ${form.col_label('organization', 'Organization')}
-          ${form.col_text('organization')}
+          ${form.label('organization', 'Organization')}
+          ${form.text('organization')}
         </div>
 
         <div class="row">
-          ${form.col_label('timezone_name', 'Timezone')}
-          ${form.col_select('timezone_name', options=view.timezones, selected_value='UTC', inner_cols=6)}
+          ${form.label('timezone_name', 'Timezone')}
+          ${form.select('timezone_name', options=view.timezones, selected_value='UTC', inner_cols=6)}
         </div>
 
         <div class="row">
-          ${form.col_label('email', 'Email Address')}
-          ${form.col_email('email', placeholder='someone@somewhere.edu')}
+          ${form.label('email', 'Email Address')}
+          ${form.email('email', placeholder='someone@somewhere.edu')}
         </div>
 
         <div class="row">
-          ${form.col_label('email_confirm', 'Confirm Email')}
-          ${form.col_email('email_confirm', placeholder='someone@somewhere.edu')}
+          ${form.label('email_confirm', 'Confirm Email')}
+          ${form.email('email_confirm', placeholder='someone@somewhere.edu')}
         </div>
 
         <div class="row">
-          ${form.col_label('limits_id', 'Account Type')}
+          ${form.label('limits_id', 'Account Type')}
           <div class="ten columns">
             ${form.radio('limits_id', 'academic', label='Academic', checked='checked')}
             ${form.radio('limits_id', 'commercial', label='Commercial (not currently available)', disabled='disabled')}
@@ -56,17 +56,17 @@
         </div>
 
         <div class="row">
-          ${form.col_label('password', 'Password')}
-          ${form.col_password('password', inner_cols=6)}
+          ${form.label('password', 'Password')}
+          ${form.password('password', inner_cols=6)}
         </div>
 
         <div class="row">
-          ${form.col_label('password_confirm', 'Confirm Password')}
-          ${form.col_password('password_confirm', inner_cols=6)}
+          ${form.label('password_confirm', 'Confirm Password')}
+          ${form.password('password_confirm', inner_cols=6)}
         </div>
 
         <div class="row">
-          ${form.col_submit()}
+          ${form.submit(class_='small right')}
         </div>
 
         ${form.end()}

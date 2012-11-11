@@ -17,6 +17,14 @@
 # You should have received a copy of the GNU General Public License along with
 # samplesdb.  If not, see <http://www.gnu.org/licenses/>.
 
+"""Implements an extended version of pyramid_simpleform.
+
+This module extends the pyramid_simpleform package to support bi-directional
+transcoding of values with formencode's validators (using from_python as well
+as to_python), and the Foundation Grid being used for horizontal layout of form
+controls.
+"""
+
 from __future__ import (
     unicode_literals,
     print_function,
@@ -28,17 +36,18 @@ import logging
 
 from webhelpers.html import tags
 from webhelpers.html.builder import HTML
+from pyramid.i18n import get_localizer
+from pyramid.renderers import render
 from formencode import (
     FancyValidator,
     Schema,
     Invalid,
+    htmlfill,
     validators,
     variabledecode,
     )
 from pyramid.events import NewRequest, subscriber
 from pyramid.httpexceptions import HTTPForbidden
-import pyramid_simpleform
-import pyramid_simpleform.renderers
 
 
 COL_NAMES = {
@@ -90,124 +99,257 @@ def csrf_validation(event):
         logging.debug('CSRF token is valid')
 
 
-class Form(pyramid_simpleform.Form):
-    "A refinement of Form to make decoded form variables accessible"
+class State(object):
+    """
+    Default "empty" state object.
+
+    Keyword arguments are automatically bound to properties, for
+    example::
+
+        obj = State(foo="bar")
+        obj.foo == "bar"
+    """
+
+    def __init__(self, **kwargs):
+        for k, v in kwargs.items():
+            setattr(self, k, v)
+
+    def __contains__(self, k):
+        return hasattr(self, k)
+
+    def __getitem__(self, k):
+        try:
+            return getattr(self, k)
+        except AttributeError:
+            raise KeyError
+
+    def __setitem__(self, k, v):
+        setattr(self, k, v)
+
+    def get(self, k, default=None):
+        return getattr(self, k, default)
+
+
+class Form(object):
+    """
+    Represents an HTML form with formencode based schemas.
+
+    `request` : Pyramid request instance
+
+    `schema`  : FormEncode Schema class or instance
+
+    `validators` : a dict of FormEncode validators i.e. { field : validator }
+
+    `defaults`   : a dict of default values
+
+    `obj`        : instance of an object (e.g. SQLAlchemy model)
+
+    `state`      : state passed to FormEncode validators.
+
+    `method`        : HTTP method
+
+    `variable_decode` : will decode dict/lists
+
+    `dict_char`       : variabledecode dict char
+
+    `list_char`       : variabledecode list char
+
+    Also note that values of ``obj`` supercede those of ``defaults``. Only
+    fields specified in your schema or validators will be taken from the
+    object.
+    """
+
+    default_state = State
 
     def __init__(
-            self, request, schema, defaults=None, obj=None,
-            variable_decode=False):
-        super(Form, self).__init__(
-            request, schema=schema, defaults=defaults, obj=obj,
-            variable_decode=variable_decode)
+            self, request, schema=None, validators=None, defaults=None,
+            obj=None, extra=None, include=None, exclude=None, state=None,
+            method='POST', variable_decode=False,  dict_char='.',
+            list_char='-', multipart=False):
+
+        self.request = request
+        self.schema = schema
+        self.validators = validators or {}
+        self.method = method
+        self.variable_decode = variable_decode
+        self.dict_char = dict_char
+        self.list_char = list_char
+        self.multipart = multipart
+        self.state = state
+        self.is_validated = False
+        self.errors = {}
+        self.data = {}
         self.data_decoded = {}
+        if self.state is None:
+            self.state = self.default_state()
+        if not hasattr(self.state, '_'):
+            self.state._ = get_localizer(self.request).translate
+        if defaults:
+            self.data.update(defaults)
+        if obj:
+            fields = self.schema.fields.keys() + self.validators.keys()
+            for f in fields:
+                if hasattr(obj, f):
+                    self.data[f] = getattr(obj, f)
+
+    def is_error(self, field):
+        """Checks if individual field has errors."""
+        return field in self.errors
+
+    def all_errors(self):
+        """Returns all errors in a single list."""
+        if isinstance(self.errors, basestring):
+            return [self.errors]
+        if isinstance(self.errors, list):
+            return self.errors
+        errors = []
+        for field in self.errors.iterkeys():
+            errors += self.errors_for(field)
+        return errors
+
+    def errors_for(self, field):
+        """Returns any errors for a given field as a list."""
+        errors = self.errors.get(field, [])
+        if isinstance(errors, basestring):
+            errors = [errors]
+        return errors
 
     def validate(self):
-        if self.method == 'POST':
+        """
+        Runs validation and returns True/False whether form is valid.
+
+        This will check if the form should be validated (i.e. the request
+        method matches) and the schema/validators validate.
+
+        Validation will only be run once; subsequent calls to validate() will
+        have no effect, i.e. will just return the original result.
+
+        The errors and data values will be updated accordingly.
+        """
+        assert self.schema or self.validators, \
+                "validators and/or schema required"
+        if self.is_validated:
+            return not(self.errors)
+        if self.method and self.method != self.request.method:
+            return False
+        if self.method == "POST":
             params = self.request.POST
         else:
             params = self.request.params
-
         if self.variable_decode:
             self.data_decoded = variabledecode.variable_decode(
-                    params, self.dict_char, self.list_char)
+                params, self.dict_char, self.list_char)
         else:
             self.data_decoded = params
-        return super(Form, self).validate()
+        self.data.update(params)
+        if self.schema:
+            try:
+                self.data = self.schema.to_python(
+                    self.data_decoded, self.state)
+            except Invalid, e:
+                self.errors = e.unpack_errors(
+                    self.variable_decode, self.dict_char, self.list_char)
+        if self.validators:
+            for field, validator in self.validators.iteritems():
+                try:
+                    self.data[field] = validator.to_python(
+                        self.data_decoded.get(field), self.state)
+                except Invalid, e:
+                    self.errors[field] = unicode(e)
+        self.is_validated = True
+        return not(self.errors)
 
+    def bind(self, obj, include=None, exclude=None):
+        """
+        Binds validated field values to an object instance, for example a
+        SQLAlchemy model instance.
 
-class FormRenderer(pyramid_simpleform.renderers.FormRenderer):
-    "A refinement of FormRenderer with additions for Foundation columns"
+        `include` : list of included fields. If field not in this list it will
+        not be bound to this object.
 
-    def __init__(self, form, csrf_field='_csrf'):
-        super(FormRenderer, self).__init__(form, csrf_field)
-        self.data_decoded = form.data_decoded
+        `exclude` : list of excluded fields. If field is in this list it will
+        not be bound to the object.
 
-    def begin(self, url=None, **attrs):
-        "Returns the opening tag for an HTML form"
-        self._csrf_done = False
-        return super(FormRenderer, self).begin(url, **attrs)
+        Returns the `obj` passed in.
 
-    def end(self):
-        "Returns the closing tag for an HTML form"
-        if not self._csrf_done:
-            logging.debug('Forcing inclusion of CSRF token')
-            return self.csrf_token() + super(FormRenderer, self).end()
-        return super(FormRenderer, self).end()
+        Note that any properties starting with underscore "_" are ignored
+        regardless of ``include`` and ``exclude``. If you need to set these
+        do so manually from the ``data`` property of the form instance.
 
-    def csrf(self, name=None):
-        "Returns the hidden Cross-Site Request Forgery input element"
-        result = super(FormRenderer, self).csrf(name)
-        self._csrf_done = True
+        Calling bind() before running validate() will result in a RuntimeError
+        """
+        if not self.is_validated:
+            raise RuntimeError(
+                'Form has not been validated. Call validate() first')
+        if self.errors:
+            raise RuntimeError('Cannot bind to object if form has errors')
+        items = [(k, v) for k, v in self.data.items() if not k.startswith("_")]
+        for k, v in items:
+            if include and k not in include:
+                continue
+            if exclude and k in exclude:
+                continue
+            setattr(obj, k, v)
+        return obj
+
+    def htmlfill(self, content, **htmlfill_kwargs):
+        """Runs FormEncode **htmlfill** on content."""
+        charset = getattr(self.request, 'charset', 'utf-8')
+        htmlfill_kwargs.setdefault('encoding', charset)
+        return htmlfill.render(
+            content, defaults=self.data, errors=self.errors, **htmlfill_kwargs)
+
+    def render(self, template, extra_info=None, htmlfill=True,
+              **htmlfill_kwargs):
+        """
+        Renders the form directly to a template, using Pyramid's **render**
+        function.
+
+        `template` : name of template
+
+        `extra_info` : dict of extra data to pass to template
+
+        `htmlfill` : run htmlfill on the result.
+
+        By default the form itself will be passed in as `form`.
+
+        htmlfill is automatically run on the result of render if `htmlfill` is
+        **True**.
+
+        This is useful if you want to use htmlfill on a form, but still return
+        a dict from a view. For example::
+
+            @view_config(name='submit', request_method='POST')
+            def submit(request):
+
+                form = Form(request, MySchema)
+                if form.validate():
+                    # do something
+                return dict(form=form.render("my_form.html"))
+        """
+        extra_info = extra_info or {}
+        extra_info.setdefault('form', self)
+        result = render(template, extra_info, self.request)
+        if htmlfill:
+            result = self.htmlfill(result, **htmlfill_kwargs)
         return result
 
-    def select(self, name, options=None, selected_value=None, id=None, **attrs):
-        "Returns a select element"
-        if options is None:
-            validator = self.form.schema.fields[name]
-            assert isinstance(validator, validators.OneOf)
-            options = validator.list
-        return super(FormRenderer, self).select(name, options, selected_value, id, **attrs)
 
-    def text(self, name, value=None, id=None, **attrs):
-        "Returns an text input element"
-        if name in self.form.schema.fields:
-            validator = self.form.schema.fields[name]
-            if isinstance(validator, validators.FancyValidator) and validator.not_empty:
-                attrs['required'] = 'required'
-            if isinstance(validator, validators.String) and validator.max is not None:
-                attrs['maxlength'] = validator.max
-        return super(FormRenderer, self).text(name, value, id, **attrs)
+class FormRenderer(object):
+    """
+    A simple form helper. Uses WebHelpers to render individual form widgets:
+    see the WebHelpers library for more information on individual widgets.
+    """
 
-    def email(self, name, value=None, id=None, **attrs):
-        "Returns an email input element"
-        if 'type' not in attrs:
-            attrs['type'] = 'email'
-        return self.text(name, value, id, **attrs)
+    def __init__(self, form, csrf_field='_csrf'):
+        self.form = form
+        self.data = self.form.data
+        self.data_decoded = self.form.data_decoded
+        self.csrf_field = csrf_field
+        self._csrf_done = False
 
-    def submit(self, name='submit', value='Submit', id=None, **attrs):
-        "Returns a form submit button"
-        if not 'class_' in attrs:
-            attrs['class_'] = 'small button right'
-        return super(FormRenderer, self).submit(name, value, id, **attrs)
-
-    def label(self, name, label=None, **attrs):
-        "Returns a form label element"
-        if 'class_' not in attrs:
-            attrs['class_'] = 'inline'
-        return super(FormRenderer, self).label(name, label, **attrs)
-
-    def errorlist(self, name=None, **attrs):
-        "Returns the list of current form errors"
-        return self.error_flashes(name, **attrs)
-
-    def error_flashes(self, name=None, **attrs):
-        "Returns the list of specified errors as Foundation flashes"
-        if name is None:
-            errors = self.all_errors()
-        else:
-            errors = self.errors_for(name)
-        content = [
-            HTML.div(error, class_='alert-box alert', **attrs)
-            for error in errors]
-        return HTML(*content)
-
-    def error_small(self, name=None, cols=None, **attrs):
-        "Returns the list of specified errors as Foundation form attachments"
-        if name is None:
-            errors = self.all_errors()
-        else:
-            errors = self.errors_for(name)
-        if not errors:
-            return ''
-        content = []
-        for error in errors:
-            content.append(HTML(error))
-            content.append(tags.BR)
-        content = content[:-1]
-        attrs = css_add_class(attrs, 'error')
-        if cols:
-            attrs = css_add_class(attrs, COL_NAMES[cols])
-        return HTML.tag('small', *content, **attrs)
+    def value(self, name, default=None):
+        return self.data.get(name, default)
 
     def column(self, name, content, cols, inner_cols=None, errors=True):
         "Wraps content in a Foundation column"
@@ -219,84 +361,276 @@ class FormRenderer(pyramid_simpleform.renderers.FormRenderer):
             class_='%s columns %s' % (
                 COL_NAMES[cols], 'error' if error_content else ''))
 
-    def col_label(
-            self, name, label=None, errors=True, cols=2, inner_cols=None,
-            **attrs):
-        "Return a form label within a column"
+    def begin(self, url=None, **attrs):
+        """
+        Creates the opening <form> tags.
+
+        By default URL will be current path.
+        """
+        self._csrf_done = False
+        url = url or self.form.request.path
+        multipart = attrs.pop('multipart', self.form.multipart)
+        return tags.form(url, multipart=multipart, **attrs)
+
+    def end(self):
+        """
+        Closes the form, i.e. outputs </form>.
+        """
+        result = tags.end_form()
+        if not self._csrf_done:
+            logging.debug('Forcing inclusion of CSRF token')
+            return self.csrf_token() + result
+        return result
+
+    def csrf(self, name=None):
+        """
+        Returns the CSRF hidden input. Creates new CSRF token
+        if none has been assigned yet.
+
+        The name of the hidden field is **_csrf** by default.
+        """
+        name = name or self.csrf_field
+        token = self.form.request.session.get_csrf_token()
+        if token is None:
+            token = self.form.request.session.new_csrf_token()
+        self._csrf_done = True
+        return self.hidden(name, value=token)
+
+    def csrf_token(self, name=None):
+        """
+        Convenience function. Returns CSRF hidden tag inside hidden DIV.
+        """
+        return HTML.tag('div', self.csrf(name), style='display:none;')
+
+    def hidden_tag(self, *names):
+        """
+        Convenience for printing all hidden fields in a form inside a
+        hidden DIV. Will also render the CSRF hidden field.
+
+        :versionadded: 0.4
+        """
+        inputs = [self.hidden(name) for name in names]
+        inputs.append(self.csrf())
+        return HTML.tag(
+            'div', tags.literal(''.join(inputs)), style='display:none;')
+
+    def hidden(self, name, value=None, id=None, **attrs):
+        """
+        Outputs hidden input.
+        """
+        id = id or name
+        return tags.hidden(name, self.value(name, value), id, **attrs)
+
+    def label(self, name, label=None, cols=2, inner_cols=None, **attrs):
+        """
+        Outputs a <label> element.
+
+        `name`  : field name. Automatically added to "for" attribute.
+
+        `label` : if **None**, uses the capitalized field name.
+        """
+        if 'for_' not in attrs:
+            attrs['for_'] = name
+        label = label or name.capitalize()
         if inner_cols:
             attrs = css_add_class(attrs, COL_NAMES[inner_cols])
-        return self.column(
-            name, self.label(name, label, **attrs),
-            cols, inner_cols, errors=False)
+        attrs = css_add_class(attrs, 'inline')
+        result = HTML.tag('label', label, **attrs)
+        if cols:
+            return self.column(name, result, cols, inner_cols, errors=False)
+        else:
+            return result
 
-    def col_select(
+    def text(
+            self, name, value=None, id=None,
+            cols=10, inner_cols=None, errors=True, **attrs):
+        """
+        Outputs text input.
+        """
+        id = id or name
+        if name in self.form.schema.fields:
+            validator = self.form.schema.fields[name]
+            if (
+                    isinstance(validator, validators.FancyValidator) and
+                    validator.not_empty and
+                    not 'required' in attrs):
+                attrs['required'] = 'required'
+            if (
+                    isinstance(validator, validators.String) and
+                    validator.max is not None and
+                    not 'maxlength' in attrs):
+                attrs['maxlength'] = validator.max
+        if inner_cols:
+            attrs = css_add_class(attrs, COL_NAMES[inner_cols])
+        result = tags.text(name, self.value(name, value), id, **attrs)
+        if cols:
+            return self.column(name, result, cols, inner_cols, errors)
+        else:
+            return result
+
+    def email(
+            self, name, value=None, id=None,
+            cols=10, inner_cols=None, errors=True, **attrs):
+        """
+        Outputs email input.
+        """
+        if 'type' not in attrs:
+            attrs['type'] = 'email'
+        return self.text(name, value, id, cols, inner_cols, errors, **attrs)
+
+    def file(
+            self, name, value=None, id=None,
+            cols=10, inner_cols=None, errors=True, **attrs):
+        """
+        Outputs file input.
+        """
+        id = id or name
+        if inner_cols:
+            attrs = css_add_class(attrs, COL_NAMES[inner_cols])
+        result = tags.file(name, self.value(name, value), id, **attrs)
+        if cols:
+            return self.column(name, result, cols, inner_cols, errors)
+        else:
+            return result
+
+    def password(
+            self, name, value=None, id=None,
+            cols=10, inner_cols=None, errors=True, **attrs):
+        """
+        Outputs a password input.
+        """
+        id = id or name
+        if inner_cols:
+            attrs = css_add_class(attrs, COL_NAMES[inner_cols])
+        result = tags.password(name, self.value(name, value), id, **attrs)
+        if cols:
+            return self.column(name, result, cols, inner_cols, errors)
+        else:
+            return result
+
+    def textarea(
+            self, name, content="", id=None,
+            cols=10, inner_cols=None, errors=True, **attrs):
+        """
+        Outputs <textarea> element.
+        """
+        id = id or name
+        if inner_cols:
+            attrs = css_add_class(attrs, COL_NAMES[inner_cols])
+        result = tags.textarea(name, self.value(name, content), id, **attrs)
+        if cols:
+            return self.column(name, result, cols, inner_cols, errors=False)
+        else:
+            return result
+
+    def select(
             self, name, options=None, selected_value=None, id=None,
-            errors=True, cols=10, inner_cols=None, **attrs):
-        "Return a select element within a column"
+            cols=10, inner_cols=None, errors=True, **attrs):
+        """
+        Outputs <select> element.
+        """
+        id = id or name
+        if options is None:
+            validator = self.form.schema.fields[name]
+            assert isinstance(validator, validators.OneOf)
+            options = validator.list
         if inner_cols:
             attrs = css_add_class(attrs, COL_NAMES[inner_cols])
-        return self.column(
-            name, self.select(name, options, selected_value, id, **attrs),
-            cols, inner_cols, errors)
+        result = tags.select(
+            name, self.value(name, selected_value), options, id, **attrs)
+        if cols:
+            return self.column(name, result, cols, inner_cols, errors)
+        else:
+            return result
 
-    def col_text(
-            self, name, value=None, id=None,
-            errors=True, cols=10, inner_cols=None, **attrs):
-        "Return a text input within a column"
-        if inner_cols:
-            attrs = css_add_class(attrs, COL_NAMES[inner_cols])
-        return self.column(
-            name, self.text(name, value, id, **attrs),
-            cols, inner_cols, errors)
+    def radio(self, name, value=None, checked=False, label=None, **attrs):
+        """
+        Outputs radio input.
+        """
+        checked = self.data.get(name) == value or checked
+        return tags.radio(name, value, checked, label, **attrs)
 
-    def col_file(
-            self, name, value=None, id=None,
-            errors=True, cols=10, inner_cols=None, **attrs):
-        "Return a file input within a column"
-        if inner_cols:
-            attrs = css_add_class(attrs, COL_NAMES[inner_cols])
-        return self.column(
-            name, self.file(name, value, id, **attrs),
-            cols, inner_cols, errors)
+    def checkbox(
+            self, name, value="1", checked=False, label=None, id=None, **attrs):
+        """
+        Outputs checkbox input.
+        """
+        id = id or name
+        return tags.checkbox(name, value, self.value(name), label, id, **attrs)
 
-    def col_email(
-            self, name, value=None, id=None,
-            errors=True, cols=10, inner_cols=None, **attrs):
-        "Return an email input within a column"
-        if inner_cols:
-            attrs = css_add_class(attrs, COL_NAMES[inner_cols])
-        return self.column(
-            name, self.email(name, value, id, **attrs),
-            cols, inner_cols, errors)
-
-    def col_password(
-            self, name, value=None, id=None,
-            errors=True, cols=10, inner_cols=None, **attrs):
-        "Return a password input within a column"
-        if inner_cols:
-            attrs = css_add_class(attrs, COL_NAMES[inner_cols])
-        return self.column(
-            name, self.password(name, value, id, **attrs),
-            cols, inner_cols, errors)
-
-    def col_submit(
+    def submit(
             self, name='submit', value='Submit', id=None,
             cols=12, inner_cols=None, **attrs):
-        "Return a submit button within a column"
+        """
+        Outputs submit button.
+        """
+        id = id or name
+        attrs = css_add_class(attrs, 'button')
         if inner_cols:
             attrs = css_add_class(attrs, COL_NAMES[inner_cols])
-        return self.column(
-            name, self.submit(name, value, id, **attrs),
-            cols, inner_cols, errors=False)
+        result = tags.submit(name, self.value(name, value), id, **attrs)
+        if cols:
+            return self.column(name, result, cols, inner_cols, errors=False)
+        else:
+            return result
 
-    def col_textarea(
-            self, name, content='', id=None,
-            errors=True, cols=10, inner_cols=None, **attrs):
-        "Return a textarea element within a column"
-        if inner_cols:
-            attrs = css_add_class(attrs, COL_NAMES[inner_cols])
-        return self.column(
-            name, self.textarea(name, content, id, **attrs),
-            cols, inner_cols, errors=False)
+    def is_error(self, name):
+        """
+        Shortcut for **self.form.is_error(name)**
+        """
+        return self.form.is_error(name)
 
+    def errors_for(self, name):
+        """
+        Shortcut for **self.form.errors_for(name)**
+        """
+        return self.form.errors_for(name)
+
+    def all_errors(self):
+        """
+        Shortcut for **self.form.all_errors()**
+        """
+        return self.form.all_errors()
+
+    def errorlist(self, name=None, **attrs):
+        """
+        Shortcut for **self.error_flashes()**
+        """
+        return self.error_flashes(name, **attrs)
+
+    def error_flashes(self, name=None, **attrs):
+        """
+        Renders errors as Foundation flash messages.
+
+        If no errors present returns an empty string.
+
+        `name` : errors for name. If **None** all errors will be rendered.
+        """
+        if name is None:
+            errors = self.all_errors()
+        else:
+            errors = self.errors_for(name)
+        content = [
+            HTML.div(error, class_='alert-box alert', **attrs)
+            for error in errors]
+        return HTML(*content)
+
+    def error_small(self, name, cols=None, **attrs):
+        """
+        Renders the specified error next to a Foundation form control
+
+        `name` : errors for name.
+        """
+        errors = self.errors_for(name)
+        if not errors:
+            return ''
+        content = []
+        for error in errors:
+            content.append(HTML(error))
+            content.append(tags.BR)
+        content = content[:-1]
+        attrs = css_add_class(attrs, 'error')
+        if cols:
+            attrs = css_add_class(attrs, COL_NAMES[cols])
+        return HTML.tag('small', *content, **attrs)
 
