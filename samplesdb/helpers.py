@@ -63,10 +63,10 @@ except ImportError:
 ALLOWED_TAGS = set((
     'a', 'abbr', 'acronym', 'address', 'b', 'big', 'blockquote', 'br',
     'caption', 'center', 'cite', 'code', 'col', 'colgroup', 'dd', 'del', 'dfn',
-    'dl', 'dt', 'em', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'i', 'img',
-    'ins', 'kbd', 'li', 'ol', 'p', 'pre', 'q', 's', 'samp', 'small', 'strike',
-    'strong', 'sub', 'sup', 'table', 'tbody', 'td', 'tfoot', 'th', 'thead',
-    'tr', 'tt', 'u', 'ul', 'var'))
+    'div', 'dl', 'dt', 'em', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'i',
+    'img', 'ins', 'kbd', 'li', 'ol', 'p', 'pre', 'q', 's', 'samp', 'small',
+    'span', 'strike', 'strong', 'sub', 'sup', 'table', 'tbody', 'td', 'tfoot',
+    'th', 'thead', 'tr', 'tt', 'u', 'ul', 'var'))
 
 P_ATTRS     = ['align']
 Q_ATTRS     = ['cite']
@@ -155,11 +155,11 @@ def render_markup(language, source):
             'doctitle_xform'       : False,
             'initial_header_level' : 2,
             }
-        result = docutils.core.public_parts(
+        html = docutils.core.publish_parts(
             source=source, writer_name='html',
             settings_overrides=overrides)['fragment']
     elif language == 'creole':
-        result = creole.html_emitter.HtmlEmitter(
+        html = creole.html_emitter.HtmlEmitter(
                 creole.Parser(source).parse()).emit()
     # Sanitize all HTML output with bleach (don't rely on safe-mode of
     # converters above as they're not necessarily as good and sometimes disable
