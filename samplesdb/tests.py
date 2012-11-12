@@ -511,6 +511,8 @@ class SiteFunctionalTest(FunctionalFixture):
         res.form['name'] = 'Flibbles'
         res = res.form.submit()
         res = res.follow()
-        assert DBSession.query(Collection).filter(Collection.name=='Flibbles').first()
+        collection = DBSession.query(Collection).filter(Collection.name=='Flibbles').first()
+        assert collection is not None
         assert 'Flibbles' in res
-        #res = res.click('Flibbles')
+        res = res.click(href='/collections/%d/new' % collection.id)
+        assert 'New Sample' in res
