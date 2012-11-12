@@ -36,6 +36,7 @@ from samplesdb.forms import (
 from samplesdb.validators import (
     BaseSchema,
     ValidCollection,
+    ValidMarkupLanguage,
     ValidSampleDescription,
     ValidSampleLocation,
     ValidSampleNotes,
@@ -54,6 +55,7 @@ class SampleSchema(BaseSchema):
     collection = ValidCollection()
     description = ValidSampleDescription()
     location = ValidSampleLocation()
+    notes_markup = ValidMarkupLanguage()
     notes = ValidSampleNotes()
 
 
@@ -77,12 +79,14 @@ class SamplesView(BaseView):
         renderer='../templates/samples/create.pt',
         permission=EDIT_COLLECTION)
     def create(self):
-        form = Form(self.request, schema=SampleCreateSchema)
+        form = Form(self.request, schema=SampleCreateSchema, multipart=True)
         if form.validate():
             new_sample = form.bind(
                 Sample.create(self.request.user, self.context.collection))
             DBSession.add(new_sample)
             DBSession.flush()
+            for storage in self.request.POST.getall('attachments'):
+                new_sample.attachments.create(storage.filename, storage.file)
             return HTTPFound(
                 location=self.request.route_url(
                     'samples_view', sample_id=new_sample.id))

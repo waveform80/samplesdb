@@ -32,6 +32,7 @@ from formencode import (
     validators,
     )
 
+from samplesdb.helpers import MARKUP_LANGUAGES
 from samplesdb.models import EmailAddress, User, Collection, Role, Sample
 
 
@@ -114,6 +115,11 @@ class ValidSampleNotes(validators.UnicodeString):
 class ValidTimezone(validators.OneOf):
     def __init__(self):
         super(ValidTimezone, self).__init__(pytz.all_timezones)
+
+
+class ValidMarkupLanguage(validators.OneOf):
+    def __init__(self):
+        super(ValidMarkupLanguage, self).__init__(MARKUP_LANGUAGES.keys())
 
 
 class ValidRole(FancyValidator):
