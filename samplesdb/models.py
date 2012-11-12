@@ -667,125 +667,155 @@ class SampleLogEntry(Base):
     created = synonym('_created', descriptor=property(_get_created, _set_created))
 
 
-class SampleAttachment(Base):
-    __tablename__ = 'sample_attachments'
+class SampleAttachments(object):
+    """Represents all attachments of a sample"""
+    # TODO Add SA instance delete/remove event to destroy attachment directories
 
-    sample_id = Column(
-        Integer, ForeignKey(
-            'samples.id', onupdate='RESTRICT', ondelete='CASCADE'),
-        primary_key=True)
-    # sample defined as backref on Sample
-    name = Column(Unicode(200), primary_key=True)
-    _default = Column('default', Boolean, default=False, nullable=False)
-
-    def __repr__(self):
-        return ('<SampleAttachment: sample_id=%d, filename="%s">' % (
-            self.sample_id, self.data_filename)).encode('utf-8')
-
-    def __str__(self):
-        return unicode(self).encode('utf-8')
-
-    def __unicode__(self):
-        return self.data_filename
-
-    def _get_default(self):
-        return self._default
-
-    def _set_default(self, value):
-        if value:
-            if not self.mime_type.startswith('image/'):
-                raise ValueError('Default attachment must be an image')
-            # Unset any existing default
-            current_default = DBSession.query(SampleAttachment).\
-                    filter(SampleAttachment.sample_id==self.sample_id).\
-                    filter(SampleAttachment.default==True).first()
-            if current_default:
-                current_default.default = False
-        self._default = value
-
-    default = synonym('_default', descriptor=property(_get_default, _set_default))
+    def __init__(self, sample):
+        self.sample = sample
 
     @property
-    def mime_type(self):
-        return mimetypes.guess_type(self.name, strict=False)[0] or 'application/octet-stream'
-
-    @property
-    def content_encoding(self):
-        return mimetypes.guess_type(self.name, strict=False)[1]
-
-    @property
-    def data_filename(self):
+    def path(self):
+        if self.sample.id is None:
+            DBSession.flush()
+            assert self.sample.id is not None
         return os.path.join(
             get_current_registry().settings['sample_attachments_dir'],
-            self.sample_id,
-            self.name)
+            'attachments',
+            self.sample.id)
 
     @property
-    def thumb_filename(self):
+    def thumb_path(self):
+        if self.sample.id is None:
+            DBSession.flush()
+            assert self.sample.id is not None
         return os.path.join(
             get_current_registry().settings['sample_attachments_dir'],
             'thumbs',
-            self.sample_id,
-            self.name)
+            self.sample.id)
+
+    def __contains__(self, attachment):
+        return os.path.exists(self._filename(attachment))
+
+    def __iter__(self):
+        for f in os.listdir(self.path):
+            yield f
+
+    def __getitem__(self, index):
+        return os.listdir(self.path)[index]
+
+    def __len__(self):
+        if os.path.exists(self.path):
+            return len(os.listdir(self.path))
+        return 0
 
     @property
-    def updated(self):
-        if os.path.exists(self.data_filename):
-            return datetime.fromtimestamp(os.stat(self.data_filename).st_mtime)
+    def storage_used(self):
+        return sum(self.size(a) for a in self)
 
     @property
-    def size(self):
-        if os.path.exists(self.data_filename):
-            return os.stat(self.data_filename).st_size
+    def last_updated(self):
+        return max(self.updated(a) for a in self)
 
-    @property
-    def thumb_updated(self):
-        if os.path.exists(self.thumb_filename):
-            return datetime.fromtimestamp(os.stat(self.thumb_filename).st_mtime)
+    def _filename(self, attachment):
+        # XXX Ensure attachment contains no path components
+        return os.path.join(self.path, attachment)
 
-    def open_thumb(self):
+    def _thumb_filename(self, attachment):
+        # XXX Ensure attachment contains no path components
+        return os.path.join(self.thumb_path, attachment)
+
+    def mime_type(self, attachment):
+        return mimetypes.guess_type(
+            self._filename(attachment),
+            strict=False)[0] or 'application/octet-stream'
+
+    def content_encoding(self, attachment):
+        return mimetypes.guess_type(
+            self._filename(attachment),
+            strict=False)[1]
+
+    def updated(self, attachment):
+        s = self._filename(attachment)
+        if os.path.exists(s):
+            return datetime.fromtimestamp(os.stat(s).st_mtime)
+
+    def thumb_updated(self, attachment):
+        s = self._thumb_filename(attachment)
+        if os.path.exists(s):
+            return datetime.fromtimestamp(os.stat(s).st_mtime)
+
+    def size(self, attachment):
+        s = self._filename(attachment)
+        t = self._thumb_filename(attachment)
+        result = 0
+        if os.path.exists(s):
+            result += os.stat(s).st_size
+        if os.path.exists(t):
+            result += os.stat(t).st_size
+        return result
+
+    def open_thumb(self, attachment):
         """Returns the attachment's thumbnail image as a file-like object"""
         THUMB_MAXWIDTH = 200
         THUMB_MAXHEIGHT = 200
+        s = self._filename(attachment)
+        t = self._thumb_filename(attachment)
         # Regenerate the thumbnail if it's stale
-        if os.path.exists(self.data_filename) and can_resize(self.mime_type) and (
-                not os.path.exists(self.thumb_filename) or
-                self.thumb_updated < self.updated):
-            resize_image(
-                self.data_filename, self.thumb_filename,
-                THUMB_MAXWIDTH, THUMB_MAXHEIGHT)
-        if os.path.exists(self.thumb_filename):
-            return open(self.thumb_filename, 'rb')
+        if os.path.exists(s) and can_resize(self.mime_type(attachment)) and (
+                not os.path.exists(t) or
+                self.thumb_updated(attachment) < self.updated(attachment)):
+            path = os.path.dirname(t)
+            if not os.path.exists(path):
+                os.makedirs(path)
+            resize_image(s, t, THUMB_MAXWIDTH, THUMB_MAXHEIGHT)
+        if os.path.exists(t):
+            return open(t, 'rb')
         else:
             # XXX Return some generic thumbnail?
             return None
 
-    def open_data(self):
+    def open(self, attachment):
         """Returns the attachment as a file-like object"""
         # Caller is responsible for closing
-        if os.path.exists(self.data_filename):
-            return open(self.data_filename, 'rb')
+        s = self._filename(attachment)
+        if os.path.exists(s):
+            return open(s, 'rb')
 
-    def replace_data(self, source):
-        """Replaces the attachment's content from a file-like object"""
-        if value is None:
-            if os.path.exists(self.data_filename):
-                os.unlink(self.data_filename)
+    def create(self, attachment, file_obj):
+        """Creates the attachment's content from a file-like object"""
+        s = self._filename(attachment)
+        if file_obj is None:
+            if os.path.exists(s):
+                os.unlink(s)
         else:
-            source.seek(0)
-            tempfd, temppath = tempfile.mkstemp(
-                dir=os.path.dirname(self.data_filename))
+            path = os.path.dirname(s)
+            file_obj.seek(0)
+            if not os.path.exists(path):
+                os.makedirs(path)
+            tempfd, temppath = tempfile.mkstemp(dir=path)
             try:
                 with closing(os.fdopen(tempfd, 'wb')) as f:
                     while True:
-                        data = source.read(1024**2)
+                        data = file_obj.read(1024**2)
                         if not data:
                             break
                         f.write(data)
             except:
                 os.unlink(temppath)
                 raise
-            os.rename(temppath, self.data_filename)
+            os.rename(temppath, s)
+
+    replace = create
+
+    def remove(self, attachment):
+        """Removes the attachment"""
+        s = self._filename(attachment)
+        t = self._thumb_filename(attachment)
+        if os.path.exists(s):
+            os.unlink(s)
+        if os.path.exists(t):
+            os.unlink(t)
 
 
 class Sample(Base):
@@ -799,7 +829,7 @@ class Sample(Base):
     location = Column(Unicode(200), default='', nullable=False)
     notes_markup = Column(
         Unicode(8),
-        CheckConstraint("notes_markup IN ('text', 'html', 'md', 'rst')"),
+        CheckConstraint("notes_markup IN ('text', 'html', 'md', 'rst', 'creole', 'textile')"),
         default='text', nullable=False)
     notes = Column(UnicodeText, default='', nullable=False)
     collection_id = Column(Integer, ForeignKey(
@@ -814,9 +844,6 @@ class Sample(Base):
         'Sample', secondary='sample_origins',
         primaryjoin='sample_origins.c.parent_id==samples.c.id',
         secondaryjoin='sample_origins.c.sample_id==samples.c.id')
-    attachments = relationship(
-        SampleAttachment, backref='sample',
-        cascade='all, delete-orphan', passive_deletes=True)
     log = relationship(
         SampleLogEntry, backref='sample',
         cascade='all, delete-orphan', passive_deletes=True,
@@ -824,6 +851,10 @@ class Sample(Base):
     # sample_codes defined as backref on SampleCode
     codes = association_proxy('sample_codes', 'value',
         creator=lambda k, v: SampleCode(name=k, value=v))
+
+    def __init__(self, **kwargs):
+        super(Sample, self).__init__(**kwargs)
+        self.attachments = SampleAttachments(self)
 
     @property
     def status(self):
