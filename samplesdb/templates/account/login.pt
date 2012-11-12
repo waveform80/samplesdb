@@ -14,19 +14,19 @@
         <p>Please enter your login credentials below and you will be redirected
         back to the page you came from.</p>
         <div metal:use-macro="view.flashes"></div>
-        ${form.begin(request.route_url('account_login'))}
+        ${form.begin()}
         ${form.hidden_tag('came_from')}
         ${form.errorlist()}
         <div class="row">
-          ${form.col_label('username', 'Username')}
-          ${form.col_email('username', placeholder='someone@somewhere.edu')}
+          ${form.label('username', 'Username')}
+          ${form.email('username', placeholder='someone@somewhere.edu')}
         </div>
         <div class="row">
-          ${form.col_label('password', 'Password')}
-          ${form.col_password('password', placeholder='Password')}
+          ${form.label('password', 'Password')}
+          ${form.password('password', placeholder='Password')}
         </div>
         <div class="row">
-          ${form.col_submit()}
+          ${form.submit(class_='small right')}
         </div>
         ${form.end()}
       </div>

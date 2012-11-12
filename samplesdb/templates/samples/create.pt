@@ -14,7 +14,7 @@
 
         <div metal:use-macro="view.flashes"></div>
 
-        ${form.begin(request.route_url('samples_create', collection_id=context.collection.id))}
+        ${form.begin()}
 
         <div class="row">
           ${form.label('collection', 'Collection')}
@@ -51,12 +51,12 @@
           ${form.label('notes_markup', 'Markup')}
           ${form.select('notes_markup',
             options=sorted(view.helpers.MARKUP_LANGUAGES.items()),
-            selected_value='text', inner_cols=3)}
+            selected_value='text', inner_cols=6)}
         </div>
 
         <div class="row">
           ${form.label('notes', 'Notes')}
-          ${form.textarea('notes')}
+          ${form.textarea('notes', class_='mono', rows=10)}
         </div>
 
         <div class="row">

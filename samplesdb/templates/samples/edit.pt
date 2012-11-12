@@ -14,12 +14,12 @@
 
         <div metal:use-macro="view.flashes"></div>
 
-        ${form.begin(request.route_url('samples_create', collection_id=context.collection.id))}
+        ${form.begin()}
 
         <div class="row">
           ${form.label('collection', 'Collection')}
           ${form.select('collection',
-            options=[(c.id, c.name) for c in request.user.editable_collections],
+            options=((c.id, c.name) for c in request.user.editable_collections),
             inner_cols=6)}
         </div>
 
@@ -27,26 +27,33 @@
 
         <div class="row">
           ${form.label('description', 'Description')}
-          ${form.text('description', autofocus='autofocus', placeholder='Sample Description')}
+          ${form.text('description',
+            autofocus='autofocus',
+            placeholder='Sample Description')}
         </div>
 
         <div class="row">
           ${form.label('location', 'Location')}
-          ${form.text('location', placeholder='Sample Location', inner_cols=6)}
+          ${form.text('location',
+            placeholder='Sample Location', inner_cols=6)}
         </div>
 
+        <hr />
+
         <div class="row">
-          ${form.label('notes_markup', 'Notes Markup')}
-          ${form.select('notes_markup', options=view.helpers.MARKUP_LANGUAGES, selected_value='text', inner_cols=6)}
+          ${form.label('notes_markup', 'Markup')}
+          ${form.select('notes_markup',
+            options=sorted(view.helpers.MARKUP_LANGUAGES.items()),
+            inner_cols=6)}
         </div>
 
         <div class="row">
           ${form.label('notes', 'Notes')}
-          ${form.textarea('notes')}
+          ${form.textarea('notes', class_='mono', rows=10)}
         </div>
 
         <div class="row">
-          ${form.submit()}
+          ${form.submit(class_='small right')}
         </div>
 
         ${form.end()}

@@ -32,7 +32,7 @@
 
         <div metal:use-macro="view.flashes"></div>
 
-        ${form.begin(request.route_url('account_edit'))}
+        ${form.begin()}
 
         <div class="row">
           ${form.label('salutation', 'Name')}
@@ -62,7 +62,7 @@
         </div>
 
         <div class="row">
-          ${form.submit()}
+          ${form.submit(class_='small right')}
         </div>
 
         ${form.end()}

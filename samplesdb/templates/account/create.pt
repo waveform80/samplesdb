@@ -17,7 +17,7 @@
 
         <div metal:use-macro="view.flashes"></div>
 
-        ${form.begin(request.route_url('account_create'))}
+        ${form.begin()}
 
         <div class="row">
           ${form.label('salutation', 'Name')}

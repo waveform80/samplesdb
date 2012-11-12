@@ -11,7 +11,7 @@
 
     <div class="row">
       <div class="twelve columns">
-        ${form.begin(request.current_route_url())}
+        ${form.begin()}
 
         <div class="row">
           ${form.label('name', 'Name', cols=1)}
