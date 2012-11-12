@@ -51,6 +51,10 @@ pre.notes {
   line-height: 1.6;
 }
 
+textarea.mono {
+  font-family: monospace;
+}
+
 /* Make placeholder text lighter - no decent standards for this yet. See
  * <http://stackoverflow.com/questions/2610497/change-an-inputs-html5-placeholder-color-with-css>
  */
