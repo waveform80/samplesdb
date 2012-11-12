@@ -78,6 +78,8 @@ REQUIRES = [
     'markdown<3.0dev',
     'bleach<2.0dev',
     'xlwt<0.8dev',
+    # elaphe trunk is borked (apparently). Remove this limit when it's fixed
+    'elaphe==0.5.3',
     'nose',
     'mock',
     'WebTest',
