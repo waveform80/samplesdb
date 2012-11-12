@@ -164,7 +164,7 @@ class Form(object):
     def __init__(
             self, request, schema=None, validators=None, defaults=None,
             obj=None, extra=None, include=None, exclude=None, state=None,
-            method='POST', variable_decode=False,  dict_char='.',
+            method='POST', variable_decode=False, dict_char='.',
             list_char='-', multipart=False):
 
         self.request = request
@@ -187,10 +187,20 @@ class Form(object):
         if defaults:
             self.data.update(defaults)
         if obj:
-            fields = self.schema.fields.keys() + self.validators.keys()
-            for f in fields:
-                if hasattr(obj, f):
-                    self.data[f] = getattr(obj, f)
+            if not self.schema:
+                raise ValueError(
+                    'You must specify a schema to read an obj for values')
+            if self.schema:
+                for f in self.schema.fields.keys():
+                    if hasattr(obj, f):
+                        self.data[f] = self.schema.fields[f].from_python(getattr(obj, f))
+            if self.validators:
+                fields = set(self.validators.keys())
+                if self.schema:
+                    fields -= set(self.schema.fields.keys())
+                for f in fields:
+                    if hasattr(obj, f):
+                        self.data[f] = self.validators[f].from_python(getattr(obj, f))
 
     def is_error(self, field):
         """Checks if individual field has errors."""
