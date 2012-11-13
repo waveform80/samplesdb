@@ -14,7 +14,7 @@ from pyramid import testing
 from pyramid.httpexceptions import HTTPFound
 from pyramid_mailer.mailer import Mailer
 
-from samplesdb.image import can_resize, resize_image
+from samplesdb.image import can_resize, make_thumbnail
 from samplesdb.forms import css_add_class, css_del_class, FormRenderer
 from samplesdb.scripts.initializedb import init_instances
 from samplesdb.models import *
@@ -39,7 +39,7 @@ def test_image_resize():
     if os.path.exists(test_out):
         os.unlink(test_out)
     assert not os.path.exists(test_out)
-    resize_image(test_img, test_out, 200)
+    make_thumbnail(test_img, test_out)
     assert os.path.exists(test_out)
     os.unlink(test_out)
 
@@ -111,6 +111,7 @@ class RootViewUnitTests(UnitFixture):
     def make_one(self):
         request = testing.DummyRequest()
         request.user = Mock()
+        request.referer = request.url
         view = RootView(request)
         return view
 
@@ -129,6 +130,7 @@ class AccountViewUnitTests(UnitFixture):
     def make_one(self):
         request = testing.DummyRequest()
         request.user = Mock()
+        request.referer = request.url
         view = AccountView(request)
         return view
 
@@ -224,6 +226,7 @@ class AccountViewUnitTests(UnitFixture):
         view.request.POST['organization'] = 'Baz University'
         view.request.POST['limits_id'] = 'academic'
         view.request.POST['timezone_name'] = 'UTC'
+        view.request.POST['came_from'] = view.request.referer
         result = view.create()
         assert isinstance(result, HTTPFound)
         assert 'Location' in result.headers
@@ -261,6 +264,7 @@ class AccountViewUnitTests(UnitFixture):
         view.request.POST['timezone_name'] = 'UTC'
         view.request.POST['password_new'] = ''
         view.request.POST['password_new_confirm'] = ''
+        view.request.POST['came_from'] = view.request.referer
         result = view.edit()
         assert isinstance(result, HTTPFound)
         assert 'Location' in result.headers
@@ -278,6 +282,7 @@ class AccountViewUnitTests(UnitFixture):
         view.request.POST['timezone_name'] = 'UTC'
         view.request.POST['password_new'] = 'bar'
         view.request.POST['password_new_confirm'] = 'bar'
+        view.request.POST['came_from'] = view.request.referer
         result = view.edit()
         assert isinstance(result, HTTPFound)
         assert 'Location' in result.headers
@@ -355,6 +360,7 @@ class CollectionsViewUnitTests(UnitFixture):
     def make_one(self):
         request = testing.DummyRequest()
         request.user = User.by_email('admin@example.com')
+        request.referer = request.url
         context = Mock()
         view = CollectionsView(context, request)
         return view
@@ -387,6 +393,7 @@ class CollectionsViewUnitTests(UnitFixture):
         view = self.make_one()
         view.request.method = 'POST'
         view.request.POST['name'] = 'New Collection'
+        view.request.POST['came_from'] = view.request.referer
         result = view.create()
         assert isinstance(result, HTTPFound)
         assert 'Location' in result.headers
