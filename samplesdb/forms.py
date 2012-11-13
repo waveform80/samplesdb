@@ -237,8 +237,7 @@ class Form(object):
 
         The errors and data values will be updated accordingly.
         """
-        assert self.schema or self.validators, \
-                "validators and/or schema required"
+        assert self.schema or self.validators
         if self.is_validated:
             return not(self.errors)
         if self.method and self.method != self.request.method:
@@ -359,6 +358,7 @@ class FormRenderer(object):
         self.csrf_field = csrf_field
         self.came_from_field = came_from_field
         self._csrf_done = False
+        self._came_from_done = False
 
     def value(self, name, default=None):
         return self.data.get(name, default)
@@ -388,11 +388,7 @@ class FormRenderer(object):
         """
         Closes the form, i.e. outputs </form>.
         """
-        result = tags.end_form()
-        if not self._csrf_done:
-            logging.debug('Forcing inclusion of CSRF token')
-            return self.csrf_token() + result
-        return result
+        return self.hidden_tag() + tags.end_form()
 
     def csrf(self, name=None):
         """
@@ -415,13 +411,8 @@ class FormRenderer(object):
         """
         name = name or self.came_from_field
         url = self.form.data.get(name, self.form.request.referer)
+        self._came_from_done = True
         return self.hidden(name, value=url)
-
-    def csrf_token(self, name=None):
-        """
-        Convenience function. Returns CSRF hidden tag inside hidden DIV.
-        """
-        return HTML.tag('div', self.csrf(name), style='display:none;')
 
     def hidden_tag(self, *names):
         """
@@ -431,8 +422,11 @@ class FormRenderer(object):
         :versionadded: 0.4
         """
         inputs = [self.hidden(name) for name in names]
-        inputs.append(self.csrf())
-        inputs.append(self.came_from())
+        if not self._csrf_done:
+            logging.debug('Forcing inclusion of CSRF token')
+            inputs.append(self.csrf())
+        if not self._came_from_done:
+            inputs.append(self.came_from())
         return HTML.tag(
             'div', tags.literal(''.join(inputs)), style='display:none;')
 
