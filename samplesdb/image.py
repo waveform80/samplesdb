@@ -25,13 +25,17 @@ from __future__ import (
     )
 
 import os
+import io
 import tempfile
 from contextlib import closing
 
 from PIL import Image
 
-__all__ = ['can_resize', 'resize_image']
+__all__ = ['can_resize', 'make_thumbnail']
 
+SVG_MIME_TYPE = 'image/svg+xml'
+THUMB_MAXWIDTH = 150
+THUMB_MAXHEIGHT = 150
 
 def can_resize(mime_type):
     "Returns True if the specified MIME type can be resized by this library"
@@ -48,14 +52,12 @@ def can_resize(mime_type):
         'image/x-xbitmap',
         ))
 
-def resize_image(source_filename, target_filename, maxw, maxh=None):
+def make_thumbnail(source_filename, target_filename):
     "Resizes source image to target with specified maximum width and/or height"
-    if maxh is None:
-        maxh = maxw
     im = Image.open(source_filename)
     (w, h) = im.size
-    if w > maxw or h > maxh:
-        scale = min(float(maxw) / w, float(maxh) / h)
+    if w > THUMB_MAXWIDTH or h > THUMB_MAXHEIGHT:
+        scale = min(float(THUMB_MAXWIDTH) / w, float(THUMB_MAXHEIGHT) / h)
         w = int(round(w * scale))
         h = int(round(h * scale))
         im = im.convert('RGB').resize((w, h), Image.ANTIALIAS)
@@ -64,7 +66,7 @@ def resize_image(source_filename, target_filename, maxw, maxh=None):
     tempfd, temppath = tempfile.mkstemp(
         dir=os.path.dirname(target_filename))
     try:
-        with closing(os.fdopen(tempfd, 'wb')) as f:
+        with io.open(tempfd, 'wb') as f:
             im.save(f, 'JPEG')
     except:
         os.unlink(temppath)
