@@ -29,6 +29,7 @@ from __future__ import (
 import os
 import mimetypes
 import tempfile
+from contextlib import closing
 from datetime import datetime, timedelta
 
 import pytz
@@ -559,9 +560,8 @@ class User(Base):
     def storage_used(self):
         # XXX Do this with a query
         return sum(
-            attachment.size
-            for sample in self.owned_samples
-            for attachment in sample.attachments)
+            sample.attachments.storage_used
+            for sample in self.owned_samples)
 
 
 class UserLimit(Base):
@@ -682,7 +682,7 @@ class SampleAttachments(object):
         return os.path.join(
             get_current_registry().settings['sample_attachments_dir'],
             'attachments',
-            self.sample.id)
+            str(self.sample.id))
 
     @property
     def thumb_path(self):
@@ -692,7 +692,7 @@ class SampleAttachments(object):
         return os.path.join(
             get_current_registry().settings['sample_attachments_dir'],
             'thumbs',
-            self.sample.id)
+            str(self.sample.id))
 
     def __contains__(self, attachment):
         return os.path.exists(self._filename(attachment))
@@ -851,10 +851,7 @@ class Sample(Base):
     # sample_codes defined as backref on SampleCode
     codes = association_proxy('sample_codes', 'value',
         creator=lambda k, v: SampleCode(name=k, value=v))
-
-    def __init__(self, **kwargs):
-        super(Sample, self).__init__(**kwargs)
-        self.attachments = SampleAttachments(self)
+    # attachments are added by the two event listeners (load and init) below
 
     @property
     def status(self):
@@ -971,6 +968,15 @@ class Sample(Base):
             aliquots.append(aliquant)
         self.destroy(creator)
         return aliquots
+
+def add_sample_attachments_on_init(target, args, kwargs):
+    target.attachments = SampleAttachments(target)
+
+def add_sample_attachments_on_load(target, context):
+    target.attachments = SampleAttachments(target)
+
+event.listen(Sample, 'init', add_sample_attachments_on_init)
+event.listen(Sample, 'load', add_sample_attachments_on_load)
 
 
 class SampleCode(Base):

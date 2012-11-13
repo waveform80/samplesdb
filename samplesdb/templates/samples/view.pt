@@ -75,7 +75,7 @@
           </li>
 
           <li id="logTab">
-          <table class="expand">
+          <table>
             <thead><tr><th>Timestamp</th><th>Message</th></tr></thead>
             <tbody>
               <tr tal:repeat="entry context.sample.log">
@@ -87,7 +87,32 @@
           </li>
 
           <li id="attachmentsTab">
-          Sample attachments
+          <table>
+            <thead>
+              <tr>
+                <th>Filename</th>
+                <th>Size</th>
+                <th>MIME type</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr tal:repeat="attachment context.sample.attachments">
+                <td>${attachment}</td>
+                <td>${view.helpers.format_data_size(context.sample.attachments.size(attachment), 'B')}</td>
+                <td>${context.sample.attachments.mime_type(attachment)}</td>
+                <td><a href="${request.route_url('samples_remove_attachment', sample_id=context.sample.id, _query={'attachment': attachment})}">Remove</a></td>
+              </tr>
+            </tbody>
+          </table>
+
+          ${attachment_form.begin(request.route_url('samples_add_attachment', sample_id=context.sample.id))}
+          <div class="row">
+            ${attachment_form.label('attachments', 'Add Attachments')}
+            ${attachment_form.file('attachments', multiple='multiple', cols=6)}
+            ${attachment_form.submit(class_='tiny right', cols=4)}
+          </div>
+          ${attachment_form.end()}
           </li>
 
           <li id="historyTab">

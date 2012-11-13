@@ -76,6 +76,8 @@ ROUTES = {
     'samples_create':             r'/collections/{collection_id:\d+}/new',
     'samples_view':               r'/samples/{sample_id:\d+}',
     'samples_edit':               r'/samples/{sample_id:\d+}/edit',
+    'samples_add_attachment':     r'/samples/{sample_id:\d+}/add-attachment',
+    'samples_remove_attachment':  r'/samples/{sample_id:\d+}/remove-attachment',
     'samples_split':              r'/samples/{sample_id:\d+}/split',
     'samples_destroy':            r'/samples/{sample_id:\d+}/destroy',
     'samples_remove':             r'/samples/{sample_id:\d+}/remove',

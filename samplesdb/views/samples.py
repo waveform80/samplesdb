@@ -111,5 +111,5 @@ class SamplesView(BaseView):
         renderer='../templates/samples/view.pt',
         permission=VIEW_COLLECTION)
     def view(self):
-        return {}
+        return dict(attachment_form=FormRenderer(Form(self.request)))
 
