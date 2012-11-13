@@ -35,7 +35,7 @@ from __future__ import (
 import logging
 
 from webhelpers.html import tags
-from webhelpers.html.builder import HTML
+from webhelpers.html.builder import HTML, literal
 from pyramid.i18n import get_localizer
 from pyramid.renderers import render
 from formencode import (
@@ -184,6 +184,7 @@ class Form(object):
             self.state = self.default_state()
         if not hasattr(self.state, '_'):
             self.state._ = get_localizer(self.request).translate
+        self.data['came_from'] = self.request.referer
         if defaults:
             self.data.update(defaults)
         if obj:
@@ -351,11 +352,12 @@ class FormRenderer(object):
     see the WebHelpers library for more information on individual widgets.
     """
 
-    def __init__(self, form, csrf_field='_csrf'):
+    def __init__(self, form, csrf_field='_csrf', came_from_field='came_from'):
         self.form = form
         self.data = self.form.data
         self.data_decoded = self.form.data_decoded
         self.csrf_field = csrf_field
+        self.came_from_field = came_from_field
         self._csrf_done = False
 
     def value(self, name, default=None):
@@ -394,8 +396,8 @@ class FormRenderer(object):
 
     def csrf(self, name=None):
         """
-        Returns the CSRF hidden input. Creates new CSRF token
-        if none has been assigned yet.
+        Returns the CSRF hidden input. Creates new CSRF token if none has been
+        assigned yet.
 
         The name of the hidden field is **_csrf** by default.
         """
@@ -405,6 +407,15 @@ class FormRenderer(object):
             token = self.form.request.session.new_csrf_token()
         self._csrf_done = True
         return self.hidden(name, value=token)
+
+    def came_from(self, name=None):
+        """
+        Returns the referral hidden input. Gets the referrer from the form data
+        or the request if the form lacks it.
+        """
+        name = name or self.came_from_field
+        url = self.form.data.get(name, self.form.request.referer)
+        return self.hidden(name, value=url)
 
     def csrf_token(self, name=None):
         """
@@ -421,6 +432,7 @@ class FormRenderer(object):
         """
         inputs = [self.hidden(name) for name in names]
         inputs.append(self.csrf())
+        inputs.append(self.came_from())
         return HTML.tag(
             'div', tags.literal(''.join(inputs)), style='display:none;')
 
@@ -570,7 +582,7 @@ class FormRenderer(object):
 
     def submit(
             self, name='submit', value='Submit', id=None,
-            cols=12, inner_cols=None, **attrs):
+            cols=12, inner_cols=None, cancel=True, **attrs):
         """
         Outputs submit button.
         """
@@ -579,6 +591,11 @@ class FormRenderer(object):
         if inner_cols:
             attrs = css_add_class(attrs, COL_NAMES[inner_cols])
         result = tags.submit(name, self.value(name, value), id, **attrs)
+        if cancel and self.form.data.get('came_from'):
+            cancel_attrs = attrs.copy()
+            cancel_attrs = css_add_class(cancel_attrs, 'secondary')
+            result += literal(' ') + HTML.a(
+                'Cancel', href=self.form.data['came_from'], **cancel_attrs)
         if cols:
             return self.column(name, result, cols, inner_cols, errors=False)
         else:
