@@ -26,6 +26,7 @@ from __future__ import (
     division,
     )
 
+import io
 import re
 import sys
 
@@ -45,7 +46,7 @@ def require_python(minimum):
 def get_version(filename):
     "Simple parser to extract a __version__ variable from a source file"
     version_re = re.compile(r'(\d\.\d(\.\d+)?)')
-    with open(filename) as source:
+    with io.open(filename) as source:
         for line_num, line in enumerate(source):
             if line.startswith('__version__'):
                 match = version_re.search(line)
@@ -62,7 +63,7 @@ def description(filename):
     result = []
     # We use a simple DFA to parse the file which looks for blank, non-blank,
     # and heading-delimiter lines.
-    with open(filename) as rst_file:
+    with io.open(filename) as rst_file:
         for line in rst_file:
             line = line.rstrip()
             # Manipulate state based on line content
