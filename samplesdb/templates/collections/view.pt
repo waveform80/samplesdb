@@ -10,8 +10,12 @@
     <div class="row"><h1 class="twelve columns">${context.collection.name} Collection</h1></div>
 
     <div class="row">
-      <p class="eight columns"><a href="${request.route_url('samples_create',
-        collection_id=context.collection.id)}">New Sample</a></p>
+      <p class="eight columns">
+        <a href="${request.route_url('samples_create',
+          collection_id=context.collection.id)}">New Sample</a>
+        | <a href="#">Export CSV</a>
+        | <a href="#">Export Excel</a>
+      </p>
       <dl class="four columns sub-nav">
         <dt>Filter</dt>
         <dd
@@ -23,6 +27,9 @@
         <dd
         class="${'active' if filter == 'destroyed' else None}"><a
           href="${request.current_route_url(_query={'filter': 'destroyed'})}">Destroyed</a></dd>
+        <dt>Display</dt>
+        <dd class="active"><a href="#">Grid</a></dd>
+        <dd><a href="#">Table</a></dd>
       </dl>
     </div>
 
