@@ -68,7 +68,6 @@ class LoginSchema(BaseSchema):
     """Schema for account login form"""
     username = ValidEmail(resolve_domain=False)
     password = ValidPassword()
-    came_from = validators.UnicodeString()
 
 
 class AccountSchema(BaseSchema):
