@@ -27,6 +27,8 @@ from __future__ import (
     )
 
 import os
+import io
+import shutil
 import mimetypes
 import tempfile
 from contextlib import closing
@@ -68,7 +70,7 @@ from sqlalchemy.engine import Engine
 from zope.sqlalchemy import ZopeTransactionExtension
 from pyramid.threadlocal import get_current_registry
 
-from samplesdb.image import can_resize, resize_image
+from samplesdb.image import can_resize, make_thumbnail
 from samplesdb.helpers import utcnow
 
 
@@ -388,7 +390,7 @@ class LabelTemplate(Base):
 
     def _get_template(self):
         if os.path.exists(self.template_filename):
-            with open(self.template_filename, 'rb') as f:
+            with io.open(self.template_filename, 'rb') as f:
                 return f.read()
 
     def _set_template(self, value):
@@ -399,7 +401,7 @@ class LabelTemplate(Base):
             tempfd, temppath = tempfile.mkstemp(
                 dir=get_current_registry().settings['label_templates_dir'])
             try:
-                with closing(os.fdopen(tempfd, 'wb')) as f:
+                with io.open(tempfd, 'wb') as f:
                     f.write(value)
             except:
                 os.unlink(temppath)
@@ -634,9 +636,9 @@ class SampleLogEntry(Base):
         Integer, ForeignKey(
             'users.id', onupdate='RESTRICT', ondelete='SET NULL'))
     creator = relationship(User)
-    kind = Column(
+    event = Column(
         Unicode(10),
-        CheckConstraint("kind IN ('create', 'destroy', 'audit', 'change', 'user')"),
+        CheckConstraint("event IN ('create', 'destroy', 'audit', 'change', 'user')"),
         default='user', nullable=False)
     message = Column(UnicodeText, nullable=False)
 
@@ -682,27 +684,17 @@ class SampleAttachments(object):
         return os.path.join(
             get_current_registry().settings['sample_attachments_dir'],
             'attachments',
-            str(self.sample.id))
-
-    @property
-    def thumb_path(self):
-        if self.sample.id is None:
-            DBSession.flush()
-            assert self.sample.id is not None
-        return os.path.join(
-            get_current_registry().settings['sample_attachments_dir'],
-            'thumbs',
-            str(self.sample.id))
+            '%d' % self.sample.id)
 
     def __contains__(self, attachment):
         return os.path.exists(self._filename(attachment))
 
     def __iter__(self):
-        for f in os.listdir(self.path):
+        for f in sorted(os.listdir(self.path)):
             yield f
 
     def __getitem__(self, index):
-        return os.listdir(self.path)[index]
+        return sorted(os.listdir(self.path))[index]
 
     def __len__(self):
         if os.path.exists(self.path):
@@ -718,12 +710,7 @@ class SampleAttachments(object):
         return max(self.updated(a) for a in self)
 
     def _filename(self, attachment):
-        # XXX Ensure attachment contains no path components
-        return os.path.join(self.path, attachment)
-
-    def _thumb_filename(self, attachment):
-        # XXX Ensure attachment contains no path components
-        return os.path.join(self.thumb_path, attachment)
+        return os.path.join(self.path, os.path.basename(attachment))
 
     def mime_type(self, attachment):
         return mimetypes.guess_type(
@@ -740,11 +727,6 @@ class SampleAttachments(object):
         if os.path.exists(s):
             return datetime.fromtimestamp(os.stat(s).st_mtime)
 
-    def thumb_updated(self, attachment):
-        s = self._thumb_filename(attachment)
-        if os.path.exists(s):
-            return datetime.fromtimestamp(os.stat(s).st_mtime)
-
     def size(self, attachment):
         s = self._filename(attachment)
         t = self._thumb_filename(attachment)
@@ -755,32 +737,12 @@ class SampleAttachments(object):
             result += os.stat(t).st_size
         return result
 
-    def open_thumb(self, attachment):
-        """Returns the attachment's thumbnail image as a file-like object"""
-        THUMB_MAXWIDTH = 200
-        THUMB_MAXHEIGHT = 200
-        s = self._filename(attachment)
-        t = self._thumb_filename(attachment)
-        # Regenerate the thumbnail if it's stale
-        if os.path.exists(s) and can_resize(self.mime_type(attachment)) and (
-                not os.path.exists(t) or
-                self.thumb_updated(attachment) < self.updated(attachment)):
-            path = os.path.dirname(t)
-            if not os.path.exists(path):
-                os.makedirs(path)
-            resize_image(s, t, THUMB_MAXWIDTH, THUMB_MAXHEIGHT)
-        if os.path.exists(t):
-            return open(t, 'rb')
-        else:
-            # XXX Return some generic thumbnail?
-            return None
-
     def open(self, attachment):
         """Returns the attachment as a file-like object"""
         # Caller is responsible for closing
         s = self._filename(attachment)
         if os.path.exists(s):
-            return open(s, 'rb')
+            return io.open(s, 'rb')
 
     def create(self, attachment, file_obj):
         """Creates the attachment's content from a file-like object"""
@@ -810,12 +772,69 @@ class SampleAttachments(object):
 
     def remove(self, attachment):
         """Removes the attachment"""
+        if self.sample.default_attachment == attachment:
+            self.sample.default_attachment = None
         s = self._filename(attachment)
         t = self._thumb_filename(attachment)
         if os.path.exists(s):
             os.unlink(s)
         if os.path.exists(t):
             os.unlink(t)
+
+    @property
+    def thumb_path(self):
+        if self.sample.id is None:
+            DBSession.flush()
+            assert self.sample.id is not None
+        return os.path.join(
+            get_current_registry().settings['sample_attachments_dir'],
+            'thumbs',
+            '%d' % self.sample.id)
+
+    def _thumb_filename(self, attachment):
+        root = os.path.join(self.thumb_path, os.path.basename(attachment))
+        mime_type = self.mime_type(attachment)
+        if mime_type == 'image/svg+xml':
+            return '%s.svg' % root
+        elif can_resize(mime_type):
+            return '%s.jpg' % root
+
+    def thumb_mime_type(self, attachment):
+        s = self._thumb_filename(attachment)
+        if s is None:
+            # XXX Return generic thumbnail type? (image/png?)
+            pass
+        else:
+            return mimetypes.guess_type(s, strict=False)[0]
+
+    def thumb_updated(self, attachment):
+        s = self._thumb_filename(attachment)
+        if s is not None and os.path.exists(s):
+            return datetime.fromtimestamp(os.stat(s).st_mtime)
+
+    def thumb_open(self, attachment):
+        """Returns the attachment's thumbnail image as a file-like object"""
+        s = self._filename(attachment)
+        t = self._thumb_filename(attachment)
+        # Regenerate the thumbnail if it's stale
+        if os.path.exists(s) and t is not None:
+            if (not os.path.exists(t) or
+                    self.thumb_updated(attachment) < self.updated(attachment)):
+                path = os.path.dirname(t)
+                if not os.path.exists(path):
+                    os.makedirs(path)
+                mime_type = self.mime_type(attachment)
+                if mime_type == 'image/svg+xml':
+                    # Just copy the SVG over - we'll resize it when we display it
+                    shutil.copyfile(s, t)
+                elif can_resize(mime_type):
+                    # Otherwise, resize to a JPEG
+                    make_thumbnail(s, t)
+            if os.path.exists(t):
+                return io.open(t, 'rb')
+        else:
+            # XXX Return some generic thumbnail?
+            return None
 
 
 class Sample(Base):
@@ -827,6 +846,7 @@ class Sample(Base):
         'created', DateTime, default=datetime.utcnow, nullable=False)
     _destroyed = Column('destroyed', DateTime)
     location = Column(Unicode(200), default='', nullable=False)
+    default_attachment = Column(Unicode(200))
     notes_markup = Column(
         Unicode(8),
         CheckConstraint("notes_markup IN ('text', 'html', 'md', 'rst', 'creole', 'textile')"),
@@ -916,7 +936,7 @@ class Sample(Base):
         sample = cls(collection_id=collection.id, **kwargs)
         sample.log.append(SampleLogEntry(
             creator_id=creator.id,
-            kind='create', message='Sample created'))
+            event='create', message='Sample created'))
         return sample
 
     def destroy(self, destroyer):
@@ -924,7 +944,7 @@ class Sample(Base):
         assert not self.destroyed
         self.log.append(SampleLogEntry(
             creator_id=destroyer.id,
-            kind='destroy', message='Sample destroyed'))
+            event='destroy', message='Sample destroyed'))
         self.destroyed = utcnow()
 
     @classmethod
@@ -935,7 +955,7 @@ class Sample(Base):
         for aliquot in aliquots:
             aliquot.log.append(SampleLogEntry(
                 creator_id=creator.id,
-                kind='change', message='Sample combined into new sample'))
+                event='change', message='Sample combined into new sample'))
             aliquot.destroy(creator)
             sample.parents.append(aliquot)
         return sample
@@ -945,7 +965,7 @@ class Sample(Base):
         assert aliquots > 0
         self.log.append(SampleLogEntry(
             creator_id=creator.id,
-            kind='change', message='Sample split into %d' % aliquots))
+            event='change', message='Sample split into %d' % aliquots))
         aliargs = kwargs.copy()
         if not 'description' in aliargs:
             aliargs['description'] = 'Aliquot of sample %d' % self.id
