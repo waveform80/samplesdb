@@ -14,8 +14,13 @@
         <span tal:omit-tag="True" tal:condition="not context.sample.destroyed">| <a href="#">Mark Destroyed</a></span>
         <span tal:omit-tag="True" tal:condition="not context.sample.destroyed">| <a href="#">Create Aliquots</a></span>
       </div>
-      <div class="two columns">
-        <img src="${request.static_url('samplesdb:static/unknown_mime_type_optimized.svg')}" class="thumb" />
+      <div class="two columns th">
+        <img tal:condition="context.sample.default_attachment"
+          src="${request.route_url('samples_attachment_thumb',
+            sample_id=context.sample.id,
+            attachment=context.sample.default_attachment)}" />
+        <img tal:condition="not context.sample.default_attachment"
+        src="${request.static_url('samplesdb:static/unknown_mime_type_optimized.svg')}" />
       </div>
     </div>
 
@@ -84,33 +89,76 @@
               </tr>
             </tbody>
           </table>
+
+          <hr />
+
+          ${log_form.begin(request.route_url('samples_add_log', sample_id=context.sample.id))}
+          <div class="row">
+            ${log_form.label('message', 'Add Log Entry')}
+            ${log_form.text('message')}
+          </div>
+
+          <div class="row">
+            <div class="two columns">&nbsp;</div>
+            ${log_form.submit(class_='small', cols=10, cancel=False)}
+          </div>
+          ${log_form.end()}
           </li>
 
           <li id="attachmentsTab">
           <table>
             <thead>
               <tr>
-                <th>Filename</th>
+                <th>Attachment</th>
                 <th>Size</th>
-                <th>MIME type</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               <tr tal:repeat="attachment context.sample.attachments">
-                <td>${attachment}</td>
+                <td>
+                  <a class="th" href="${request.route_url(
+                      'samples_download_attachment',
+                      sample_id=context.sample.id,
+                      _query={'attachment': attachment})}">
+                    <img src="${request.route_url(
+                      'samples_attachment_thumb',
+                      sample_id=context.sample.id,
+                      attachment=attachment)}" />
+                      ${attachment}
+                  </a>
+                </td>
                 <td>${view.helpers.format_data_size(context.sample.attachments.size(attachment), 'B')}</td>
-                <td>${context.sample.attachments.mime_type(attachment)}</td>
-                <td><a href="${request.route_url('samples_remove_attachment', sample_id=context.sample.id, _query={'attachment': attachment})}">Remove</a></td>
+                <td>
+                  <a href="${request.route_url(
+                    'samples_remove_attachment',
+                    sample_id=context.sample.id,
+                    _query={'attachments': attachment})}">Remove</a>
+                  <span tal:omit-tag="True"
+                    tal:condition="(
+                      context.sample.attachments.mime_type(attachment).startswith('image/') and
+                      context.sample.default_attachment != attachment
+                      )">
+                    | <a href="${request.route_url(
+                        'samples_default_attachment',
+                        sample_id=context.sample.id,
+                        _query={'attachment': attachment})}">Default</a></span>
+                </td>
               </tr>
             </tbody>
           </table>
 
+          <hr />
+
           ${attachment_form.begin(request.route_url('samples_add_attachment', sample_id=context.sample.id))}
           <div class="row">
             ${attachment_form.label('attachments', 'Add Attachments')}
-            ${attachment_form.file('attachments', multiple='multiple', cols=6)}
-            ${attachment_form.submit(class_='tiny right', cols=4)}
+            ${attachment_form.file('attachments', multiple='multiple')}
+          </div>
+
+          <div class="row">
+            <div class="two columns">&nbsp;</div>
+            ${attachment_form.submit(class_='small', cols=10, cancel=False)}
           </div>
           ${attachment_form.end()}
           </li>

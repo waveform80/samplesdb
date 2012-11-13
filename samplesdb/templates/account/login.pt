@@ -15,7 +15,6 @@
         back to the page you came from.</p>
         <div metal:use-macro="view.flashes"></div>
         ${form.begin()}
-        ${form.hidden_tag('came_from')}
         ${form.errorlist()}
         <div class="row">
           ${form.label('username', 'Username')}

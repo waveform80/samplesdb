@@ -40,6 +40,7 @@ from samplesdb.validators import (
     ValidSampleDescription,
     ValidSampleLocation,
     ValidSampleNotes,
+    ValidLogMessage,
     )
 from samplesdb.security import (
     VIEW_COLLECTION,
@@ -48,7 +49,16 @@ from samplesdb.security import (
 from samplesdb.models import (
     DBSession,
     Sample,
+    SampleLogEntry,
     )
+
+
+class SampleLogEntrySchema(BaseSchema):
+    message = ValidLogMessage()
+
+
+class SampleLogEntryCreateSchema(SampleLogEntrySchema):
+    pass
 
 
 class SampleSchema(BaseSchema):
@@ -79,7 +89,10 @@ class SamplesView(BaseView):
         renderer='../templates/samples/create.pt',
         permission=EDIT_COLLECTION)
     def create(self):
-        form = Form(self.request, schema=SampleCreateSchema, multipart=True)
+        form = Form(
+            self.request,
+            schema=SampleCreateSchema,
+            multipart=True)
         if form.validate():
             new_sample = form.bind(
                 Sample.create(self.request.user, self.context.collection))
@@ -111,5 +124,68 @@ class SamplesView(BaseView):
         renderer='../templates/samples/view.pt',
         permission=VIEW_COLLECTION)
     def view(self):
-        return dict(attachment_form=FormRenderer(Form(self.request)))
+        return dict(
+            log_form=FormRenderer(Form(self.request, schema=SampleLogEntryCreateSchema)),
+            attachment_form=FormRenderer(Form(self.request, multipart=True)),
+            )
+
+    @view_config(
+        route_name='samples_add_attachment',
+        permission=EDIT_COLLECTION)
+    def add_attachment(self):
+        for storage in self.request.POST.getall('attachments'):
+            self.context.sample.attachments.create(storage.filename, storage.file)
+        return HTTPFound(
+            location=self.request.route_url(
+                'samples_view',
+                sample_id=self.context.sample.id,
+                _anchor='attachments'))
+
+    @view_config(
+        route_name='samples_remove_attachment',
+        permission=EDIT_COLLECTION)
+    def remove_attachment(self):
+        for filename in self.request.params.getall('attachments'):
+            self.context.sample.attachments.remove(filename)
+        return HTTPFound(
+            location=self.request.route_url(
+                'samples_view',
+                sample_id=self.context.sample.id,
+                _anchor='attachments'))
+
+    @view_config(
+        route_name='samples_default_attachment',
+        permission=EDIT_COLLECTION)
+    def default_attachment(self):
+        self.context.sample.default_attachment = self.request.params.get('attachment')
+        return HTTPFound(
+            location=self.request.route_url(
+                'samples_view',
+                sample_id=self.context.sample.id,
+                _anchor='attachments'))
+
+    @view_config(
+        route_name='samples_attachment_thumb',
+        permission=VIEW_COLLECTION)
+    def attachment_thumb(self):
+        response = self.request.response
+        response.content_type = self.context.sample.attachments.thumb_mime_type(
+                self.request.matchdict['attachment'])
+        response.app_iter = self.context.sample.attachments.thumb_open(
+                self.request.matchdict['attachment'])
+        return response
+
+    @view_config(
+        route_name='samples_add_log',
+        permission=EDIT_COLLECTION)
+    def add_log(self):
+        form = Form(self.request, schema=SampleLogEntryCreateSchema)
+        if form.validate():
+            new_log_entry = form.bind(SampleLogEntry(creator=self.request.user))
+            self.context.sample.log.append(new_log_entry)
+        return HTTPFound(
+            location=self.request.route_url(
+                'samples_view',
+                sample_id=self.context.sample.id,
+                _anchor='log'))
 

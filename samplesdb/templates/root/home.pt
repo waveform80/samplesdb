@@ -11,7 +11,6 @@
       <div class="five columns" tal:condition="not request.user">
         <div metal:use-macro="view.flashes"></div>
         ${form.begin(request.route_url('account_login'))}
-        ${form.hidden_tag('came_from')}
         ${form.errorlist()}
         <div class="row">
           ${form.email('username', placeholder='E-mail Address', cols=None)}
@@ -25,7 +24,7 @@
             <a href="${request.route_url('account_reset_password', email='')}">Forgotten password</a>
           </div>
           <div class="two mobile-one columns">
-            ${form.submit('submit', value='Login', class_='tiny right button')}
+            ${form.submit('submit', value='Login', class_='tiny right button', cancel=False)}
           </div>
         </div>
         ${form.end()}

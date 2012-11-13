@@ -33,12 +33,20 @@ from formencode import (
     )
 
 from samplesdb.helpers import MARKUP_LANGUAGES
-from samplesdb.models import EmailAddress, User, Collection, Role, Sample
+from samplesdb.models import (
+    EmailAddress,
+    User,
+    Collection,
+    Role,
+    Sample,
+    SampleLogEntry,
+    )
 
 
 class BaseSchema(Schema):
     filter_extra_fields = True
     allow_extra_fields = True
+    came_from = validators.UnicodeString()
 
 
 # The following classes define validators for each of the fields in the
@@ -110,6 +118,12 @@ class ValidSampleLocation(validators.UnicodeString):
 class ValidSampleNotes(validators.UnicodeString):
     def __init__(self):
         super(ValidSampleNotes, self).__init__(not_empty=False)
+
+
+class ValidLogMessage(validators.UnicodeString):
+    def __init__(self):
+        super(ValidLogMessage, self).__init__(
+            not_empty=False, max=SampleLogEntry.__table__.c.message.type.length)
 
 
 class ValidTimezone(validators.OneOf):

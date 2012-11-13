@@ -29,8 +29,15 @@
     <div class="row">
       <ul class="block-grid four-up mobile-two-up">
         <li class="collection" tal:repeat="sample samples">
-          <a href="${request.route_url('samples_view', sample_id=sample.id)}">
-            <img src="${request.static_url('samplesdb:static/unknown_mime_type_optimized.svg')}" class="thumb" alt="" />
+          <a class="th" href="${request.route_url('samples_view', sample_id=sample.id)}">
+            <img tal:condition="sample.default_attachment"
+              src="${request.route_url(
+                'samples_attachment_thumb',
+                sample_id=sample.id,
+                attachment=sample.default_attachment)}" alt="" />
+            <img tal:condition="not sample.default_attachment"
+              src="${request.static_url('samplesdb:static/unknown_mime_type_optimized.svg')}"
+              alt="" />
             ${sample.description}<br />
           </a>
         </li>

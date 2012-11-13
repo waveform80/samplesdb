@@ -62,7 +62,8 @@
         </div>
 
         <div class="row">
-          ${form.submit(class_='small right')}
+          <div class="two columns">&nbsp;</div>
+          ${form.submit(class_='small', cols=10)}
         </div>
 
         ${form.end()}

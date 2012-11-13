@@ -42,7 +42,10 @@
           <a href="#" class="secondary small button right" id="add-button">Add</a>
         </fieldset>
 
-        ${form.submit(class_='small right')}
+        <div class="row">
+          ${form.submit(class_='small')}
+        </div>
+
         ${form.end()}
 
         <div class="row" id="form-template" style="display: none">
