@@ -44,7 +44,7 @@ README = open(os.path.join(HERE, 'README.txt')).read()
 CHANGES = open(os.path.join(HERE, 'CHANGES.txt')).read()
 
 CLASSIFIERS = [
-    'Development Status :: 4 - Beta',
+    'Development Status :: 3 - Alpha',
     'Environment :: Web Environment',
     'Framework :: Pyramid',
     'Intended Audience :: Science/Research',
@@ -78,7 +78,7 @@ REQUIRES = [
     'markdown<3.0dev',
     'bleach<2.0dev',
     'xlwt<0.8dev',
-    # elaphe trunk is borked (apparently). Remove this limit when it's fixed
+    # XXX elaphe trunk is borked (apparently). Remove this limit when it's fixed
     'elaphe==0.5.3',
     'nose',
     'mock',
