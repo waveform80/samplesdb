@@ -34,13 +34,16 @@ from samplesdb.forms import (
     FormRenderer,
     )
 from samplesdb.validators import (
-    BaseSchema,
+    FormSchema,
+    SubFormSchema,
     ValidCollection,
     ValidMarkupLanguage,
     ValidSampleDescription,
     ValidSampleLocation,
     ValidSampleNotes,
     ValidLogMessage,
+    ValidCodeName,
+    ValidCodeValue,
     )
 from samplesdb.security import (
     VIEW_COLLECTION,
@@ -53,7 +56,7 @@ from samplesdb.models import (
     )
 
 
-class SampleLogEntrySchema(BaseSchema):
+class SampleLogEntrySchema(SubFormSchema):
     message = ValidLogMessage()
 
 
@@ -61,12 +64,18 @@ class SampleLogEntryCreateSchema(SampleLogEntrySchema):
     pass
 
 
-class SampleSchema(BaseSchema):
+class SampleCodeSchema(SubFormSchema):
+    name = ValidCodeName()
+    value = ValidCodeValue()
+
+
+class SampleSchema(FormSchema):
     collection = ValidCollection()
     description = ValidSampleDescription()
     location = ValidSampleLocation()
     notes_markup = ValidMarkupLanguage()
     notes = ValidSampleNotes()
+    sample_codes = foreach.ForEach(SampleCodeSchema())
 
 
 class SampleCreateSchema(SampleSchema):
@@ -92,8 +101,10 @@ class SamplesView(BaseView):
         form = Form(
             self.request,
             schema=SampleCreateSchema,
+            variable_decode=True,
             multipart=True)
         if form.validate():
+            print(form.data)
             new_sample = form.bind(
                 Sample.create(self.request.user, self.context.collection))
             DBSession.add(new_sample)
@@ -112,7 +123,11 @@ class SamplesView(BaseView):
         permission=EDIT_COLLECTION)
     def edit(self):
         sample = self.context.sample
-        form = Form(self.request, schema=SampleEditSchema, obj=sample)
+        form = Form(
+            self.request,
+            schema=SampleEditSchema,
+            obj=sample,
+            variable_decode=True)
         if form.validate():
             form.bind(sample)
             return HTTPFound(

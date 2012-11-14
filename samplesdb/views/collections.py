@@ -35,7 +35,8 @@ from samplesdb.forms import (
     FormRenderer,
     )
 from samplesdb.validators import (
-    BaseSchema,
+    FormSchema,
+    SubFormSchema,
     ValidRole,
     ValidUser,
     ValidCollectionName,
@@ -56,12 +57,12 @@ from samplesdb.models import (
     )
 
 
-class CollectionUserSchema(BaseSchema):
+class CollectionUserSchema(SubFormSchema):
     user = ValidUser()
     role = ValidRole()
 
 
-class CollectionSchema(BaseSchema):
+class CollectionSchema(FormSchema):
     name = ValidCollectionName()
     users = foreach.ForEach(CollectionUserSchema())
 
@@ -126,11 +127,11 @@ class CollectionsView(BaseView):
         display = self.request.params.get('display', 'grid')
         # XXX Construct a query instead (better performance than retrieving
         # everything and doing filtering in Python)
-        samples = (
+        samples = [
             sample
             for sample in self.context.collection.all_samples
             if filter == 'all'
             or (filter == 'existing' and not sample.destroyed)
-            or (filter == 'destroyed' and sample.destroyed))
+            or (filter == 'destroyed' and sample.destroyed)]
         return dict(filter=filter, display=display, samples=samples)
 

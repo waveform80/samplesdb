@@ -43,7 +43,7 @@ from samplesdb.forms import (
     FormRenderer,
     )
 from samplesdb.validators import (
-    BaseSchema,
+    FormSchema,
     ValidSalutation,
     ValidGivenName,
     ValidSurname,
@@ -64,13 +64,13 @@ from samplesdb.models import (
     )
 
 
-class LoginSchema(BaseSchema):
+class LoginSchema(FormSchema):
     """Schema for account login form"""
     username = ValidEmail(resolve_domain=False)
     password = ValidPassword()
 
 
-class AccountSchema(BaseSchema):
+class AccountSchema(FormSchema):
     """Common schema for account creation and editing"""
     salutation = ValidSalutation()
     given_name = ValidGivenName()
