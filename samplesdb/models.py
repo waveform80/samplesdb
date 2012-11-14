@@ -690,8 +690,9 @@ class SampleAttachments(object):
         return os.path.exists(self._filename(attachment))
 
     def __iter__(self):
-        for f in sorted(os.listdir(self.path)):
-            yield f
+        if os.path.exists(self.path):
+            for f in sorted(os.listdir(self.path)):
+                yield f
 
     def __getitem__(self, index):
         return sorted(os.listdir(self.path))[index]
