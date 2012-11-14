@@ -13,44 +13,79 @@
       <p class="eight columns">
         <a href="${request.route_url('samples_create',
           collection_id=context.collection.id)}">New Sample</a>
-        | <a href="#">Export CSV</a>
-        | <a href="#">Export Excel</a>
+        | <a href="#">Export List</a>
+        | <a href="#">Print Labels</a>
       </p>
-      <dl class="four columns sub-nav">
-        <dt>Filter</dt>
-        <dd
-        class="${'active' if filter == 'all' else None}"><a 
-          href="${request.current_route_url(_query={'filter': 'all', 'display': display})}">All</a></dd>
-        <dd
-        class="${'active' if filter == 'existing' else None}"><a
-          href="${request.current_route_url(_query={'filter': 'existing', 'display': display})}">Existing</a></dd>
-        <dd
-        class="${'active' if filter == 'destroyed' else None}"><a
-          href="${request.current_route_url(_query={'filter': 'destroyed', 'display': display})}">Destroyed</a></dd>
-        <dt>Display</dt>
-        <dd class="${'active' if display == 'grid' else None}"><a
-          href="${request.current_route_url(_query={'filter': filter, 'display': 'grid'})}">Grid</a></dd>
-        <dd class="${'active' if display == 'table' else None}"><a
-          href="${request.current_route_url(_query={'filter': filter, 'display': 'table'})}">Table</a></dd>
-      </dl>
+      <div class="four columns">
+        <dl class="sub-nav">
+          <dt>Filter</dt>
+          <dd
+          class="${'active' if filter == 'all' else None}"><a 
+            href="${request.current_route_url(_query={'filter': 'all', 'display': display})}">All</a></dd>
+          <dd
+          class="${'active' if filter == 'existing' else None}"><a
+            href="${request.current_route_url(_query={'filter': 'existing', 'display': display})}">Existing</a></dd>
+          <dd
+          class="${'active' if filter == 'destroyed' else None}"><a
+            href="${request.current_route_url(_query={'filter': 'destroyed', 'display': display})}">Destroyed</a></dd>
+        </dl>
+        <dl class="sub-nav">
+          <dt>Display</dt>
+          <dd class="${'active' if display == 'grid' else None}"><a
+            href="${request.current_route_url(_query={'filter': filter, 'display': 'grid'})}">Grid</a></dd>
+          <dd class="${'active' if display == 'table' else None}"><a
+            href="${request.current_route_url(_query={'filter': filter, 'display': 'table'})}">Table</a></dd>
+        </dl>
+      </div>
     </div>
 
     <div class="row">
-      <ul class="block-grid four-up mobile-two-up">
-        <li class="collection" tal:repeat="sample samples">
-          <a class="th" href="${request.route_url('samples_view', sample_id=sample.id)}">
-            <img tal:condition="sample.default_attachment"
-              src="${request.route_url(
-                'samples_attachment_thumb',
-                sample_id=sample.id,
-                attachment=sample.default_attachment)}" alt="" />
-            <img tal:condition="not sample.default_attachment"
-              src="${request.static_url('samplesdb:static/unknown_mime_type_optimized.svg')}"
-              alt="" />
-            ${sample.description}<br />
-          </a>
-        </li>
-      </ul>
+
+      <p class="twelve columns" tal:condition="not samples">
+      This collection has no samples<span tal:omit-tag="True" tal:condition="filter!='all'"> for the selected filter</span>.
+      </p>
+
+      <div class="twelve columns">
+        <table tal:condition="display=='table' and samples">
+          <thead>
+            <tr>
+              <th>Sample</th>
+              <th>Status</th>
+              <th>Description</th>
+              <th>Location</th>
+              <th>Logged</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr tal:repeat="sample samples">
+              <td><a href="${request.route_url('samples_view', sample_id=sample.id)}">${sample.id}</a></td>
+              <td>${sample.status}</td>
+              <td>${sample.description}</td>
+              <td>${sample.location}</td>
+              <td>${sample.created.astimezone(request.user.timezone).strftime('%H:%M on %a, %d %b %Y')}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="twelve columns">
+        <ul class="block-grid four-up mobile-two-up" tal:condition="display=='grid' and samples">
+          <li class="collection" tal:repeat="sample samples">
+            <a class="th" href="${request.route_url('samples_view', sample_id=sample.id)}">
+              <img tal:condition="sample.default_attachment"
+                src="${request.route_url(
+                  'samples_attachment_thumb',
+                  sample_id=sample.id,
+                  attachment=sample.default_attachment)}" alt="" />
+              <img tal:condition="not sample.default_attachment"
+                src="${request.static_url('samplesdb:static/unknown_mime_type_optimized.svg')}"
+                alt="" />
+              ${sample.description}<br />
+            </a>
+          </li>
+        </ul>
+      </div>
+
     </div>
 
   </div>

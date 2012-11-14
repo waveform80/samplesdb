@@ -64,10 +64,6 @@
 
   <div metal:fill-slot="scripts">
     <script type="text/javascript">
-      /* Dupe a div within the form, using unique identifiers for each form
-       * element within
-       */
-
 (function() {
     function make_form_ids() {
       $('.form-template').each(function(index) {

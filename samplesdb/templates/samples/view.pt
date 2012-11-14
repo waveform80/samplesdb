@@ -10,7 +10,8 @@
     <div class="row">
       <div class="ten columns">
         <h1>Sample #${context.sample.id}</h1>
-        <a href="${request.route_url('samples_edit', sample_id=context.sample.id)}">Edit Details</a>
+        <a href="${request.route_url('collections_view', collection_id=context.sample.collection.id)}">${context.sample.collection.name} Collection</a>
+        | <a href="${request.route_url('samples_edit', sample_id=context.sample.id)}">Edit Details</a>
         <span tal:omit-tag="True" tal:condition="not context.sample.destroyed">| <a href="#">Mark Destroyed</a></span>
         <span tal:omit-tag="True" tal:condition="not context.sample.destroyed">| <a href="#">Create Aliquots</a></span>
       </div>
@@ -37,17 +38,12 @@
           <li class="active" id="overviewTab">
 
           <dl class="row">
-            <dt class="three mobile-one columns">Collection</dt>
-            <dd class="nine mobile-three columns"><a href="${request.route_url('collections_view', collection_id=context.sample.collection.id)}">${context.sample.collection.name}</a></dd>
-          </dl>
-
-          <dl class="row">
             <dt class="three mobile-one columns">Status</dt>
             <dd class="nine mobile-three columns">${context.sample.status}</dd>
           </dl>
 
           <dl class="row">
-            <dt class="three mobile-one columns">Created</dt>
+            <dt class="three mobile-one columns">Logged</dt>
             <dd class="nine mobile-three columns">${context.sample.created.astimezone(request.user.timezone).strftime('%H:%M on %A, %d %B %Y')}
                 (${view.helpers.time_ago_in_words(context.sample.created, granularity='day')} ago)</dd>
           </dl>
@@ -66,6 +62,11 @@
           <dl class="row">
             <dt class="three mobile-one columns">Location</dt>
             <dd class="nine mobile-three columns">${context.sample.location}</dd>
+          </dl>
+
+          <dl class="row" tal:repeat="code context.sample.codes.items()">
+            <dt class="three mobile-one columns">${code[0]}</dt>
+            <dd class="nine mobile-three columns">${code[1]}</dd>
           </dl>
 
           <hr />
@@ -106,9 +107,11 @@
           </li>
 
           <li id="attachmentsTab">
+
           <div class="row" tal:condition="not context.sample.attachments">
             <p class="twelve columns">This sample currently has no attachments</p>
           </div>
+
           <table tal:condition="context.sample.attachments">
             <thead>
               <tr>
@@ -153,7 +156,10 @@
 
           <hr />
 
-          ${attachment_form.begin(request.route_url('samples_add_attachment', sample_id=context.sample.id))}
+          ${attachment_form.begin(request.route_url(
+            'samples_add_attachment',
+            sample_id=context.sample.id))}
+
           <div class="row">
             ${attachment_form.label('attachments', 'Add Attachments')}
             ${attachment_form.file('attachments', multiple='multiple')}
@@ -163,7 +169,9 @@
             <div class="two columns">&nbsp;</div>
             ${attachment_form.submit(class_='small', cols=10, cancel=False)}
           </div>
+
           ${attachment_form.end()}
+
           </li>
 
           <li id="historyTab">
