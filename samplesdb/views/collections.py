@@ -123,6 +123,7 @@ class CollectionsView(BaseView):
         permission=VIEW_COLLECTION)
     def view(self):
         filter = self.request.params.get('filter', 'existing')
+        display = self.request.params.get('display', 'grid')
         # XXX Construct a query instead (better performance than retrieving
         # everything and doing filtering in Python)
         samples = (
@@ -131,5 +132,5 @@ class CollectionsView(BaseView):
             if filter == 'all'
             or (filter == 'existing' and not sample.destroyed)
             or (filter == 'destroyed' and sample.destroyed))
-        return dict(filter=filter, samples=samples)
+        return dict(filter=filter, display=display, samples=samples)
 

@@ -20,16 +20,18 @@
         <dt>Filter</dt>
         <dd
         class="${'active' if filter == 'all' else None}"><a 
-          href="${request.current_route_url(_query={'filter': 'all'})}">All</a></dd>
+          href="${request.current_route_url(_query={'filter': 'all', 'display': display})}">All</a></dd>
         <dd
         class="${'active' if filter == 'existing' else None}"><a
-          href="${request.current_route_url(_query={'filter': 'existing'})}">Existing</a></dd>
+          href="${request.current_route_url(_query={'filter': 'existing', 'display': display})}">Existing</a></dd>
         <dd
         class="${'active' if filter == 'destroyed' else None}"><a
-          href="${request.current_route_url(_query={'filter': 'destroyed'})}">Destroyed</a></dd>
+          href="${request.current_route_url(_query={'filter': 'destroyed', 'display': display})}">Destroyed</a></dd>
         <dt>Display</dt>
-        <dd class="active"><a href="#">Grid</a></dd>
-        <dd><a href="#">Table</a></dd>
+        <dd class="${'active' if display == 'grid' else None}"><a
+          href="${request.current_route_url(_query={'filter': filter, 'display': 'grid'})}">Grid</a></dd>
+        <dd class="${'active' if display == 'table' else None}"><a
+          href="${request.current_route_url(_query={'filter': filter, 'display': 'table'})}">Table</a></dd>
       </dl>
     </div>
 
