@@ -106,7 +106,10 @@
           </li>
 
           <li id="attachmentsTab">
-          <table>
+          <div class="row" tal:condition="not context.sample.attachments">
+            <p class="twelve columns">This sample currently has no attachments</p>
+          </div>
+          <table tal:condition="context.sample.attachments">
             <thead>
               <tr>
                 <th>Attachment</th>
