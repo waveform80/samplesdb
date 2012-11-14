@@ -40,13 +40,21 @@ from samplesdb.models import (
     Role,
     Sample,
     SampleLogEntry,
+    SampleCode,
     )
 
 
 class BaseSchema(Schema):
     filter_extra_fields = True
     allow_extra_fields = True
+
+
+class FormSchema(BaseSchema):
     came_from = validators.UnicodeString()
+
+
+class SubFormSchema(BaseSchema):
+    pass
 
 
 # The following classes define validators for each of the fields in the
@@ -118,6 +126,18 @@ class ValidSampleLocation(validators.UnicodeString):
 class ValidSampleNotes(validators.UnicodeString):
     def __init__(self):
         super(ValidSampleNotes, self).__init__(not_empty=False)
+
+
+class ValidCodeName(validators.UnicodeString):
+    def __init__(self):
+        super(ValidCodeName, self).__init__(
+            not_empty=True, max=SampleCode.__table__.c.name.type.length)
+
+
+class ValidCodeValue(validators.UnicodeString):
+    def __init__(self):
+        super(ValidCodeValue, self).__init__(
+            not_empty=True, max=SampleCode.__table__.c.value.type.length)
 
 
 class ValidLogMessage(validators.UnicodeString):
