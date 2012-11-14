@@ -40,8 +40,8 @@ ul li.collection a { display: block; }
 
 dl.sub-nav { padding-top: 8px; }
 
-dl dt { color: #4d4d4d; }
-dl dd { margin-bottom: 0.5em; }
+dl dt { color: #4d4d4d; line-height: 1.3em; }
+dl dd { line-height: 1.3em; margin-bottom: 0.5em; }
 
 fieldset { padding: 12px; }
 
