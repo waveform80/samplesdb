@@ -38,9 +38,12 @@ def init_instances():
         unlimited_limit = UserLimit(
             id='unlimited', collections_limit=1000000, samples_limit=1000000,
             templates_limit=1000000, storage_limit=8000 * 1000000)
+        commercial_limit = UserLimit(
+            id='commercial', collections_limit=10, samples_limit=50000,
+            templates_limit=10, storage_limit=500 * 1000000)
         academic_limit = UserLimit(
-            id='academic', collections_limit=10, samples_limit=10000,
-            templates_limit=10, storage_limit=100 * 1000000)
+            id='academic', collections_limit=10, samples_limit=500,
+            templates_limit=10, storage_limit=50 * 1000000)
         admin_user = User(
             salutation='', given_name='Administrator', surname='',
             limits_id='unlimited')
@@ -64,6 +67,7 @@ def init_instances():
                         'manipulate the collection')
         DBSession.add(admins_group)
         DBSession.add(unlimited_limit)
+        DBSession.add(commercial_limit)
         DBSession.add(academic_limit)
         DBSession.add(admin_user)
         DBSession.add(admin_email)
