@@ -21,7 +21,8 @@
           ${form.select('collection',
             options=((c.id, c.name) for c in request.user.editable_collections),
             selected_value=context.collection.id,
-            inner_cols=6)}
+            cols=6)}
+          <div class="four columns">&nbsp;</div>
         </div>
 
         <hr />
@@ -37,7 +38,21 @@
           ${form.label('location', 'Location')}
           ${form.text('location',
             placeholder='Sample Location',
-            inner_cols=6)}
+            cols=6)}
+          <div class="four columns">&nbsp;</div>
+        </div>
+
+        <div class="row form-template" tal:repeat="item form.data_decoded.get('codes', [])">
+          ${form.text('sample_codes-%d.name' % repeat.item.index, placeholder='Name', required='required', maxlength=50, cols=2)}
+          ${form.text('sample_codes-%d.value' % repeat.item.index, placeholder='Value', required='required', maxlength=50, cols=6)}
+          <div class="four columns">
+            <a href="#" class="secondary small button remove-button">Remove</a>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="two columns">&nbsp;</div>
+          <p class="ten columns"><a href="#" class="secondary small button" id="add-button">Add Codes</a></p>
         </div>
 
         <div class="row">
@@ -66,9 +81,55 @@
 
         ${form.end()}
 
+        <div class="row" id="form-template" style="display: none">
+          ${form.text('name', placeholder='Name', required='required', cols=2)}
+          ${form.text('value', placeholder='Value', required='required', cols=6)}
+          <div class="four columns">
+            <a href="#" class="secondary small button remove-button">Remove</a>
+          </div>
+        </div>
+
       </div>
     </div>
 
+  </div>
+
+  <div metal:fill-slot="scripts">
+    <script type="text/javascript">
+(function() {
+    function make_form_ids() {
+      $('.form-template').each(function(index) {
+        $(this).find(':input').attr('id', function(i, val) {
+          return 'sample_codes-' + index + '.' + (val.split('.')[1] || val);
+        }).attr('name', function(i, val) {
+          return 'sample_codes-' + index + '.' + (val.split('.')[1] || val);
+        });
+        $(this).find('label').attr('for', function(i, val) {
+          return 'sample_codes-' + index + '.' + (val.split('.')[1] || val);
+        });
+      });
+    }
+
+    $('#add-button').click(function() {
+        var source = $('#form-template'),
+            clone = source.clone(true);
+
+        clone.removeAttr('id').addClass('form-template');
+        clone.insertBefore($(this).parent().parent()).slideDown('fast');
+        make_form_ids();
+        return false;
+    });
+
+    $('.remove-button').click(function() {
+        $(this).parent().parent().slideUp('fast', function() {
+            $(this).remove();
+            make_form_ids();
+        });
+        return false;
+    });
+
+})();
+    </script>
   </div>
 </div>
 
