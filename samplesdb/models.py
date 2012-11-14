@@ -1011,8 +1011,8 @@ class SampleCode(Base):
         'sample_codes',
         collection_class=attribute_mapped_collection('name'),
         cascade='all, delete-orphan'))
-    name = Column(Unicode(50), primary_key=True)
-    value = Column(Unicode(50), default='', nullable=False)
+    name = Column(Unicode(20), primary_key=True)
+    value = Column(Unicode(200), default='', nullable=False)
 
     def __repr__(self):
         return ('<SampleCode: sample_id=%d, name="%s">' % (
