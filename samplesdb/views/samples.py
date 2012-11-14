@@ -99,7 +99,8 @@ class SamplesView(BaseView):
             DBSession.add(new_sample)
             DBSession.flush()
             for storage in self.request.POST.getall('attachments'):
-                new_sample.attachments.create(storage.filename, storage.file)
+                if storage:
+                    new_sample.attachments.create(storage.filename, storage.file)
             return HTTPFound(
                 location=self.request.route_url(
                     'samples_view', sample_id=new_sample.id))
