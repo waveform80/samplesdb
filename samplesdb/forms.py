@@ -184,7 +184,7 @@ class Form(object):
             self.state = self.default_state()
         if not hasattr(self.state, '_'):
             self.state._ = get_localizer(self.request).translate
-        self.data['came_from'] = self.request.referer
+        self.data['_came_from'] = self.request.referer
         if defaults:
             self.data.update(defaults)
         if obj:
@@ -351,7 +351,7 @@ class FormRenderer(object):
     see the WebHelpers library for more information on individual widgets.
     """
 
-    def __init__(self, form, csrf_field='_csrf', came_from_field='came_from'):
+    def __init__(self, form, csrf_field='_csrf', came_from_field='_came_from'):
         self.form = form
         self.data = self.form.data
         self.data_decoded = self.form.data_decoded
@@ -408,6 +408,8 @@ class FormRenderer(object):
         """
         Returns the referral hidden input. Gets the referrer from the form data
         or the request if the form lacks it.
+
+        The name of the hidden field is **_came_from** by default
         """
         name = name or self.came_from_field
         url = self.form.data.get(name, self.form.request.referer)
@@ -423,7 +425,6 @@ class FormRenderer(object):
         """
         inputs = [self.hidden(name) for name in names]
         if not self._csrf_done:
-            logging.debug('Forcing inclusion of CSRF token')
             inputs.append(self.csrf())
         if not self._came_from_done:
             inputs.append(self.came_from())
@@ -585,11 +586,11 @@ class FormRenderer(object):
         if inner_cols:
             attrs = css_add_class(attrs, COL_NAMES[inner_cols])
         result = tags.submit(name, self.value(name, value), id, **attrs)
-        if cancel and self.form.data.get('came_from'):
+        if cancel and self.form.data.get('_came_from'):
             cancel_attrs = attrs.copy()
             cancel_attrs = css_add_class(cancel_attrs, 'secondary')
             result += literal(' ') + HTML.a(
-                'Cancel', href=self.form.data['came_from'], **cancel_attrs)
+                'Cancel', href=self.form.data['_came_from'], **cancel_attrs)
         if cols:
             return self.column(name, result, cols, inner_cols, errors=False)
         else:
