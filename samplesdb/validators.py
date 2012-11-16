@@ -50,11 +50,33 @@ class BaseSchema(Schema):
 
 
 class FormSchema(BaseSchema):
-    came_from = validators.UnicodeString()
+    _came_from = validators.UnicodeString()
 
 
 class SubFormSchema(BaseSchema):
     pass
+
+
+class ListToDict(FancyValidator):
+    def __init__(self, key_name, value_name):
+        self.key_name = key_name
+        self.value_name = value_name
+
+    def validate_python(self, value, state):
+        if not hasattr(value, 'items'):
+            if not hasattr(value, 'iteritems'):
+                raise Invalid('value is not dict-like', value, state)
+
+    def _to_python(self, value, state):
+        result = {}
+        try:
+            for item in value:
+                result[item[self.key_name]] = item[self.value_name]
+        except TypeError:
+            raise Invalid('value is not iterable', value, state)
+        return result
+
+    def _from_python(self, value, state):
 
 
 # The following classes define validators for each of the fields in the
