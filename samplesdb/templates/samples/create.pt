@@ -43,8 +43,8 @@
         </div>
 
         <div class="row form-template" tal:repeat="item form.data_decoded.get('codes', [])">
-          ${form.text('sample_codes-%d.name' % repeat.item.index, placeholder='Name', required='required', maxlength=50, cols=2)}
-          ${form.text('sample_codes-%d.value' % repeat.item.index, placeholder='Value', required='required', maxlength=50, cols=6)}
+          ${form.text('codes-%d.name' % repeat.item.index, placeholder='Name', required='required', maxlength=20, cols=2)}
+          ${form.text('codes-%d.value' % repeat.item.index, placeholder='Value', required='required', maxlength=200, cols=6)}
           <div class="four columns">
             <a href="#" class="secondary small button remove-button">Remove</a>
           </div>
@@ -100,12 +100,12 @@
     function make_form_ids() {
       $('.form-template').each(function(index) {
         $(this).find(':input').attr('id', function(i, val) {
-          return 'sample_codes-' + index + '.' + (val.split('.')[1] || val);
+          return 'codes-' + index + '.' + (val.split('.')[1] || val);
         }).attr('name', function(i, val) {
-          return 'sample_codes-' + index + '.' + (val.split('.')[1] || val);
+          return 'codes-' + index + '.' + (val.split('.')[1] || val);
         });
         $(this).find('label').attr('for', function(i, val) {
-          return 'sample_codes-' + index + '.' + (val.split('.')[1] || val);
+          return 'codes-' + index + '.' + (val.split('.')[1] || val);
         });
       });
     }

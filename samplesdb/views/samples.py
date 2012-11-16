@@ -75,7 +75,7 @@ class SampleSchema(FormSchema):
     location = ValidSampleLocation()
     notes_markup = ValidMarkupLanguage()
     notes = ValidSampleNotes()
-    sample_codes = foreach.ForEach(SampleCodeSchema())
+    codes = foreach.ForEach(SampleCodeSchema())
 
 
 class SampleCreateSchema(SampleSchema):
@@ -104,7 +104,6 @@ class SamplesView(BaseView):
             variable_decode=True,
             multipart=True)
         if form.validate():
-            print(form.data)
             new_sample = form.bind(
                 Sample.create(self.request.user, self.context.collection))
             DBSession.add(new_sample)
