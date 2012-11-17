@@ -201,7 +201,7 @@ class Form(object):
                 for f in fields:
                     if hasattr(obj, f):
                         self.data[f] = self.validators[f].from_python(getattr(obj, f))
-        self.data_decoded = self.data.copy()
+        self.data_raw = self.data.copy()
 
     def is_error(self, field):
         """Checks if individual field has errors."""
@@ -247,15 +247,15 @@ class Form(object):
         else:
             params = self.request.params
         if self.variable_decode:
-            self.data_decoded = variabledecode.variable_decode(
+            self.data_raw = variabledecode.variable_decode(
                 params, self.dict_char, self.list_char)
         else:
-            self.data_decoded = params
+            self.data_raw = params
         self.data.update(params)
         if self.schema:
             try:
                 self.data = self.schema.to_python(
-                    self.data_decoded, self.state)
+                    self.data_raw, self.state)
             except Invalid, e:
                 self.errors = e.unpack_errors(
                     self.variable_decode, self.dict_char, self.list_char)
@@ -263,7 +263,7 @@ class Form(object):
             for field, validator in self.validators.iteritems():
                 try:
                     self.data[field] = validator.to_python(
-                        self.data_decoded.get(field), self.state)
+                        self.data_raw.get(field), self.state)
                 except Invalid, e:
                     self.errors[field] = unicode(e)
         self.is_validated = True
@@ -354,7 +354,7 @@ class FormRenderer(object):
     def __init__(self, form, csrf_field='_csrf', came_from_field='_came_from'):
         self.form = form
         self.data = self.form.data
-        self.data_decoded = self.form.data_decoded
+        self.data_raw = self.form.data_raw
         self.csrf_field = csrf_field
         self.came_from_field = came_from_field
         self._csrf_done = False

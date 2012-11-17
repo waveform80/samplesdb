@@ -29,7 +29,7 @@
           </div>
           <hr />
 
-          <div tal:repeat="item form.data_decoded.get('users', [])" class="row form-template">
+          <div tal:repeat="item form.data_raw.get('users', [])" class="row form-template">
             ${form.label('users-%d.user' % repeat.item.index, 'E-mail', cols=1)}
             ${form.email('users-%d.user' % repeat.item.index, value=item['user'], placeholder='someone@somewhere.edu', cols=6)}
             ${form.label('users-%d.role' % repeat.item.index, 'Role', cols=1)}

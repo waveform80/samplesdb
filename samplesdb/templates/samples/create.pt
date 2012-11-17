@@ -42,7 +42,7 @@
           <div class="four columns">&nbsp;</div>
         </div>
 
-        <div class="row form-template" tal:repeat="item form.data_decoded.get('codes', [])">
+        <div class="row form-template" tal:repeat="item form.data_raw.get('codes', [])">
           ${form.text('codes-%d.name' % repeat.item.index, value=item['name'], placeholder='Name', required='required', maxlength=20, cols=2)}
           ${form.text('codes-%d.value' % repeat.item.index, value=item['value'], placeholder='Value', required='required', maxlength=200, cols=6)}
           <div class="four columns">
