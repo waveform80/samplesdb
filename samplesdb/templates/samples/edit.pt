@@ -38,6 +38,19 @@
             placeholder='Sample Location', inner_cols=6)}
         </div>
 
+        <div class="row form-template" tal:repeat="item form.data_decoded.get('codes', [])">
+          ${form.text('codes-%d.name' % repeat.item.index, value=item['name'], placeholder='Name', required='required', maxlength=20, cols=2)}
+          ${form.text('codes-%d.value' % repeat.item.index, value=item['value'], placeholder='Value', required='required', maxlength=200, cols=6)}
+          <div class="four columns">
+            <a href="#" class="secondary small button remove-button">Remove</a>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="two columns">&nbsp;</div>
+          <p class="ten columns"><a href="#" class="secondary small button" id="add-button">Add Codes</a></p>
+        </div>
+
         <hr />
 
         <div class="row">
@@ -61,7 +74,44 @@
 
       </div>
     </div>
+  </div>
 
+  <div metal:fill-slot="scripts">
+    <script type="text/javascript">
+(function() {
+    function make_form_ids() {
+      $('.form-template').each(function(index) {
+        $(this).find(':input').attr('id', function(i, val) {
+          return 'codes-' + index + '.' + (val.split('.')[1] || val);
+        }).attr('name', function(i, val) {
+          return 'codes-' + index + '.' + (val.split('.')[1] || val);
+        });
+        $(this).find('label').attr('for', function(i, val) {
+          return 'codes-' + index + '.' + (val.split('.')[1] || val);
+        });
+      });
+    }
+
+    $('#add-button').click(function() {
+        var source = $('#form-template'),
+            clone = source.clone(true);
+
+        clone.removeAttr('id').addClass('form-template');
+        clone.insertBefore($(this).parent().parent()).slideDown('fast');
+        make_form_ids();
+        return false;
+    });
+
+    $('.remove-button').click(function() {
+        $(this).parent().parent().slideUp('fast', function() {
+            $(this).remove();
+            make_form_ids();
+        });
+        return false;
+    });
+
+})();
+    </script>
   </div>
 </div>
 

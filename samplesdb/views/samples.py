@@ -26,7 +26,7 @@ from __future__ import (
 
 from pyramid.view import view_config
 from pyramid.httpexceptions import HTTPFound
-from formencode import foreach
+from formencode.foreach import ForEach
 
 from samplesdb.views import BaseView
 from samplesdb.forms import (
@@ -36,6 +36,7 @@ from samplesdb.forms import (
 from samplesdb.validators import (
     FormSchema,
     SubFormSchema,
+    ListToDict,
     ValidCollection,
     ValidMarkupLanguage,
     ValidSampleDescription,
@@ -75,7 +76,8 @@ class SampleSchema(FormSchema):
     location = ValidSampleLocation()
     notes_markup = ValidMarkupLanguage()
     notes = ValidSampleNotes()
-    codes = foreach.ForEach(SampleCodeSchema())
+    codes = ListToDict(ForEach(SampleCodeSchema()),
+                key_name='name', value_name='value')
 
 
 class SampleCreateSchema(SampleSchema):

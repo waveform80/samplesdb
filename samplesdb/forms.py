@@ -179,7 +179,6 @@ class Form(object):
         self.is_validated = False
         self.errors = {}
         self.data = {}
-        self.data_decoded = {}
         if self.state is None:
             self.state = self.default_state()
         if not hasattr(self.state, '_'):
@@ -202,6 +201,7 @@ class Form(object):
                 for f in fields:
                     if hasattr(obj, f):
                         self.data[f] = self.validators[f].from_python(getattr(obj, f))
+        self.data_decoded = self.data.copy()
 
     def is_error(self, field):
         """Checks if individual field has errors."""

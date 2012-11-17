@@ -31,6 +31,7 @@ from formencode import (
     Invalid,
     validators,
     )
+from formencode.compound import CompoundValidator
 
 from samplesdb.helpers import MARKUP_LANGUAGES
 from samplesdb.models import (
@@ -58,9 +59,10 @@ class SubFormSchema(BaseSchema):
 
 
 class ListToDict(FancyValidator):
-    def __init__(self, key_name, value_name):
-        self.key_name = key_name
-        self.value_name = value_name
+    def __init__(self, *args, **kwargs):
+        super(ListToDict, self).__init__()
+        self.key_name = kwargs['key_name']
+        self.value_name = kwargs['value_name']
 
     def validate_python(self, value, state):
         if not hasattr(value, 'items'):
@@ -70,13 +72,37 @@ class ListToDict(FancyValidator):
     def _to_python(self, value, state):
         result = {}
         try:
-            for item in value:
-                result[item[self.key_name]] = item[self.value_name]
+            for i, item in enumerate(value):
+                try:
+                    key = item[self.key_name]
+                except KeyError:
+                    raise Invalid(
+                        'key %s not present in item %d of value' % (
+                            self.key_name, i), value, state)
+                try:
+                    value = item[self.value_name]
+                except KeyError:
+                    raise Invalid(
+                        'key %s not present in item %d of value' % (
+                            self.value_name, i), value, state)
+                if key in result:
+                    raise Invalid(
+                        'duplicate key %s found at position %d in value' % (
+                            key, i), value, state)
+                result[key] = value
         except TypeError:
             raise Invalid('value is not iterable', value, state)
         return result
 
     def _from_python(self, value, state):
+        result = []
+        if hasattr(value, 'iteritems'):
+            iterator = value.iteritems()
+        elif hasattr(value, 'items'):
+            iterator = value.items()
+        for key, value in iterator:
+            result.append({self.key_name: key, self.value_name: value})
+        return result
 
 
 # The following classes define validators for each of the fields in the
