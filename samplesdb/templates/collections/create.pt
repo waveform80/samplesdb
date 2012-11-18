@@ -27,6 +27,7 @@
             <label class="one columns">Role</label>
             <span class="two columns end">Owner</span>
           </div>
+
           <hr />
 
           <div tal:repeat="item form.data_raw.get('users', [])" class="row form-template">
@@ -43,7 +44,8 @@
         </fieldset>
 
         <div class="row">
-          ${form.submit(class_='small')}
+          ${form.label('submit', '', cols=1)}
+          ${form.submit('submit', class_='small', cols=11)}
         </div>
 
         ${form.end()}

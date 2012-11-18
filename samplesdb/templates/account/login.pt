@@ -29,8 +29,8 @@
         </div>
 
         <div class="row">
-          <div class="two columns">&nbsp;</div>
-          ${form.submit(class_='small', cols=10)}
+          ${form.label('submit', '')}
+          ${form.submit('submit', class_='small')}
         </div>
 
         ${form.end()}
