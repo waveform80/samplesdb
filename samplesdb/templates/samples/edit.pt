@@ -72,6 +72,14 @@
 
         ${form.end()}
 
+        <div class="row" id="form-template" style="display: none">
+          ${form.text('name', placeholder='Name', required='required', cols=2)}
+          ${form.text('value', placeholder='Value', required='required', cols=6)}
+          <div class="four columns">
+            <a href="#" class="secondary small button remove-button">Remove</a>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
