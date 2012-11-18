@@ -141,14 +141,14 @@ class AccountViewUnitTests(UnitFixture):
         assert 'form' in result
         assert isinstance(result['form'], FormRenderer)
         assert result['form'].form.schema == LoginSchema
-        assert result['form'].form.data['_came_from'] == 'http://example.com'
+        assert result['form'].form.came_from == 'http://example.com'
 
     def test_account_login_redirect(self):
         view = self.make_one()
         view.request.url = 'http://example.com/login'
         result = view.login()
         assert 'form' in result
-        assert result['form'].form.data['_came_from'] == 'http://example.com/collections'
+        assert result['form'].form.came_from != 'http://example.com/login'
 
     def test_account_login_bad(self):
         view = self.make_one()

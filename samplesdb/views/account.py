@@ -129,13 +129,13 @@ class AccountView(BaseView):
         form = Form(
             self.request,
             schema=LoginSchema,
-            defaults=dict(_came_from=referer))
+            came_from=referer)
         if form.validate():
             username = form.data['username']
             password = form.data['password']
             if authenticate(username, password):
                 return HTTPFound(
-                    location=form.data['_came_from'],
+                    location=form.came_from,
                     headers=remember(self.request, username))
             else:
                 self.request.session.flash('Invalid login')

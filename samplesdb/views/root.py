@@ -43,8 +43,7 @@ class RootView(BaseView):
         form = Form(
             self.request,
             schema=LoginSchema,
-            defaults=dict(
-                _came_from=self.request.route_url('collections_index')))
+            came_from=self.request.route_url('collections_index'))
         return dict(form=FormRenderer(form))
 
     @view_config(

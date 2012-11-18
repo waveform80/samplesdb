@@ -165,7 +165,7 @@ class Form(object):
             self, request, schema=None, validators=None, defaults=None,
             obj=None, extra=None, include=None, exclude=None, state=None,
             method='POST', variable_decode=False, dict_char='.',
-            list_char='-', multipart=False):
+            list_char='-', multipart=False, came_from=None):
 
         self.request = request
         self.schema = schema
@@ -175,6 +175,7 @@ class Form(object):
         self.dict_char = dict_char
         self.list_char = list_char
         self.multipart = multipart
+        self.came_from = came_from
         self.state = state
         self.is_validated = False
         self.errors = {}
@@ -183,7 +184,8 @@ class Form(object):
             self.state = self.default_state()
         if not hasattr(self.state, '_'):
             self.state._ = get_localizer(self.request).translate
-        self.data['_came_from'] = self.request.referer
+        if self.came_from is None:
+            self.came_from = self.request.referer
         if defaults:
             self.data.update(defaults)
         if obj:
@@ -242,7 +244,7 @@ class Form(object):
             return not(self.errors)
         if self.method and self.method != self.request.method:
             return False
-        if self.method == "POST":
+        if self.method == 'POST':
             params = self.request.POST
         else:
             params = self.request.params
@@ -266,6 +268,8 @@ class Form(object):
                         self.data_raw.get(field), self.state)
                 except Invalid, e:
                     self.errors[field] = unicode(e)
+        # XXX This is a tad dirty - how do we know the field is called _came_from here?
+        self.came_from = self.data.get('_came_from', self.came_from)
         self.is_validated = True
         return not(self.errors)
 
@@ -412,7 +416,7 @@ class FormRenderer(object):
         The name of the hidden field is **_came_from** by default
         """
         name = name or self.came_from_field
-        url = self.form.data[name]
+        url = self.form.came_from
         self._came_from_done = True
         return self.hidden(name, value=url)
 
