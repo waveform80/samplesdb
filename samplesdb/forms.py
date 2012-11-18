@@ -453,7 +453,7 @@ class FormRenderer(object):
         """
         if 'for_' not in attrs:
             attrs['for_'] = name
-        label = label or name.capitalize()
+        label = label if label is not None else name.capitalize()
         if inner_cols:
             attrs = css_add_class(attrs, COL_NAMES[inner_cols])
         attrs = css_add_class(attrs, 'inline')
@@ -573,7 +573,7 @@ class FormRenderer(object):
         return tags.radio(name, value, checked, label, **attrs)
 
     def checkbox(
-            self, name, value="1", checked=False, label=None, id=None, **attrs):
+            self, name, value='1', checked=False, label=None, id=None, **attrs):
         """
         Outputs checkbox input.
         """
@@ -582,7 +582,7 @@ class FormRenderer(object):
 
     def submit(
             self, name='submit', value='Submit', id=None,
-            cols=12, inner_cols=None, cancel=True, **attrs):
+            cols=10, inner_cols=None, cancel=True, **attrs):
         """
         Outputs submit button.
         """
@@ -591,11 +591,11 @@ class FormRenderer(object):
         if inner_cols:
             attrs = css_add_class(attrs, COL_NAMES[inner_cols])
         result = tags.submit(name, self.value(name, value), id, **attrs)
-        if cancel and self.form.data.get('_came_from'):
+        if cancel and self.form.came_from:
             cancel_attrs = attrs.copy()
             cancel_attrs = css_add_class(cancel_attrs, 'secondary')
             result += literal(' ') + HTML.a(
-                'Cancel', href=self.form.data['_came_from'], **cancel_attrs)
+                'Cancel', href=self.form.came_from, **cancel_attrs)
         if cols:
             return self.column(name, result, cols, inner_cols, errors=False)
         else:
