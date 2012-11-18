@@ -13,6 +13,8 @@
       <p class="eight columns">
         <a href="${request.route_url('samples_create',
           collection_id=context.collection.id)}">New Sample</a>
+        | <a href="${request.route_url('collections_edit',
+          collection_id=context.collection.id)}">Edit Collection</a>
         | <a href="#">Export List</a>
         | <a href="#">Print Labels</a>
       </p>
