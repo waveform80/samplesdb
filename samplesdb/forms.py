@@ -412,14 +412,15 @@ class FormRenderer(object):
         The name of the hidden field is **_came_from** by default
         """
         name = name or self.came_from_field
-        url = self.form.data.get(name, self.form.request.referer)
+        url = self.form.data[name]
         self._came_from_done = True
         return self.hidden(name, value=url)
 
     def hidden_tag(self, *names):
         """
-        Convenience for printing all hidden fields in a form inside a
-        hidden DIV. Will also render the CSRF hidden field.
+        Convenience for printing all hidden fields in a form inside a hidden
+        DIV. Will also render the CSRF and referal hidden fields if they
+        haven't been output explicitly already.
 
         :versionadded: 0.4
         """

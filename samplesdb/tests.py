@@ -17,6 +17,7 @@ from pyramid_mailer.mailer import Mailer
 from samplesdb.image import can_resize, make_thumbnail
 from samplesdb.forms import css_add_class, css_del_class, FormRenderer
 from samplesdb.scripts.initializedb import init_instances
+from samplesdb.security import *
 from samplesdb.models import *
 from samplesdb.views.root import *
 from samplesdb.views.account import *
@@ -140,19 +141,19 @@ class AccountViewUnitTests(UnitFixture):
         assert 'form' in result
         assert isinstance(result['form'], FormRenderer)
         assert result['form'].form.schema == LoginSchema
-        assert result['form'].form.data['came_from'] == 'http://example.com'
+        assert result['form'].form.data['_came_from'] == 'http://example.com'
 
     def test_account_login_redirect(self):
         view = self.make_one()
         view.request.url = 'http://example.com/login'
         result = view.login()
         assert 'form' in result
-        assert result['form'].form.data['came_from'] == 'http://example.com/collections'
+        assert result['form'].form.data['_came_from'] == 'http://example.com/collections'
 
     def test_account_login_bad(self):
         view = self.make_one()
         view.request.method = 'POST'
-        view.request.POST['came_from'] = 'http://example.com/foo'
+        view.request.POST['_came_from'] = 'http://example.com/foo'
         view.request.POST['username'] = 'admin@example.com'
         view.request.POST['password'] = 'badpass'
         view.request.POST['submit'] = 'Submit'
@@ -164,7 +165,7 @@ class AccountViewUnitTests(UnitFixture):
     def test_account_login_good(self):
         view = self.make_one()
         view.request.method = 'POST'
-        view.request.POST['came_from'] = 'http://example.com/foo'
+        view.request.POST['_came_from'] = 'http://example.com/foo'
         view.request.POST['username'] = 'admin@example.com'
         view.request.POST['password'] = 'adminpass'
         view.request.POST['submit'] = 'Submit'
@@ -226,7 +227,7 @@ class AccountViewUnitTests(UnitFixture):
         view.request.POST['organization'] = 'Baz University'
         view.request.POST['limits_id'] = 'academic'
         view.request.POST['timezone_name'] = 'UTC'
-        view.request.POST['came_from'] = view.request.referer
+        view.request.POST['_came_from'] = view.request.referer
         result = view.create()
         assert isinstance(result, HTTPFound)
         assert 'Location' in result.headers
@@ -264,7 +265,7 @@ class AccountViewUnitTests(UnitFixture):
         view.request.POST['timezone_name'] = 'UTC'
         view.request.POST['password_new'] = ''
         view.request.POST['password_new_confirm'] = ''
-        view.request.POST['came_from'] = view.request.referer
+        view.request.POST['_came_from'] = view.request.referer
         result = view.edit()
         assert isinstance(result, HTTPFound)
         assert 'Location' in result.headers
@@ -282,7 +283,7 @@ class AccountViewUnitTests(UnitFixture):
         view.request.POST['timezone_name'] = 'UTC'
         view.request.POST['password_new'] = 'bar'
         view.request.POST['password_new_confirm'] = 'bar'
-        view.request.POST['came_from'] = view.request.referer
+        view.request.POST['_came_from'] = view.request.referer
         result = view.edit()
         assert isinstance(result, HTTPFound)
         assert 'Location' in result.headers
@@ -357,11 +358,15 @@ class AccountViewUnitTests(UnitFixture):
 
 
 class CollectionsViewUnitTests(UnitFixture):
-    def make_one(self):
+    def make_one(self, collection_id=None):
         request = testing.DummyRequest()
         request.user = User.by_email('admin@example.com')
         request.referer = request.url
-        context = Mock()
+        if collection_id is not None:
+            request.matchdict['collection_id'] = collection_id
+            context = CollectionContextFactory(request)
+        else:
+            context = RootContextFactory(request)
         view = CollectionsView(context, request)
         return view
 
@@ -393,13 +398,22 @@ class CollectionsViewUnitTests(UnitFixture):
         view = self.make_one()
         view.request.method = 'POST'
         view.request.POST['name'] = 'New Collection'
-        view.request.POST['came_from'] = view.request.referer
+        view.request.POST['_came_from'] = view.request.referer
         result = view.create()
         assert isinstance(result, HTTPFound)
         assert 'Location' in result.headers
         assert DBSession.query(Collection).join(UserCollection).\
                 filter(UserCollection.user_id==view.request.user.id).\
                 filter(Collection.name=='New Collection').first()
+
+    def test_collections_view(self):
+        view = self.make_one(1)
+        result = view.view()
+        assert 'filter' in result
+        assert result['filter'] in ('all', 'existing', 'destroyed')
+        assert 'display' in result
+        assert result['display'] in ('grid', 'table')
+        assert 'samples' in result
 
     
 class SiteFunctionalTest(FunctionalFixture):
@@ -501,6 +515,7 @@ class SiteFunctionalTest(FunctionalFixture):
         assert 'My Account' in res
         # Attempt to change password
         res = res.click(href='/account/edit')
+        assert 'Edit Account' in res
         res.form['password_new'] = 'quux'
         res.form['password_new_confirm'] = 'quux'
         res = res.form.submit()
@@ -513,7 +528,7 @@ class SiteFunctionalTest(FunctionalFixture):
         res.form['password'] = 'quux'
         res = res.form.submit()
         res = res.follow()
-        assert 'My Collections' in res
+        assert 'Login' not in res
         res = res.click(href='/collections/new')
         res.form['name'] = 'Flibbles'
         res = res.form.submit()
