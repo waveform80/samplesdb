@@ -62,7 +62,8 @@ REQUIRES = [
     'transaction',
     'pyramid_tm',
     'pyramid_debugtoolbar',
-    'pyramid_simpleform',
+    # XXX Overridden with samplesdb.forms (submit changes as a patch to pyramid_simpleform?)
+    #'pyramid_simpleform',
     'pyramid_beaker',
     'pyramid_mailer',
     'pydns',
