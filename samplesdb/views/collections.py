@@ -27,7 +27,6 @@ from __future__ import (
 from pyramid.view import view_config
 from pyramid.decorator import reify
 from pyramid.httpexceptions import HTTPFound
-from formencode import foreach
 
 from samplesdb.views import BaseView
 from samplesdb.forms import (
@@ -37,6 +36,7 @@ from samplesdb.forms import (
 from samplesdb.validators import (
     FormSchema,
     SubFormSchema,
+    ForEachDict,
     ValidRole,
     ValidUser,
     ValidCollectionName,
@@ -64,10 +64,15 @@ class CollectionUserSchema(SubFormSchema):
 
 class CollectionSchema(FormSchema):
     name = ValidCollectionName()
-    users = foreach.ForEach(CollectionUserSchema())
+    users = ForEachDict(CollectionUserSchema(),
+                key_name='user', value_name='role')
 
 
 class CollectionCreateSchema(CollectionSchema):
+    pass
+
+
+class CollectionEditSchema(CollectionSchema):
     pass
 
 

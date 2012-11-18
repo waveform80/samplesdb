@@ -32,6 +32,7 @@ from formencode import (
     validators,
     )
 from formencode.compound import CompoundValidator
+from formencode.foreach import ForEach
 
 from samplesdb.helpers import MARKUP_LANGUAGES
 from samplesdb.models import (
@@ -58,11 +59,11 @@ class SubFormSchema(BaseSchema):
     pass
 
 
-class ListToDict(FancyValidator):
-    def __init__(self, *args, **kwargs):
-        super(ListToDict, self).__init__()
-        self.key_name = kwargs['key_name']
-        self.value_name = kwargs['value_name']
+class ForEachDict(ForEach):
+    def __init__(self, *args, **kw):
+        super(ForEachDict, self).__init__(*args, **kw)
+        self.key_name = kw['key_name']
+        self.value_name = kw['value_name']
 
     def validate_python(self, value, state):
         if not hasattr(value, 'items'):
@@ -70,6 +71,7 @@ class ListToDict(FancyValidator):
                 raise Invalid('value is not dict-like', value, state)
 
     def _to_python(self, value, state):
+        value = super(ForEachDict, self)._to_python(value, state)
         result = {}
         try:
             for i, item in enumerate(value):
@@ -102,7 +104,7 @@ class ListToDict(FancyValidator):
             iterator = value.items()
         for key, value in iterator:
             result.append({self.key_name: key, self.value_name: value})
-        return result
+        return super(ForEachDict, self)._from_python(result, state)
 
 
 # The following classes define validators for each of the fields in the
