@@ -24,7 +24,7 @@
             <a href="${request.route_url('account_reset_password', email='')}">Forgotten password</a>
           </div>
           <div class="two mobile-one columns">
-            ${form.submit('submit', value='Login', class_='tiny right button', cancel=False)}
+            ${form.submit('submit', value='Login', class_='tiny right button', cols=None, cancel=False)}
           </div>
         </div>
         ${form.end()}
