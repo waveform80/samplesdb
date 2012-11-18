@@ -3,11 +3,11 @@
 <!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
 <!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
 <!--[if gt IE 8]><!--> <div metal:use-macro="view.layout">
-  <div tal:omit-tag="True" metal:fill-slot="title">My Account</div>
+  <div tal:omit-tag="True" metal:fill-slot="title">Edit Account</div>
   <div tal:omit-tag="True" metal:fill-slot="content">
     <div metal:use-macro="view.top_bar"></div>
 
-    <div class="row"><h1 class="twelve columns">My Account</h1></div>
+    <div class="row"><h1 class="twelve columns">Edit Account</h1></div>
 
     <div class="row">
       <div class="twelve columns">
