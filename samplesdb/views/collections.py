@@ -98,7 +98,9 @@ class CollectionsView(BaseView):
         permission=CREATE_COLLECTION)
     def create(self):
         form = Form(
-            self.request, schema=CollectionCreateSchema, variable_decode=True)
+            self.request,
+            schema=CollectionCreateSchema,
+            variable_decode=True)
         if form.validate():
             new_collection = form.bind(Collection())
             # Hard-code ownership to currently authenticated user
@@ -116,7 +118,16 @@ class CollectionsView(BaseView):
         renderer='../templates/collections/edit.pt',
         permission=EDIT_COLLECTION)
     def edit(self):
-        return {}
+        collection = self.context.collection
+        form = Form(
+            self.request,
+            schema=CollectionEditSchema,
+            obj=collection,
+            variable_decode=True)
+        if form.validate():
+            form.bind(collection)
+            return HTTPFound(location=form.came_from)
+        return dict(form=FormRenderer(form))
 
     @view_config(
         route_name='collections_view',
