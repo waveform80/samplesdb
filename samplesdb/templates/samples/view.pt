@@ -100,8 +100,8 @@
           </div>
 
           <div class="row">
-            <div class="two columns">&nbsp;</div>
-            ${log_form.submit(class_='small', cols=10, cancel=False)}
+            ${log_form.label('submit', '')}
+            ${log_form.submit('submit', class_='small', cancel=False)}
           </div>
           ${log_form.end()}
           </li>
