@@ -1,0 +1,107 @@
+<!doctype html>
+<!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
+<!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
+<!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!--> <div metal:use-macro="view.layout">
+  <div tal:omit-tag="True" metal:fill-slot="title">Editing ${context.collection.name} Collection</div>
+  <div tal:omit-tag="True" metal:fill-slot="content">
+    <div metal:use-macro="view.top_bar"></div>
+
+    <div class="row"><h1 class="twelve columns">Editing ${context.collection.name} Collection</h1></div>
+
+    <div class="row">
+      <div class="twelve columns">
+        ${form.begin()}
+
+        <div class="row">
+          ${form.label('name', 'Name', cols=1)}
+          ${form.text('name', placeholder='Collection Name', cols=11)}
+        </div>
+
+        <fieldset>
+          <legend>Authorizations</legend>
+
+          <div tal:repeat="item form.data_raw.get('users', [])" class="row form-template">
+            <div tal:omit-tag="True" tal:define="is_me item['user'] in (e.email for e in request.user.verified_emails)">
+              ${form.label('users-%d.user' % repeat.item.index, 'E-mail', cols=1)}
+              ${form.email(
+                  'users-%d.user' % repeat.item.index,
+                  value=item['user'], disabled=is_me,
+                  placeholder='someone@somewhere.edu', cols=6)}
+              ${form.label('users-%d.role' % repeat.item.index, 'Role', cols=1)}
+              ${form.select(
+                  'users-%d.role' % repeat.item.index,
+                  selected_value=item['role'], disabled=is_me,
+                  options=view.roles, cols=2)}
+              <div class="two columns">
+                <span tal:condition="is_me" class="secondary disabled small button right">Remove</span>
+                <a href="#" tal:condition="not is_me" class="secondary small button right remove-button">Remove</a>
+              </div>
+            </div>
+          </div>
+
+          <a href="#" class="secondary small button right" id="add-button">Add</a>
+        </fieldset>
+
+        <div class="row">
+          ${form.label('submit', '', cols=1)}
+          ${form.submit('submit', class_='small', cols=11)}
+        </div>
+
+        ${form.end()}
+
+        <div class="row" id="form-template" style="display: none">
+          ${form.label('user', 'E-mail', cols=1)}
+          ${form.email('user', placeholder='someone@somewhere.edu', cols=6)}
+          ${form.label('role', 'Role', cols=1)}
+          ${form.select('role', options=view.roles, selected_value='owner', cols=2)}
+          <div class="two columns">
+            <a href="#" class="secondary small button right remove-button">Remove</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div metal:fill-slot="scripts">
+    <script type="text/javascript">
+(function() {
+    function make_form_ids() {
+      $('.form-template').each(function(index) {
+        $(this).find(':input').attr('id', function(i, val) {
+          return 'users-' + index + '.' + (val.split('.')[1] || val);
+        }).attr('name', function(i, val) {
+          return 'users-' + index + '.' + (val.split('.')[1] || val);
+        });
+        $(this).find('label').attr('for', function(i, val) {
+          return 'users-' + index + '.' + (val.split('.')[1] || val);
+        });
+      });
+    }
+
+    $('#add-button').click(function() {
+        var source = $('#form-template'),
+            clone = source.clone(true);
+
+        clone.removeAttr('id').addClass('form-template');
+        clone.insertBefore(this).slideDown('fast');
+        make_form_ids();
+        return false;
+    });
+
+    $('.remove-button').click(function() {
+        $(this).parent().parent().slideUp('fast', function() {
+            $(this).remove();
+            make_form_ids();
+        });
+        return false;
+    });
+
+})();
+    </script>
+  </div>
+</div>
+
+
+
