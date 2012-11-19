@@ -149,10 +149,20 @@ class ValidAccountType(validators.OneOf):
 
 
 class ValidEmail(validators.Email):
-    def __init__(self, not_empty=True, resolve_domain=True):
+    def __init__(self, not_exist=False, not_empty=True, resolve_domain=True):
         super(ValidEmail, self).__init__(
             not_empty=not_empty, resolve_domain=resolve_domain,
             max=EmailAddress.__table__.c.email.type.length)
+        self.not_exist = not_exist
+
+    def _to_python(self, value, state):
+        result = super(ValidEmail, self)._to_python(value, state)
+        if self.not_exist:
+            address = EmailAddress.by_email(result)
+            if address:
+                raise Invalid(
+                    'A user exists with that e-mail address', value, state)
+        return result
 
 
 class ValidCollectionName(validators.UnicodeString):

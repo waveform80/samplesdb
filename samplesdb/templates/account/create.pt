@@ -37,12 +37,12 @@
         </div>
 
         <div class="row">
-          ${form.label('email', 'Email Address')}
+          ${form.label('email', 'E-mail Address')}
           ${form.email('email', placeholder='someone@somewhere.edu')}
         </div>
 
         <div class="row">
-          ${form.label('email_confirm', 'Confirm Email')}
+          ${form.label('email_confirm', 'Confirm E-mail')}
           ${form.email('email_confirm', placeholder='someone@somewhere.edu')}
         </div>
 

@@ -93,8 +93,8 @@ class AccountCreateSchema(AccountSchema):
     limits_id = ValidAccountType()
     password = ValidPassword()
     password_confirm = validators.UnicodeString()
-    email = ValidEmail()
-    email_confirm = ValidEmail()
+    email = ValidEmail(not_exist=True, resolve_domain=True)
+    email_confirm = ValidEmail(resolve_domain=False)
     chained_validators = [
         validators.FieldsMatch('email', 'email_confirm'),
         validators.FieldsMatch('password', 'password_confirm'),
