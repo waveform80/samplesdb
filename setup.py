@@ -64,6 +64,9 @@ REQUIRES = [
     'pyramid_debugtoolbar',
     # XXX Overridden with samplesdb.forms (submit changes as a patch to pyramid_simpleform?)
     #'pyramid_simpleform',
+    # XXX Deps from pyramid_simpleform
+    'webhelpers<2.0dev',
+    'formencode<2.0dev',
     'pyramid_beaker',
     'pyramid_mailer',
     'pydns',
