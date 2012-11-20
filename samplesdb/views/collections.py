@@ -27,6 +27,7 @@ from __future__ import (
 from pyramid.view import view_config
 from pyramid.decorator import reify
 from pyramid.httpexceptions import HTTPFound
+from pyramid.security import has_permission
 
 from samplesdb.views import BaseView
 from samplesdb.forms import (
@@ -149,5 +150,9 @@ class CollectionsView(BaseView):
             if filter == 'all'
             or (filter == 'existing' and not sample.destroyed)
             or (filter == 'destroyed' and sample.destroyed)]
-        return dict(filter=filter, display=display, samples=samples)
+        return dict(
+            filter=filter,
+            display=display,
+            samples=samples,
+            has_permission=has_permission)
 

@@ -11,12 +11,19 @@
 
     <div class="row">
       <p class="eight columns">
+      <span
+        tal:omit-tag="True"
+        tal:condition="has_permission('edit_collection', context, request)">
         <a href="${request.route_url('samples_create',
-          collection_id=context.collection.id)}">New Sample</a>
-        | <a href="${request.route_url('collections_edit',
-          collection_id=context.collection.id)}">Edit Collection</a>
-        | <a href="#">Export List</a>
-        | <a href="#">Print Labels</a>
+          collection_id=context.collection.id)}">New Sample</a> |
+      </span>
+      <span
+        tal:omit-tag="True"
+        tal:condition="has_permission('manage_collection', context, request)">
+        <a href="${request.route_url('collections_edit',
+          collection_id=context.collection.id)}">Edit Collection</a> |
+      </span>
+      <a href="#">Export List</a> | <a href="#">Print Labels</a>
       </p>
       <div class="four columns">
         <dl class="sub-nav">
