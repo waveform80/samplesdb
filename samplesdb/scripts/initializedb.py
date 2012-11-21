@@ -42,8 +42,12 @@ def init_instances():
             id='commercial', collections_limit=10, samples_limit=50000,
             templates_limit=10, storage_limit=500 * 1000000)
         academic_limit = UserLimit(
-            id='academic', collections_limit=10, samples_limit=500,
-            templates_limit=10, storage_limit=50 * 1000000)
+            id='academic', collections_limit=10, samples_limit=10000,
+            templates_limit=10, storage_limit=50 * 1000000,
+            email_pattern=r'.*\.(edu|ac\.[a-z][a-z])$')
+        free_limit = UserLimit(
+            id='free', collections_limit=5, samples_limit=50,
+            templates_limit=10, storage_limit=1 * 1000000)
         admin_user = User(
             salutation='', given_name='Administrator', surname='',
             limits_id='unlimited')
@@ -69,6 +73,7 @@ def init_instances():
         DBSession.add(unlimited_limit)
         DBSession.add(commercial_limit)
         DBSession.add(academic_limit)
+        DBSession.add(free_limit)
         DBSession.add(admin_user)
         DBSession.add(admin_email)
         DBSession.add(admin_collection)

@@ -52,6 +52,7 @@ from samplesdb.validators import (
     ValidAccountType,
     ValidEmail,
     ValidPassword,
+    ValidEmailForAccountType,
     )
 from samplesdb.models import (
     DBSession,
@@ -90,7 +91,7 @@ class AccountEditSchema(AccountSchema):
 
 class AccountCreateSchema(AccountSchema):
     """Schema for account creation form"""
-    limits_id = ValidAccountType()
+    limits = ValidAccountType()
     password = ValidPassword()
     password_confirm = validators.UnicodeString()
     email = ValidEmail(not_exist=True, resolve_domain=True)
@@ -98,6 +99,7 @@ class AccountCreateSchema(AccountSchema):
     chained_validators = [
         validators.FieldsMatch('email', 'email_confirm'),
         validators.FieldsMatch('password', 'password_confirm'),
+        ValidEmailForAccountType('limits', 'email'),
         ]
 
 

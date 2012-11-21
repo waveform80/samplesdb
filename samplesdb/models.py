@@ -28,6 +28,7 @@ from __future__ import (
 
 import os
 import io
+import re
 import shutil
 import mimetypes
 import tempfile
@@ -582,6 +583,8 @@ class UserLimit(Base):
     storage_limit = Column(
         BigInteger, CheckConstraint('storage_limit >= 0'),
         default=1000000 * 100, nullable=False)
+    _email_pattern = Column(
+        'email_pattern', Unicode(100), default='.*', nullable=False)
     users = relationship(User, backref='limits')
 
     def __repr__(self):
@@ -597,6 +600,17 @@ class UserLimit(Base):
     def by_id(cls, id):
         """return the user limit with id ``id``"""
         return DBSession.query(cls).filter_by(id=id).first()
+
+    def _get_email_pattern(self):
+        return re.compile(self._email_pattern, re.IGNORECASE)
+
+    def _set_email_pattern(self, value):
+        if hasattr(value, 'pattern'):
+            self._email_pattern = value.pattern
+        else:
+            self._email_pattern = value
+
+    email_pattern = synonym('_email_pattern', descriptor=property(_get_email_pattern, _set_email_pattern))
 
 
 class Group(Base):
@@ -1010,7 +1024,7 @@ class SampleCode(Base):
     sample = relationship(Sample, backref=backref(
         'sample_codes',
         collection_class=attribute_mapped_collection('name'),
-        cascade='all, delete-orphan'))
+        cascade='all, delete-orphan', passive_deletes=True))
     name = Column(Unicode(20), primary_key=True)
     value = Column(Unicode(200), default='', nullable=False)
 
@@ -1139,10 +1153,14 @@ class UserCollection(Base):
     user = relationship(
         User, backref=backref(
             'user_collections',
+            cascade='all, delete-orphan',
+            passive_deletes=True,
             collection_class=attribute_mapped_collection('collection')))
     collection = relationship(
         Collection, backref=backref(
             'collection_users',
+            cascade='all, delete-orphan',
+            passive_deletes=True,
             collection_class=attribute_mapped_collection('user')))
     role = relationship(Role)
 

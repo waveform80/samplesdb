@@ -47,11 +47,12 @@
         </div>
 
         <div class="row">
-          ${form.label('limits_id', 'Account Type')}
+          ${form.label('limits', 'Account Type')}
           <div class="ten columns">
-            ${form.radio('limits_id', 'academic', label='Academic', checked='checked')}
-            ${form.radio('limits_id', 'commercial', label='Commercial (not currently available)', disabled='disabled')}
-            ${form.errorlist('limits_id')}
+            ${form.radio('limits', 'free', label='Free', checked='checked')}
+            ${form.radio('limits', 'academic', label='Academic (for educational institutions only)')}
+            ${form.radio('limits', 'commercial', label='Commercial (not currently available)', disabled='disabled')}
+            ${form.errorlist('limits')}
           </div>
         </div>
 

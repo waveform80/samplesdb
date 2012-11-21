@@ -32,11 +32,13 @@ from formencode import (
     validators,
     )
 from formencode.compound import CompoundValidator
+from formencode.validators import FormValidator
 from formencode.foreach import ForEach
 
 from samplesdb.helpers import MARKUP_LANGUAGES
 from samplesdb.models import (
     EmailAddress,
+    UserLimit,
     User,
     Collection,
     Role,
@@ -143,11 +145,6 @@ class ValidPassword(validators.UnicodeString):
 
 
 
-class ValidAccountType(validators.OneOf):
-    def __init__(self):
-        super(ValidAccountType, self).__init__(['academic', 'commercial'])
-
-
 class ValidEmail(validators.Email):
     def __init__(self, not_exist=False, not_empty=True, resolve_domain=True):
         super(ValidEmail, self).__init__(
@@ -214,6 +211,42 @@ class ValidTimezone(validators.OneOf):
 class ValidMarkupLanguage(validators.OneOf):
     def __init__(self):
         super(ValidMarkupLanguage, self).__init__(MARKUP_LANGUAGES.keys())
+
+
+class ValidAccountType(FancyValidator):
+    def __init__(self):
+        super(ValidAccountType, self).__init__(not_empty=True, strip=True)
+
+    def validate_python(self, value, state):
+        if not isinstance(value, UserLimit):
+            raise Invalid('value is not a UserLimit', value, state)
+
+    def _from_python(self, value, state):
+        return value.id
+
+    def _to_python(self, value, state):
+        result = UserLimit.by_id(value)
+        if result is None:
+            raise Invalid('Invalid account type', value, state)
+        return result
+
+
+class ValidEmailForAccountType(FormValidator):
+    error_msg = 'E-mail address is not valid for the selected account type'
+    # Name of the field containing the account-type id
+    account_type_field = None
+    # Name of the field containing the e-mail address
+    email_address_field = None
+
+    __unpackargs__ = ('account_type_field', 'email_address_field')
+
+    def validate_python(self, value_dict, state):
+        account_type = value_dict.get(self.account_type_field)
+        email_address = value_dict.get(self.email_address_field)
+        if not account_type.email_pattern.match(email_address):
+            raise Invalid(
+                self.error_msg, value_dict, state, error_dict={
+                    self.email_address_field: self.error_msg})
 
 
 class ValidRole(FancyValidator):
