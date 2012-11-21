@@ -40,8 +40,6 @@ except LookupError:
 require_python(0x020600f0)
 
 HERE = os.path.abspath(os.path.dirname(__file__))
-README = open(os.path.join(HERE, 'README.txt')).read()
-CHANGES = open(os.path.join(HERE, 'CHANGES.txt')).read()
 
 CLASSIFIERS = [
     'Development Status :: 3 - Alpha',
@@ -102,7 +100,7 @@ def main():
         name                 = 'samplesdb',
         version              = get_version(os.path.join(HERE, 'samplesdb/__init__.py')),
         description          = 'samplesdb',
-        long_description     = description(os.path.join(HERE, 'README.txt')),
+        long_description     = description(os.path.join(HERE, 'README.rst')),
         classifiers          = CLASSIFIERS,
         author               = 'Dave Hughes',
         author_email         = 'dave@waveform.org.uk',
