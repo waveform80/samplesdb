@@ -21,21 +21,28 @@
         <fieldset>
           <legend>Authorizations</legend>
 
+          <div class="row">
+            <label class="one columns">E-mail</label>
+            <span class="six columns">${request.user.emails[0].email}</span>
+            <label class="one columns">Role</label>
+            <span class="two columns end">Owner</span>
+          </div>
+
+          <hr />
+
           <div tal:repeat="item form.data_raw.get('users', [])" class="row form-template">
-            <div tal:omit-tag="True" tal:define="is_me item['user'] in (e.email for e in request.user.verified_emails)">
+            <div tal:omit-tag="True" tal:condition="item['user'] not in (e.email for e in request.user.verified_emails)">
               ${form.label('users-%d.user' % repeat.item.index, 'E-mail', cols=1)}
               ${form.email(
-                  'users-%d.user' % repeat.item.index,
-                  value=item['user'], disabled=is_me,
-                  placeholder='someone@somewhere.edu', cols=6)}
-              ${form.label('users-%d.role' % repeat.item.index, 'Role', cols=1)}
+                'users-%d.user' % repeat.item.index, value=item['user'],
+                placeholder='someone@somewhere.edu', cols=6)}
+              ${form.label(
+                'users-%d.role' % repeat.item.index, 'Role', cols=1)}
               ${form.select(
-                  'users-%d.role' % repeat.item.index,
-                  selected_value=item['role'], disabled=is_me,
-                  options=view.roles, cols=2)}
+                'users-%d.role' % repeat.item.index,
+                selected_value=item['role'], options=view.roles, cols=2)}
               <div class="two columns">
-                <span tal:condition="is_me" class="secondary disabled small button right">Remove</span>
-                <a href="#" tal:condition="not is_me" class="secondary small button right remove-button">Remove</a>
+                <a href="#" class="secondary small button right remove-button">Remove</a>
               </div>
             </div>
           </div>
