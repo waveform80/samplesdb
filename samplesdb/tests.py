@@ -418,6 +418,7 @@ class CollectionsViewUnitTests(UnitFixture):
     
 class SiteFunctionalTest(FunctionalFixture):
     def test(self):
+        from webtest import Text
         from pyramid_mailer.message import Message
         import DNS
         # Visit the home page and FAQ
@@ -450,20 +451,20 @@ class SiteFunctionalTest(FunctionalFixture):
         # Go to the sign-up page and create a new account
         res = res.click(href='/signup')
         res.form['salutation'] = 'Mr.'
-        res.form['given_name'] = 'Foo'
-        res.form['surname'] = 'Bar'
-        res.form['organization'] = 'Manchester University'
+        res.form['given_name'] = 'Dave'
+        res.form['surname'] = 'Foo'
+        res.form['organization'] = 'University of Quux'
         res.form['limits_id'] = 'academic'
-        res.form['email'] = 'bar@manchester.ac.uk'
-        res.form['email_confirm'] = 'bar@manchester.ac.uk'
-        res.form['password'] = 'baz'
+        res.form['email'] = 'foo@quux.edu'
+        res.form['email_confirm'] = 'foo@quux.edu'
+        res.form['password'] = 'quux'
         # ... with an incorrect password confirmation
-        res.form['password_confirm'] = 'quux'
+        res.form['password_confirm'] = 'foo'
         res = res.form.submit()
         assert DNS.DnsRequest.called # XXX check manchester.ac.uk in call args
         assert 'Fields do not match' in res
         # ... correct the password and make sure an e-mail verification is sent
-        res.form['password_confirm'] = 'baz'
+        res.form['password_confirm'] = 'quux'
         res = res.form.submit()
         res = res.follow()
         assert 'Verification Sent' in res
@@ -484,13 +485,13 @@ class SiteFunctionalTest(FunctionalFixture):
         res = self.test.get(url)
         verifications = DBSession.query(EmailVerification).all()
         assert len(verifications) == 0
-        address = EmailAddress.by_email('bar@manchester.ac.uk')
+        address = EmailAddress.by_email('foo@quux.edu')
         assert address.verified
         # Login with the newly verified account from the confirmation page
         res = res.click(href='/login', index=1)
         assert 'Login' in res
-        res.form['username'] = 'bar@manchester.ac.uk'
-        res.form['password'] = 'baz'
+        res.form['username'] = 'foo@quux.edu'
+        res.form['password'] = 'quux'
         res = res.form.submit()
         res = res.follow()
         assert 'My Collections' in res
@@ -498,16 +499,16 @@ class SiteFunctionalTest(FunctionalFixture):
         assert 'My Account' in res
         # Attempt to change surname
         res = res.click(href='/account/edit')
-        res.form['surname'] = 'Baz'
+        res.form['given_name'] = 'Adrian'
         res = res.form.submit()
         res = res.follow()
-        assert DBSession.query(User).filter(User.surname=='Baz').first()
+        assert User.by_email('foo@quux.edu').given_name == 'Adrian'
         # Ensure the edit didn't change our password
         res = res.click(href='/logout')
         res = res.follow()
         assert 'Home' in res
-        res.form['username'] = 'bar@manchester.ac.uk'
-        res.form['password'] = 'baz'
+        res.form['username'] = 'foo@quux.edu'
+        res.form['password'] = 'quux'
         res = res.form.submit()
         res = res.follow()
         assert 'My Collections' in res
@@ -516,25 +517,104 @@ class SiteFunctionalTest(FunctionalFixture):
         # Attempt to change password
         res = res.click(href='/account/edit')
         assert 'Edit Account' in res
-        res.form['password_new'] = 'quux'
-        res.form['password_new_confirm'] = 'quux'
+        res.form['password_new'] = 'foo'
+        res.form['password_new_confirm'] = 'foo'
         res = res.form.submit()
         res = res.follow()
         # Check the change worked
         res = res.click(href='/logout')
         res = res.follow()
         assert 'Home' in res
-        res.form['username'] = 'bar@manchester.ac.uk'
-        res.form['password'] = 'quux'
+        res.form['username'] = 'foo@quux.edu'
+        res.form['password'] = 'foo'
         res = res.form.submit()
         res = res.follow()
         assert 'Login' not in res
-        res = res.click(href='/collections/new')
-        res.form['name'] = 'Flibbles'
+        # Logout and create two new uesrs: Mr. Bar and Mr. Baz
+        res = res.click(href='/logout')
+        res = res.follow()
+        res = self.test.get('/signup')
+        res.form['salutation'] = 'Mr.'
+        res.form['given_name'] = 'Dave'
+        res.form['surname'] = 'Bar'
+        res.form['organization'] = 'University of Quux'
+        res.form['limits_id'] = 'academic'
+        res.form['email'] = 'bar@quux.edu'
+        res.form['email_confirm'] = 'bar@quux.edu'
+        res.form['password'] = 'bar'
+        res.form['password_confirm'] = 'bar'
         res = res.form.submit()
         res = res.follow()
-        collection = DBSession.query(Collection).filter(Collection.name=='Flibbles').first()
+        url = None
+        for line in self.mailer.send.call_args[0][0].body.splitlines():
+            if line.startswith('http:'):
+                url = line
+                break
+        res = self.test.get(url)
+        res = self.test.get('/signup')
+        res.form['salutation'] = 'Mr.'
+        res.form['given_name'] = 'Dave'
+        res.form['surname'] = 'Baz'
+        res.form['organization'] = 'University of Quux'
+        res.form['limits_id'] = 'academic'
+        res.form['email'] = 'baz@quux.edu'
+        res.form['email_confirm'] = 'baz@quux.edu'
+        res.form['password'] = 'baz'
+        res.form['password_confirm'] = 'baz'
+        res = res.form.submit()
+        res = res.follow()
+        url = None
+        for line in self.mailer.send.call_args[0][0].body.splitlines():
+            if line.startswith('http:'):
+                url = line
+                break
+        res = self.test.get(url)
+        res = res.click(href='/login', index=1)
+        # Login as Mr. Foo again
+        res.form['username'] = 'foo@quux.edu'
+        res.form['password'] = 'foo'
+        res = res.form.submit()
+        res = res.follow()
+        # Create a new collection
+        res = res.click(href='/collections/new')
+        res.form['name'] = 'Foo'
+        res = res.form.submit()
+        res = res.follow()
+        collection = DBSession.query(Collection).filter(Collection.name=='Foo').first()
         assert collection is not None
-        assert 'Flibbles' in res
-        res = res.click(href='/collections/%d/new' % collection.id)
-        assert 'New Sample' in res
+        assert 'Foo Collection' in res
+        # Go back to My Collections and create a new collection, this time
+        # shared with Mr. Bar
+        res = res.click('My Collections')
+        res = res.click('New Collection')
+        res.form['name'] = 'FooBar'
+        res.form.fields.setdefault('users-0.user', []).append(
+            Text(res.form, tag='input', name='users-0.user', pos=0))
+        res.form.fields.setdefault('users-0.role', []).append(
+            Text(res.form, tag='input', name='users-0.role', pos=0))
+        res.form['users-0.user'] = 'bar@quux.edu'
+        res.form['users-0.role'] = 'editor'
+        res = res.form.submit()
+        res = res.follow()
+        collection = DBSession.query(Collection).filter(Collection.name=='FooBar').first()
+        assert collection is not None
+        assert collection.users[User.by_email('foo@quux.edu')] == Role.by_id('owner')
+        assert collection.users[User.by_email('bar@quux.edu')] == Role.by_id('editor')
+        assert 'FooBar Collection' in res
+        # Edit the collection, rename it, and add in Mr. Baz as a viewer
+        res = res.click('Edit Collection')
+        res.form['name'] = 'FooBarBaz'
+        res.form.fields.setdefault('users-2.user', []).append(
+            Text(res.form, tag='input', name='users-2.user', pos=0))
+        res.form.fields.setdefault('users-2.role', []).append(
+            Text(res.form, tag='input', name='users-2.role', pos=0))
+        res.form['users-2.user'] = 'baz@quux.edu'
+        res.form['users-2.role'] = 'viewer'
+        res = res.form.submit()
+        res = res.follow()
+        collection = DBSession.query(Collection).filter(Collection.name=='FooBarBaz').first()
+        assert collection is not None
+        assert collection.users[User.by_email('foo@quux.edu')] == Role.by_id('owner')
+        assert collection.users[User.by_email('bar@quux.edu')] == Role.by_id('editor')
+        assert collection.users[User.by_email('baz@quux.edu')] == Role.by_id('viewer')
+        assert 'FooBarBaz Collection' in res
