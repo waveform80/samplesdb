@@ -132,6 +132,9 @@ class CollectionsView(BaseView):
             variable_decode=True)
         if form.validate():
             form.bind(collection)
+            # Ensure the edit cannot change ownership by current user
+            collection.users[self.request.user] = DBSession.query(Role).\
+                filter(Role.id==OWNER_ROLE).one()
             return HTTPFound(location=form.came_from)
         return dict(form=FormRenderer(form))
 
