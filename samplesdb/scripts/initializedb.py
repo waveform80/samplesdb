@@ -37,17 +37,17 @@ def init_instances():
             id=ADMINS_GROUP, description='Group of administrators')
         unlimited_limit = UserLimit(
             id='unlimited', collections_limit=1000000, samples_limit=1000000,
-            templates_limit=1000000, storage_limit=8000 * 1000000)
+            templates_limit=1000000, storage_limit=50000 * 1000000)
         commercial_limit = UserLimit(
-            id='commercial', collections_limit=10, samples_limit=50000,
-            templates_limit=10, storage_limit=500 * 1000000)
+            id='commercial', collections_limit=1000, samples_limit=10000,
+            templates_limit=10, storage_limit=10000 * 1000000)
         academic_limit = UserLimit(
-            id='academic', collections_limit=10, samples_limit=10000,
-            templates_limit=10, storage_limit=50 * 1000000,
+            id='academic', collections_limit=10, samples_limit=250,
+            templates_limit=5, storage_limit=100 * 1000000,
             email_pattern=r'.*\.(edu|ac\.[a-z][a-z])$')
         free_limit = UserLimit(
-            id='free', collections_limit=5, samples_limit=50,
-            templates_limit=10, storage_limit=1 * 1000000)
+            id='free', collections_limit=3, samples_limit=50,
+            templates_limit=2, storage_limit=1 * 1000000)
         admin_user = User(
             salutation='', given_name='Administrator', surname='',
             limits_id='unlimited')
