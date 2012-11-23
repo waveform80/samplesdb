@@ -45,6 +45,8 @@ dl dd { margin-bottom: 0.5em; }
 
 fieldset { padding: 12px; }
 
+select[multiple="multiple"] { height: auto; }
+
 pre.notes {
   font-family: "Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;
   font-weight: normal;
