@@ -8,21 +8,39 @@
     <div metal:use-macro="view.top_bar"></div>
 
     <div class="row">
+
       <div class="ten columns">
         <h1>Sample #${context.sample.id}</h1>
-        <a href="${request.route_url('collections_view', collection_id=context.sample.collection.id)}">${context.sample.collection.name} Collection</a>
-        | <a href="${request.route_url('samples_edit', sample_id=context.sample.id)}">Edit Details</a>
-        <span tal:omit-tag="True" tal:condition="not context.sample.destroyed">| <a href="#">Mark Destroyed</a></span>
-        <span tal:omit-tag="True" tal:condition="not context.sample.destroyed">| <a href="#">Create Aliquots</a></span>
+        <p metal:use-macro="view.collection_license"></p>
+
+        <p>
+          <a href="${request.route_url('collections_view',
+            collection_id=context.sample.collection.id)}">${context.sample.collection.name}
+            Collection</a>
+          <span tal:omit-tag="True"
+            tal:condition="has_permission('edit_collection', context, request)">
+            | <a href="${request.route_url('samples_edit', sample_id=context.sample.id)}">Edit Details</a>
+          </span>
+          <span tal:omit-tag="True" tal:condition="not context.sample.destroyed">
+            | <a href="#">Mark Destroyed</a>
+          </span>
+          <span tal:omit-tag="True" tal:condition="not context.sample.destroyed">
+            | <a href="#">Create Aliquots</a>
+          </span>
+        </p>
       </div>
-      <div class="two columns th">
-        <img tal:condition="context.sample.default_attachment"
-          src="${request.route_url('samples_attachment_thumb',
-            sample_id=context.sample.id,
-            attachment=context.sample.default_attachment)}" />
-        <img tal:condition="not context.sample.default_attachment"
-        src="${request.static_url('samplesdb:static/unknown_mime_type_optimized.svg')}" />
+
+      <div class="two columns">
+        <div class="th">
+          <img tal:condition="context.sample.default_attachment"
+            src="${request.route_url('samples_attachment_thumb',
+              sample_id=context.sample.id,
+              attachment=context.sample.default_attachment)}" />
+          <img tal:condition="not context.sample.default_attachment"
+          src="${request.static_url('samplesdb:static/unknown_mime_type_optimized.svg')}" />
+        </div>
       </div>
+
     </div>
 
     <div class="row">

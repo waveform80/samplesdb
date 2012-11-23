@@ -25,6 +25,7 @@ from __future__ import (
     )
 
 from pyramid.view import view_config
+from pyramid.security import has_permission
 from pyramid.httpexceptions import HTTPFound
 
 from samplesdb.views import BaseView
@@ -143,7 +144,7 @@ class SamplesView(BaseView):
         return dict(
             log_form=FormRenderer(Form(self.request, schema=SampleLogEntryCreateSchema)),
             attachment_form=FormRenderer(Form(self.request, multipart=True)),
-            )
+            has_permission=has_permission)
 
     @view_config(
         route_name='samples_add_attachment',

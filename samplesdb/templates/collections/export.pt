@@ -1,0 +1,55 @@
+<!doctype html>
+<!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
+<!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
+<!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!--> <div metal:use-macro="view.layout">
+  <div tal:omit-tag="True" metal:fill-slot="title">Collection ${context.collection.name}</div>
+  <div tal:omit-tag="True" metal:fill-slot="content">
+    <div metal:use-macro="view.top_bar"></div>
+
+    <div class="row"><h1 class="twelve columns">Export ${context.collection.name} Collection</h1></div>
+
+    <div class="row">
+
+      <div class="eight columns">
+        <p metal:use-macro="view.collection_license"></p>
+
+        <p>
+          <a href="${request.route_url('collections_view',
+            collection_id=context.collection.id)}">${context.collection.name}
+            Collection</a>
+        </p>
+      </div>
+
+      <div class="four columns">
+        <dl class="sub-nav">
+          <dt>Filter</dt>
+          <dd
+          class="${'active' if filter == 'all' else None}"><a 
+            href="${request.current_route_url(_query={'filter': 'all', 'format': format})}">All</a></dd>
+          <dd
+          class="${'active' if filter == 'existing' else None}"><a
+            href="${request.current_route_url(_query={'filter': 'existing', 'format': format})}">Existing</a></dd>
+          <dd
+          class="${'active' if filter == 'destroyed' else None}"><a
+            href="${request.current_route_url(_query={'filter': 'destroyed', 'format': format})}">Destroyed</a></dd>
+        </dl>
+        <dl class="sub-nav">
+          <dt>Format</dt>
+          <dd class="${'active' if format == 'csv' else None}"><a
+            href="${request.current_route_url(_query={'filter': filter, 'format': 'csv'})}">CSV</a></dd>
+          <dd class="${'active' if format == 'excel' else None}"><a
+            href="${request.current_route_url(_query={'filter': filter, 'format': 'excel'})}">Excel</a></dd>
+        </dl>
+      </div>
+
+    </div>
+
+    <div class="row">
+      <div class="twelve columns">
+      </div>
+    </div>
+
+  </div>
+</div>
+

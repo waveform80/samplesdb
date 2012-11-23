@@ -136,13 +136,7 @@ class CollectionsView(BaseView):
             self.request,
             schema=CollectionCreateSchema,
             variable_decode=True,
-            defaults=dict(
-                owner=' '.join((
-                    self.request.user.salutation,
-                    self.request.user.given_name,
-                    self.request.user.surname))
-                )
-            )
+            defaults=dict(owner=self.request.user.full_name))
         if form.validate():
             new_collection = form.bind(Collection())
             # Hard-code ownership to currently authenticated user
@@ -173,6 +167,17 @@ class CollectionsView(BaseView):
                 filter(Role.id==OWNER_ROLE).one()
             return HTTPFound(location=form.came_from)
         return dict(form=FormRenderer(form))
+
+    @view_config(
+        route_name='collections_export',
+        renderer='../templates/collections/export.pt',
+        permission=VIEW_COLLECTION)
+    def export(self):
+        filter = self.request.params.get('filter', 'existing')
+        format = self.request.params.get('format', 'csv')
+        return dict(
+            filter=filter,
+            format=format)
 
     @view_config(
         route_name='collections_view',

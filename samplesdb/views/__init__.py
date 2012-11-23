@@ -66,6 +66,11 @@ class BaseView(object):
         return renderer.implementation().macros['open_licenses']
 
     @reify
+    def collection_license(self):
+        renderer = get_renderer('../templates/collection_license.pt')
+        return renderer.implementation().macros['collection_license']
+
+    @reify
     def helpers(self):
         return helpers
 
