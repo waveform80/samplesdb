@@ -537,6 +537,14 @@ class User(Base):
         return result
 
     @property
+    def full_name(self):
+        return ' '.join((
+            self.salutation,
+            self.given_name,
+            self.surname,
+            ))
+
+    @property
     def verified_emails(self):
         # XXX Do this with a query
         return [
