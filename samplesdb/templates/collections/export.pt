@@ -46,8 +46,32 @@
     </div>
 
     <div class="row">
-      <div class="twelve columns">
+      <div class="five columns"><h5 class="subheader">Available Fields</h5></div>
+      <div class="two columns">&nbsp;</div>
+      <div class="five columns"><h5 class="subheader">Selected Fields</h5></div>
+    </div>
+
+    <div class="row">
+      <div class="five columns">
+        <form method="POST" action="#">
+          <select name="available" id="available" multiple="multiple" size="10">
+            <option tal:repeat="field fields" value="field[0]">${field[1]}</option>
+          </select>
+        </form>
       </div>
+
+      <div class="two columns">
+        <p><a class="small secondary button expand" href="#">Add &rarr;</a></p>
+        <p><a class="small secondary button expand" href="#">Remove &larr;</a></p>
+      </div>
+
+      <div class="five columns">
+        <form method="POST" action="#">
+          <select name="selected" id="selected" multiple="multiple" size="10">
+          </select>
+        </form>
+      </div>
+
     </div>
 
   </div>

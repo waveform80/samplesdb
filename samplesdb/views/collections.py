@@ -55,6 +55,7 @@ from samplesdb.models import (
     DBSession,
     EmailAddress,
     Collection,
+    SampleCode,
     Sample,
     Role,
     )
@@ -175,9 +176,24 @@ class CollectionsView(BaseView):
     def export(self):
         filter = self.request.params.get('filter', 'existing')
         format = self.request.params.get('format', 'csv')
+        fields = [
+            ('id'          , 'Identifier')  , 
+            ('description' , 'Description') , 
+            ('created'     , 'Created')     , 
+            ('destroyed'   , 'Destroyed')   , 
+            ('location'    , 'Location')    , 
+            ('parents'     , 'Parents')     , 
+            ('children'    , 'Children')    , 
+            ]
+        fields.extend(DBSession.query(SampleCode.name, SampleCode.name).\
+                join(Sample).\
+                join(Collection).\
+                filter(Collection.id==self.context.collection.id).\
+                distinct().all())
         return dict(
             filter=filter,
-            format=format)
+            format=format,
+            fields=fields)
 
     @view_config(
         route_name='collections_view',
