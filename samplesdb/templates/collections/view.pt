@@ -10,21 +10,46 @@
     <div class="row"><h1 class="twelve columns">${context.collection.name} Collection</h1></div>
 
     <div class="row">
-      <p class="eight columns">
-      <span
-        tal:omit-tag="True"
-        tal:condition="has_permission('edit_collection', context, request)">
-        <a href="${request.route_url('samples_create',
-          collection_id=context.collection.id)}">New Sample</a> |
-      </span>
-      <span
-        tal:omit-tag="True"
-        tal:condition="has_permission('manage_collection', context, request)">
-        <a href="${request.route_url('collections_edit',
-          collection_id=context.collection.id)}">Edit Collection</a> |
-      </span>
-      <a href="#">Export List</a> | <a href="#">Print Labels</a>
-      </p>
+      <div class="eight columns">
+        <p><strong>Licensed under:</strong>
+        <a href="${context.collection.license.url}"
+          tal:omit-tag="not context.collection.license.url">${context.collection.license.title}</a>
+        <span
+          tal:omit-tag="True"
+          tal:condition="context.collection.license.is_open">
+          <br />
+          <a href="http://opendefinition.org/"><img alt="This material is Open
+            Data"
+            src="http://assets.okfn.org/images/ok_buttons/od_80x15_blue.png"
+            /></a>
+        </span>
+        </p>
+        <p>
+        <span
+          tal:omit-tag="True"
+          tal:condition="not has_permission('view_collection', context, request)">
+          <a href="${request.route_url('collections_index')}">Open Collections</a> |
+        </span>
+        <span
+          tal:omit-tag="True"
+          tal:condition="has_permission('edit_collection', context, request)">
+          <a href="${request.route_url('samples_create',
+            collection_id=context.collection.id)}">New Sample</a> |
+        </span>
+        <span
+          tal:omit-tag="True"
+          tal:condition="has_permission('audit_collection', context, request)">
+          <a href="#">Print Labels</a> |
+        </span>
+        <span
+          tal:omit-tag="True"
+          tal:condition="has_permission('manage_collection', context, request)">
+          <a href="${request.route_url('collections_edit',
+            collection_id=context.collection.id)}">Edit Collection</a> |
+        </span>
+        <a href="#">Export List</a>
+        </p>
+      </div>
       <div class="four columns">
         <dl class="sub-nav">
           <dt>Filter</dt>

@@ -53,7 +53,7 @@ def init_instances():
             limits_id='unlimited')
         admin_email = EmailAddress(
             email='admin@example.com', verified=datetime.utcnow())
-        admin_collection = Collection(name='Default')
+        admin_collection = Collection(name='Default', owner='Administrator')
         owner_role = Role(
             id=OWNER_ROLE,
             description='Owner and administrator of the collection')

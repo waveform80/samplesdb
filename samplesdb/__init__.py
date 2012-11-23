@@ -40,11 +40,13 @@ from pyramid_mailer import mailer_factory_from_settings
 from sqlalchemy import engine_from_config
 
 from samplesdb.models import DBSession
+from samplesdb.licenses import licenses_factory_from_settings
 from samplesdb.security import (
     get_user,
     group_finder,
     RootContextFactory,
     CollectionContextFactory,
+    OpenCollectionContextFactory,
     SampleContextFactory,
     )
 
@@ -73,6 +75,7 @@ ROUTES = {
     'collections_view':            r'/collections/{collection_id:\d+}',
     'collections_edit':            r'/collections/{collection_id:\d+}/edit',
     'collections_destroy':         r'/collections/{collection_id:\d+}/destroy',
+    'open_collections_view':       r'/open_collections/{open_collection_id:\d+}',
     'samples_create':              r'/collections/{collection_id:\d+}/new',
     'samples_view':                r'/samples/{sample_id:\d+}',
     'samples_edit':                r'/samples/{sample_id:\d+}/edit',
@@ -106,6 +109,7 @@ def main(global_config, **settings):
     mimetypes.init()
     session_factory = session_factory_from_settings(settings)
     mailer_factory = mailer_factory_from_settings(settings)
+    licenses_factory = licenses_factory_from_settings(settings)
     engine = engine_from_config(settings, 'sqlalchemy.')
     authn_policy = AuthTktAuthenticationPolicy('secret', callback=group_finder)
     authz_policy = ACLAuthorizationPolicy()
@@ -115,13 +119,16 @@ def main(global_config, **settings):
         settings=settings, root_factory=RootContextFactory)
     config.set_authentication_policy(authn_policy)
     config.set_authorization_policy(authz_policy)
-    config.registry['mailer'] = mailer_factory
     config.set_session_factory(session_factory)
+    config.registry['mailer'] = mailer_factory
+    config.registry['licenses'] = licenses_factory
     config.set_request_property(get_user, b'user', reify=True)
     config.add_static_view('static', 'static', cache_max_age=3600)
     for name, url in ROUTES.items():
         if '{collection_id:' in url:
             factory = CollectionContextFactory
+        elif '{open_collection_id:' in url:
+            factory = OpenCollectionContextFactory
         elif '{sample_id:' in url:
             factory = SampleContextFactory
         else:

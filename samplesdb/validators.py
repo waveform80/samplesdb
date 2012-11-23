@@ -34,6 +34,7 @@ from formencode import (
 from formencode.compound import CompoundValidator
 from formencode.validators import FormValidator
 from formencode.foreach import ForEach
+from pyramid.threadlocal import get_current_registry
 
 from samplesdb.helpers import MARKUP_LANGUAGES
 from samplesdb.models import (
@@ -162,10 +163,31 @@ class ValidEmail(validators.Email):
         return result
 
 
+class ValidCollectionOwner(validators.UnicodeString):
+    def __init__(self):
+        super(ValidCollectionOwner, self).__init__(
+            not_empty=True, max=Collection.__table__.c.owner.type.length)
+
+
 class ValidCollectionName(validators.UnicodeString):
     def __init__(self):
         super(ValidCollectionName, self).__init__(
             not_empty=True, max=Collection.__table__.c.name.type.length)
+
+
+class ValidCollectionLicense(validators.OneOf):
+    def __init__(self):
+        super(ValidCollectionLicense, self).__init__(list=[], hideList=True)
+
+    def validate_python(self, value, state):
+        self.list = get_current_registry()['licenses']().keys()
+        super(ValidCollectionLicense, self).validate_python(value.id, state)
+
+    def _to_python(self, value, state):
+        return get_current_registry()['licenses']()[value]
+
+    def _from_python(self, value, state):
+        return value.id
 
 
 class ValidSampleDescription(validators.UnicodeString):

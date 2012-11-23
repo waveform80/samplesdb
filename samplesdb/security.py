@@ -17,14 +17,14 @@
 # You should have received a copy of the GNU General Public License along with
 # samplesdb.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import (
+    unicode_literals,
+    print_function,
+    absolute_import,
+    division,
+    )
 
 import transaction
-from samplesdb.models import (
-    DBSession,
-    User,
-    Collection,
-    Sample,
-    )
 from pyramid.security import (
     Allow,
     Everyone,
@@ -32,6 +32,12 @@ from pyramid.security import (
     unauthenticated_userid,
     )
 
+from samplesdb.models import (
+    DBSession,
+    User,
+    Collection,
+    Sample,
+    )
 
 # Permissions
 CREATE_USER        = 'create_user'
@@ -53,7 +59,8 @@ AUDIT_COLLECTION   = 'audit_collection'
 VIEW_COLLECTION    = 'view_collection'
 
 # Permission groups
-AUTHENTICATED_PERMISSIONS = (VIEW_COLLECTIONS, MANAGE_ACCOUNT, CREATE_COLLECTION)
+ANONYMOUS_PERMISSIONS     = (VIEW_COLLECTIONS,)
+AUTHENTICATED_PERMISSIONS = ANONYMOUS_PERMISSIONS + (MANAGE_ACCOUNT, CREATE_COLLECTION)
 VIEWER_PERMISSIONS        = AUTHENTICATED_PERMISSIONS + (VIEW_COLLECTION,)
 AUDITOR_PERMISSIONS       = VIEWER_PERMISSIONS + (AUDIT_COLLECTION,)
 EDITOR_PERMISSIONS        = AUDITOR_PERMISSIONS + (EDIT_COLLECTION,)
@@ -107,13 +114,17 @@ def group_finder(email_address, request):
     if user is not None:
         # Each group the user belongs to is added as a principal
         principals.extend(GROUP_PREFIX + group for group in user.groups)
-        if (
-                isinstance(request.context, CollectionContextFactory) or
-                isinstance(request.context, SampleContextFactory)):
-            # Each role the user holds in the current context's collection
-            # is added as a principal
-            principals.append(
-                ROLE_PREFIX + request.context.collection.users[user].id)
+    if (
+            isinstance(request.context, CollectionContextFactory) or
+            isinstance(request.context, SampleContextFactory)):
+        if request.context.collection.license.is_open:
+            # If the collection is open-access, then the viewer principal is
+            # added regardless of user authentication
+            principals.append(VIEWER_PRINCIPAL)
+        if user is not None:
+            # The role the user holds in the current context's collection is
+            # added as a principal
+            principals.append(ROLE_PREFIX + request.context.collection.users[user].id)
     return principals
 
 def authenticate(email_address, password):
@@ -130,6 +141,7 @@ def authenticate(email_address, password):
 
 class RootContextFactory(object):
     __acl__ = [
+        (Allow , Everyone          , ANONYMOUS_PERMISSIONS)     ,
         (Allow , Authenticated     , AUTHENTICATED_PERMISSIONS) ,
         (Allow , VIEWER_PRINCIPAL  , VIEWER_PERMISSIONS)        ,
         (Allow , AUDITOR_PRINCIPAL , AUDITOR_PERMISSIONS)       ,
@@ -147,6 +159,15 @@ class CollectionContextFactory(RootContextFactory):
         super(CollectionContextFactory, self).__init__(request)
         self.collection = DBSession.query(Collection).\
             filter_by(id=request.matchdict['collection_id']).one()
+
+
+class OpenCollectionContextFactory(RootContextFactory):
+    def __init__(self, request):
+        super(OpenCollectionContextFactory, self).__init__(request)
+        self.collection = DBSession.query(Collection).\
+            filter_by(id=request.matchdict['open_collection_id']).one()
+        if not self.collection.license.is_open:
+            raise ValueError('collection license does not permit open access')
 
 
 class SampleContextFactory(RootContextFactory):

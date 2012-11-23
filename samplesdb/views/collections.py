@@ -41,6 +41,8 @@ from samplesdb.validators import (
     ValidRole,
     ValidUser,
     ValidCollectionName,
+    ValidCollectionOwner,
+    ValidCollectionLicense,
     )
 from samplesdb.security import (
     OWNER_ROLE,
@@ -65,6 +67,8 @@ class CollectionUserSchema(SubFormSchema):
 
 class CollectionSchema(FormSchema):
     name = ValidCollectionName()
+    owner = ValidCollectionOwner()
+    license = ValidCollectionLicense()
     users = ForEachDict(CollectionUserSchema(),
                 key_name='user', value_name='role')
 
@@ -91,6 +95,31 @@ class CollectionsView(BaseView):
             for role in DBSession.query(Role)
             ]
 
+    @reify
+    def licenses(self):
+        licenses = self.request.registry['licenses']().values()
+        licenses = (
+            (list(sorted((
+                (license.id, license.title)
+                for license in licenses
+                if license.is_open
+                ), key=lambda i: i[1])), 'Open Licenses'),
+            (list(sorted((
+                (license.id, license.title)
+                for license in licenses
+                if not license.is_open
+                ), key=lambda i: i[1])), 'Proprietary Licenses'),
+            )
+        return licenses
+
+    @reify
+    def open_collections(self):
+        return [
+            collection
+            for collection in DBSession.query(Collection).all()
+            if collection.license.is_open
+            ]
+
     @view_config(
         route_name='collections_index',
         renderer='../templates/collections/index.pt',
@@ -106,7 +135,14 @@ class CollectionsView(BaseView):
         form = Form(
             self.request,
             schema=CollectionCreateSchema,
-            variable_decode=True)
+            variable_decode=True,
+            defaults=dict(
+                owner=' '.join((
+                    self.request.user.salutation,
+                    self.request.user.given_name,
+                    self.request.user.surname))
+                )
+            )
         if form.validate():
             new_collection = form.bind(Collection())
             # Hard-code ownership to currently authenticated user
@@ -158,4 +194,24 @@ class CollectionsView(BaseView):
             display=display,
             samples=samples,
             has_permission=has_permission)
+
+    @view_config(
+        route_name='open_collections_view',
+        renderer='../templates/collections/view.pt')
+    def open_view(self):
+        filter = self.request.params.get('filter', 'existing')
+        display = self.request.params.get('display', 'grid')
+        # XXX Construct a query instead (better performance than retrieving
+        # everything and doing filtering in Python)
+        samples = [
+            sample
+            for sample in self.context.collection.all_samples
+            if filter == 'all'
+            or (filter == 'existing' and not sample.destroyed)
+            or (filter == 'destroyed' and sample.destroyed)]
+        return dict(
+            filter=filter,
+            display=display,
+            samples=samples,
+            has_permission=lambda permission, context, request: False)
 

@@ -1,0 +1,13 @@
+<div class="panel radius" metal:define-macro="open_licenses">
+  <h5><a href="http://opendefinition.org/"><img alt="This material is Open
+      Data" class="right"
+      src="http://assets.okfn.org/images/ok_buttons/od_80x15_blue.png"
+      /></a>Open Licensing</h5>
+  <p>If you select an <a href="http://opendefinition.org/">open license</a>,
+  your collection and all samples within it (and all attachments for those
+  samples) will be accessible to anyone visiting this site. Please ensure that
+  the copyright owner (which may be your institution or company) is willing to
+  permit public access to the collection.  Once a collection is published in
+  this manner it is next to impossible to "unpublish" it due to caching, e.g.
+  by search engines.</p>
+</div>

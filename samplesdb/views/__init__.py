@@ -61,6 +61,11 @@ class BaseView(object):
         return renderer.implementation().macros['flashes']
 
     @reify
+    def open_licenses_panel(self):
+        renderer = get_renderer('../templates/open_licenses.pt')
+        return renderer.implementation().macros['open_licenses']
+
+    @reify
     def helpers(self):
         return helpers
 

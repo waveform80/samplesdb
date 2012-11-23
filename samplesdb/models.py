@@ -73,6 +73,7 @@ from pyramid.threadlocal import get_current_registry
 
 from samplesdb.image import can_resize, make_thumbnail
 from samplesdb.helpers import utcnow
+from samplesdb.licenses import License
 
 
 DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
@@ -1050,6 +1051,9 @@ class Collection(Base):
     users = association_proxy(
         'collection_users', 'role',
         creator=lambda k, v: UserCollection(user=k, role=v))
+    owner = Column(Unicode(200), nullable=False)
+    _license = Column(
+        'license', Unicode(30), default='notspecified', nullable=False)
     all_samples = relationship(Sample, backref='collection')
 
     def __repr__(self):
@@ -1081,6 +1085,17 @@ class Collection(Base):
     def by_id(cls, id):
         """return the collection with id ``id``"""
         return DBSession.query(cls).filter_by(id=id).first()
+
+    def _get_license(self):
+        return get_current_registry()['licenses']()[self._license]
+
+    def _set_license(self, value):
+        if isinstance(value, License):
+            self._license = value.id
+        else:
+            self._license = value
+
+    license = synonym('_license', descriptor=property(_get_license, _set_license))
 
     @property
     def existing_samples(self):

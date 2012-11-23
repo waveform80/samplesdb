@@ -14,8 +14,27 @@
         ${form.begin()}
 
         <div class="row">
-          ${form.label('name', 'Name', cols=1)}
-          ${form.text('name', placeholder='Collection Name', cols=11)}
+          ${form.label('name', 'Name')}
+          ${form.text(
+            'name', placeholder='Collection Name', autofocus='autofocus')}
+        </div>
+
+        <div class="row">
+          ${form.label('owner', 'Copyright Owner')}
+          ${form.text('owner', placeholder='Copyright Owner')}
+        </div>
+
+        <div class="row">
+          ${form.label('license', 'License')}
+          ${form.select(
+            'license', selected_value='notspecified', options=view.licenses,
+            inner_cols=9)}
+        </div>
+
+        <div class="row">
+          <div class="twelve columns">
+            <div metal:use-macro="view.open_licenses_panel"></div>
+          </div>
         </div>
 
         <fieldset>
@@ -44,8 +63,8 @@
         </fieldset>
 
         <div class="row">
-          ${form.label('submit', '', cols=1)}
-          ${form.submit('submit', class_='small', cols=11)}
+          ${form.label('submit', '')}
+          ${form.submit('submit', class_='small')}
         </div>
 
         ${form.end()}
