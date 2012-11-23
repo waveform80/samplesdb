@@ -25,11 +25,11 @@
 
   <div class="row">
     <div id="footer" class="twelve columns">
-      Copyright &copy; <a href="mailto:dave@waveform.org.uk">Dave Hughes</a>
-      2012. All rights reserved. <a
-        href="https://github.com/waveform80/samplesdb">Source code</a> for this
-      application is available from GitHub, licensed under the <a
-        href="http://www.gnu.org/licenses/gpl-3.0.html">GNU GPL v3</a>.
+      Site design and source code, copyright &copy; <a
+        href="mailto:dave@waveform.org.uk">Dave Hughes</a> 2012.
+      <a href="https://github.com/waveform80/samplesdb">Source
+        code</a> for this application is available from GitHub, licensed under
+      the <a href="http://www.gnu.org/licenses/gpl-3.0.html">GNU GPL v3</a>.
     </div>
   </div>
 
