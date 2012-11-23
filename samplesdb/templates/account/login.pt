@@ -20,7 +20,9 @@
 
         <div class="row">
           ${form.label('username', 'Username')}
-          ${form.email('username', placeholder='someone@somewhere.edu')}
+          ${form.email(
+            'username', placeholder='someone@somewhere.edu',
+            autofocus='autofocus')}
         </div>
 
         <div class="row">
