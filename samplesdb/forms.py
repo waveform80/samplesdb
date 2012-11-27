@@ -245,9 +245,9 @@ class Form(object):
         if self.method and self.method != self.request.method:
             return False
         if self.method == 'POST':
-            params = self.request.POST
+            params = self.request.POST.mixed()
         else:
-            params = self.request.params
+            params = self.request.params.mixed()
         if self.variable_decode:
             self.data_raw = variabledecode.variable_decode(
                 params, self.dict_char, self.list_char)
