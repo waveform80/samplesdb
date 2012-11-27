@@ -32,7 +32,6 @@ from formencode import (
     validators,
     )
 from formencode.compound import CompoundValidator
-from formencode.validators import FormValidator
 from formencode.foreach import ForEach
 from pyramid.threadlocal import get_current_registry
 
@@ -253,7 +252,7 @@ class ValidAccountType(FancyValidator):
         return result
 
 
-class ValidEmailForAccountType(FormValidator):
+class ValidEmailForAccountType(validators.FormValidator):
     error_msg = 'E-mail address is not valid for the selected account type'
     # Name of the field containing the account-type id
     account_type_field = None
@@ -343,3 +342,11 @@ class ValidSample(FancyValidator):
         return result
 
 
+class ValidExportFormat(validators.OneOf):
+    def __init__(self):
+        super(ValidExportFormat, self).__init__(['csv', 'excel'])
+
+
+class ValidExportFields(validators.Set):
+    def __init__(self):
+        super(ValidExportFields, self).__init__(not_empty=True)
