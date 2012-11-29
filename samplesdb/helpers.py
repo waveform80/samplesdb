@@ -24,6 +24,8 @@ from __future__ import (
     division,
     )
 
+import re
+from unicodedata import normalize
 from datetime import datetime, timedelta
 
 import pytz
@@ -192,3 +194,17 @@ def time_ago_in_words(from_time, granularity='second', round=False):
     "Timezone aware version of webhelpers.date.time_ago_in_words"
     return distance_of_time_in_words(
         from_time, datetime.now(), granularity, round)
+
+
+_punct_re = re.compile(r'[\t !"#$%&\'()*\-/<=>?@\[\\\]^_`{|},.]+')
+
+def slugify(text, default='', delim='-'):
+    "Convert text to an ASCII URL/filename-safe slug"
+    # Courtesy of Armin Ronacher <http://flask.pocoo.org/snippets/5/>
+    result = []
+    for word in _punct_re.split(text.lower()):
+        word = normalize('NFKD', word).encode('ascii', 'ignore')
+        if word:
+            result.append(word)
+    return delim.join(result) or default
+
