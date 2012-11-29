@@ -836,6 +836,12 @@ class SampleAttachments(object):
         if s is not None and os.path.exists(s):
             return datetime.fromtimestamp(os.stat(s).st_mtime)
 
+    def thumb_filesize(self, attachment):
+        """Returns the file-size of the attachment's thumbnail image"""
+        s = self._thumb_filename(attachment)
+        if s is not None and os.path.exists(s):
+            return os.stat(s).st_size
+
     def thumb_open(self, attachment):
         """Returns the attachment's thumbnail image as a file-like object"""
         s = self._filename(attachment)
