@@ -30,6 +30,7 @@ from pyramid.httpexceptions import HTTPFound
 from pyramid.security import has_permission
 
 from samplesdb.views import BaseView
+from samplesdb.exporters import CollectionCsvExporter
 from samplesdb.forms import (
     Form,
     FormRenderer,
@@ -43,6 +44,8 @@ from samplesdb.validators import (
     ValidCollectionName,
     ValidCollectionOwner,
     ValidCollectionLicense,
+    ValidExportFormat,
+    ValidExportFields,
     )
 from samplesdb.security import (
     OWNER_ROLE,
@@ -72,6 +75,11 @@ class CollectionSchema(FormSchema):
     license = ValidCollectionLicense()
     users = ForEachDict(CollectionUserSchema(),
                 key_name='user', value_name='role')
+
+
+class CollectionCsvExportSchema(FormSchema):
+    # XXX Can't call this "fields" because FormEncode objects (why?)
+    columns = ValidExportFields()
 
 
 class CollectionCreateSchema(CollectionSchema):
@@ -174,26 +182,20 @@ class CollectionsView(BaseView):
         renderer='../templates/collections/export.pt',
         permission=VIEW_COLLECTION)
     def export(self):
-        filter = self.request.params.get('filter', 'existing')
-        format = self.request.params.get('format', 'csv')
-        fields = [
-            ('id'          , 'Identifier')  , 
-            ('description' , 'Description') , 
-            ('created'     , 'Created')     , 
-            ('destroyed'   , 'Destroyed')   , 
-            ('location'    , 'Location')    , 
-            ('parents'     , 'Parents')     , 
-            ('children'    , 'Children')    , 
-            ]
-        fields.extend(DBSession.query(SampleCode.name, SampleCode.name).\
-                join(Sample).\
-                join(Collection).\
-                filter(Collection.id==self.context.collection.id).\
-                distinct().all())
+        exporter = CollectionCsvExporter(self.context.collection)
+        form = Form(
+            self.request,
+            obj=exporter,
+            schema=CollectionCsvExportSchema)
+        if form.validate():
+            form.bind(exporter)
+            response = self.request.response
+            response.content_type = b'text/csv'
+            exporter.export(response.body_file)
+            return response
         return dict(
-            filter=filter,
-            format=format,
-            fields=fields)
+            exporter=exporter,
+            form=FormRenderer(form))
 
     @view_config(
         route_name='collections_view',

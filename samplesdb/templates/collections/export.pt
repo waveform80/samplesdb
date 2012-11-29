@@ -10,8 +10,7 @@
     <div class="row"><h1 class="twelve columns">Export ${context.collection.name} Collection</h1></div>
 
     <div class="row">
-
-      <div class="eight columns">
+      <div class="twelve columns">
         <p metal:use-macro="view.collection_license"></p>
 
         <p>
@@ -20,60 +19,48 @@
             Collection</a>
         </p>
       </div>
+    </div>
 
-      <div class="four columns">
-        <dl class="sub-nav">
-          <dt>Filter</dt>
-          <dd
-          class="${'active' if filter == 'all' else None}"><a 
-            href="${request.current_route_url(_query={'filter': 'all', 'format': format})}">All</a></dd>
-          <dd
-          class="${'active' if filter == 'existing' else None}"><a
-            href="${request.current_route_url(_query={'filter': 'existing', 'format': format})}">Existing</a></dd>
-          <dd
-          class="${'active' if filter == 'destroyed' else None}"><a
-            href="${request.current_route_url(_query={'filter': 'destroyed', 'format': format})}">Destroyed</a></dd>
-        </dl>
-        <dl class="sub-nav">
-          <dt>Format</dt>
-          <dd class="${'active' if format == 'csv' else None}"><a
-            href="${request.current_route_url(_query={'filter': filter, 'format': 'csv'})}">CSV</a></dd>
-          <dd class="${'active' if format == 'excel' else None}"><a
-            href="${request.current_route_url(_query={'filter': filter, 'format': 'excel'})}">Excel</a></dd>
-        </dl>
+    ${form.begin()}
+
+    <div class="row">
+      <div class="five columns sortable">
+        <label tal:repeat="column exporter.columns" for="column_${column}">
+          <input type="checkbox" id="column_${column}" name="columns"
+          value="${column}" checked="checked" /> ${exporter.all_columns[column]}</label>
+        <label tal:repeat="column [c for c in exporter.all_columns if not c in exporter.columns]" for="column_${column}">
+          <input type="checkbox" id="column_${column}" name="columns"
+          value="${column}" /> ${exporter.all_columns[column]}</label>
+      </div>
+
+      <div class="seven columns">
+        <p>Drag and drop columns to re-order them in the output. If you wish to
+        exclude a column from the output, uncheck it.</p>
+
+        <div class="row">
+          ${form.label('format', 'Format')}
+          ${form.select('format', selected_value='csv', options=(('csv', 'CSV'), ('excel', 'Excel')))}
+        </div>
       </div>
 
     </div>
 
     <div class="row">
-      <div class="five columns"><h5 class="subheader">Available Fields</h5></div>
-      <div class="two columns">&nbsp;</div>
-      <div class="five columns"><h5 class="subheader">Selected Fields</h5></div>
+      ${form.submit(value='Download', cancel=False, class_='small', cols=12)}
     </div>
 
-    <div class="row">
-      <div class="five columns">
-        <form method="POST" action="#">
-          <select name="available" id="available" multiple="multiple" size="10">
-            <option tal:repeat="field fields" value="field[0]">${field[1]}</option>
-          </select>
-        </form>
-      </div>
+    ${form.end()}
 
-      <div class="two columns">
-        <p><a class="small secondary button expand" href="#">Add &rarr;</a></p>
-        <p><a class="small secondary button expand" href="#">Remove &larr;</a></p>
-      </div>
-
-      <div class="five columns">
-        <form method="POST" action="#">
-          <select name="selected" id="selected" multiple="multiple" size="10">
-          </select>
-        </form>
-      </div>
-
-    </div>
-
+  </div>
+  <div metal:fill-slot="scripts">
+    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.9.1/jquery-ui.min.js"></script>
+    <script type="text/javascript">
+      $('.sortable').sortable({
+        placeholder: 'placeholder',
+        distance: 10,
+      });
+      $('.sortable').disableSelection();
+    </script>
   </div>
 </div>
 

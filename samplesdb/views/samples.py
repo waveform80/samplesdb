@@ -186,10 +186,11 @@ class SamplesView(BaseView):
         permission=VIEW_COLLECTION)
     def attachment_thumb(self):
         response = self.request.response
-        response.content_type = self.context.sample.attachments.thumb_mime_type(
-                self.request.matchdict['attachment'])
-        response.app_iter = self.context.sample.attachments.thumb_open(
-                self.request.matchdict['attachment'])
+        attachments = self.context.sample.attachments
+        attachment = self.request.matchdict['attachment']
+        response.content_type = attachments.thumb_mime_type(attachment)
+        response.content_length = attachments.thumb_filesize(attachment)
+        response.app_iter = attachments.thumb_open(attachment)
         return response
 
     @view_config(
