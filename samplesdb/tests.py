@@ -10,6 +10,7 @@ import logging
 
 from mock import Mock
 from nose.tools import assert_raises
+from webob.multidict import MultiDict
 from pyramid import testing
 from pyramid.httpexceptions import HTTPFound
 from pyramid_mailer.mailer import Mailer
@@ -17,6 +18,7 @@ from pyramid_mailer.mailer import Mailer
 from samplesdb.image import can_resize, make_thumbnail
 from samplesdb.forms import css_add_class, css_del_class, FormRenderer
 from samplesdb.scripts.initializedb import init_instances
+from samplesdb.licenses import DummyLicensesFactory
 from samplesdb.security import *
 from samplesdb.models import *
 from samplesdb.views.root import *
@@ -66,6 +68,7 @@ class UnitFixture(object):
         self.config = testing.setUp()
         self.mailer = Mock(Mailer)
         self.config.registry['mailer'] = self.mailer
+        self.config.registry['licenses'] = DummyLicensesFactory()
         self.config.registry.settings['site_title'] = 'TESTING'
         self.config.registry.settings['session.constant_csrf_token'] = '1234'
         for route_name, route_url in ROUTES.items():
@@ -89,6 +92,7 @@ class FunctionalFixture(object):
         from webtest import TestApp
         settings = {
             'pyramid.includes':            'pyramid_beaker pyramid_mailer pyramid_tm',
+            'licenses_cache_dir':          os.environ.get('TEMP', '.'),
             'sqlalchemy.url':              'sqlite://',
             'site_title':                  'TESTING',
             'session.type':                'memory',
@@ -111,6 +115,7 @@ class FunctionalFixture(object):
 class RootViewUnitTests(UnitFixture):
     def make_one(self):
         request = testing.DummyRequest()
+        request.POST = MultiDict()
         request.user = Mock()
         request.referer = request.url
         view = RootView(request)
@@ -130,6 +135,7 @@ class RootViewUnitTests(UnitFixture):
 class AccountViewUnitTests(UnitFixture):
     def make_one(self):
         request = testing.DummyRequest()
+        request.POST = MultiDict()
         request.user = Mock()
         request.referer = request.url
         view = AccountView(request)
@@ -206,8 +212,9 @@ class AccountViewUnitTests(UnitFixture):
         view.request.POST['given_name'] = 'Foo'
         view.request.POST['surname'] = ''
         view.request.POST['organization'] = 'Baz University'
-        view.request.POST['limits_id'] = 'academic'
+        view.request.POST['limits'] = 'academic'
         view.request.POST['timezone_name'] = 'UTC'
+        view.request.POST['_came_from'] = view.request.referer
         result = view.create()
         assert 'form' in result
         assert isinstance(result['form'], FormRenderer)
@@ -225,7 +232,7 @@ class AccountViewUnitTests(UnitFixture):
         view.request.POST['given_name'] = 'Foo'
         view.request.POST['surname'] = 'Bar'
         view.request.POST['organization'] = 'Baz University'
-        view.request.POST['limits_id'] = 'academic'
+        view.request.POST['limits'] = 'free'
         view.request.POST['timezone_name'] = 'UTC'
         view.request.POST['_came_from'] = view.request.referer
         result = view.create()
@@ -360,6 +367,7 @@ class AccountViewUnitTests(UnitFixture):
 class CollectionsViewUnitTests(UnitFixture):
     def make_one(self, collection_id=None):
         request = testing.DummyRequest()
+        request.POST = MultiDict()
         request.user = User.by_email('admin@example.com')
         request.referer = request.url
         if collection_id is not None:
@@ -386,6 +394,7 @@ class CollectionsViewUnitTests(UnitFixture):
         view = self.make_one()
         view.request.method = 'POST'
         view.request.POST['name'] = 'New Collection'
+        view.request.POST['license'] = 'notspecified'
         view.request.POST['users-0.user'] = 'i-dont-exist@nowhere.org'
         view.request.POST['users-0.role'] = 'owner'
         result = view.create()
@@ -393,11 +402,14 @@ class CollectionsViewUnitTests(UnitFixture):
         assert isinstance(result['form'], FormRenderer)
         assert 'users-0.user' in result['form'].form.errors
         assert 'name' not in result['form'].form.errors
+        assert 'owner' in result['form'].form.errors
 
     def test_collections_create_good(self):
         view = self.make_one()
         view.request.method = 'POST'
         view.request.POST['name'] = 'New Collection'
+        view.request.POST['owner'] = 'Mr. Foo'
+        view.request.POST['license'] = 'notspecified'
         view.request.POST['_came_from'] = view.request.referer
         result = view.create()
         assert isinstance(result, HTTPFound)
@@ -454,7 +466,7 @@ class SiteFunctionalTest(FunctionalFixture):
         res.form['given_name'] = 'Dave'
         res.form['surname'] = 'Foo'
         res.form['organization'] = 'University of Quux'
-        res.form['limits_id'] = 'academic'
+        res.form['limits'] = 'academic'
         res.form['email'] = 'foo@quux.edu'
         res.form['email_confirm'] = 'foo@quux.edu'
         res.form['password'] = 'quux'
@@ -538,7 +550,7 @@ class SiteFunctionalTest(FunctionalFixture):
         res.form['given_name'] = 'Dave'
         res.form['surname'] = 'Bar'
         res.form['organization'] = 'University of Quux'
-        res.form['limits_id'] = 'academic'
+        res.form['limits'] = 'academic'
         res.form['email'] = 'bar@quux.edu'
         res.form['email_confirm'] = 'bar@quux.edu'
         res.form['password'] = 'bar'
@@ -556,7 +568,7 @@ class SiteFunctionalTest(FunctionalFixture):
         res.form['given_name'] = 'Dave'
         res.form['surname'] = 'Baz'
         res.form['organization'] = 'University of Quux'
-        res.form['limits_id'] = 'academic'
+        res.form['limits'] = 'academic'
         res.form['email'] = 'baz@quux.edu'
         res.form['email_confirm'] = 'baz@quux.edu'
         res.form['password'] = 'baz'

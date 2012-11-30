@@ -64,6 +64,18 @@ class License(object):
         return self.is_okd_compliant or self.is_osi_compliant
 
 
+class DummyLicensesFactory(object):
+    def __call__(self):
+        return {'notspecified': License(
+            domain_content=False,
+            domain_data=False,
+            domain_software=False,
+            id='notspecified',
+            is_generic=True,
+            status='active',
+            title='License Not Specified')}
+
+
 class LicensesFactory(object):
     """Factory class which returns a dictionary of licenses when called"""
 

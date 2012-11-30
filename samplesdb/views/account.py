@@ -184,6 +184,7 @@ class AccountView(BaseView):
             DBSession.add(new_email)
             new_collection = Collection()
             new_collection.name = 'Default'
+            new_collection.owner = new_user.full_name
             owner_role = DBSession.query(Role).filter(Role.id=='owner').one()
             new_user.collections[new_collection] = owner_role
             return HTTPFound(
