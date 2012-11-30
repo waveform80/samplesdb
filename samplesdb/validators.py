@@ -24,6 +24,9 @@ from __future__ import (
     division,
     )
 
+import csv
+from datetime import datetime
+
 import pytz
 from formencode import (
     FancyValidator,
@@ -234,6 +237,17 @@ class ValidMarkupLanguage(validators.OneOf):
         super(ValidMarkupLanguage, self).__init__(MARKUP_LANGUAGES.keys())
 
 
+class ValidDateTimeFormat(FancyValidator):
+    def __init__(self):
+        super(ValidDateTimeFormat, self).__init__(not_empty=True, strip=True)
+
+    def validate_python(self, value, state):
+        try:
+            datetime(2000, 1, 1).strftime(value)
+        except ValueError, e:
+            raise Invalid(str(e), value, state)
+
+
 class ValidAccountType(FancyValidator):
     def __init__(self):
         super(ValidAccountType, self).__init__(not_empty=True, strip=True)
@@ -347,6 +361,31 @@ class ValidExportFormat(validators.OneOf):
         super(ValidExportFormat, self).__init__(['csv', 'excel'])
 
 
-class ValidExportFields(validators.Set):
+class ValidExportColumns(validators.Set):
     def __init__(self):
-        super(ValidExportFields, self).__init__(not_empty=True)
+        super(ValidExportColumns, self).__init__(not_empty=True)
+
+
+class ValidCsvDelimiter(validators.OneOf):
+    def __init__(self):
+        super(ValidCsvDelimiter, self).__init__(['comma', 'semi-colon', 'space', 'tab'])
+
+
+class ValidCsvQuoteChar(validators.OneOf):
+    def __init__(self):
+        super(ValidCsvQuoteChar, self).__init__(['single', 'double'])
+
+
+class ValidCsvQuoting(validators.OneOf):
+    def __init__(self):
+        super(ValidCsvQuoting, self).__init__(['all', 'minimal', 'non-numeric', 'none'])
+
+
+class ValidCsvDoubleQuotes(validators.Bool):
+    pass
+
+
+class ValidCsvLineTerminator(validators.OneOf):
+    def __init__(self):
+        super(ValidCsvLineTerminator, self).__init__(['dos', 'unix', 'max'])
+

@@ -29,6 +29,7 @@ from pyramid.decorator import reify
 from pyramid.httpexceptions import HTTPFound
 from pyramid.security import has_permission
 
+from samplesdb.helpers import slugify
 from samplesdb.views import BaseView
 from samplesdb.exporters import CollectionCsvExporter
 from samplesdb.forms import (
@@ -44,8 +45,13 @@ from samplesdb.validators import (
     ValidCollectionName,
     ValidCollectionOwner,
     ValidCollectionLicense,
-    ValidExportFormat,
-    ValidExportFields,
+    ValidExportColumns,
+    ValidCsvDelimiter,
+    ValidCsvDoubleQuotes,
+    ValidCsvLineTerminator,
+    ValidCsvQuoteChar,
+    ValidCsvQuoting,
+    ValidDateTimeFormat,
     )
 from samplesdb.security import (
     OWNER_ROLE,
@@ -78,8 +84,13 @@ class CollectionSchema(FormSchema):
 
 
 class CollectionCsvExportSchema(FormSchema):
-    # XXX Can't call this "fields" because FormEncode objects (why?)
-    columns = ValidExportFields()
+    columns = ValidExportColumns()
+    delimiter = ValidCsvDelimiter()
+    doublequote = ValidCsvDoubleQuotes()
+    lineterminator = ValidCsvLineTerminator()
+    quotechar = ValidCsvQuoteChar()
+    quoting = ValidCsvQuoting()
+    dateformat = ValidDateTimeFormat()
 
 
 class CollectionCreateSchema(CollectionSchema):
@@ -191,6 +202,11 @@ class CollectionsView(BaseView):
             form.bind(exporter)
             response = self.request.response
             response.content_type = b'text/csv'
+            response.headers.add(
+                str('Content-Disposition'),
+                str('attachment; filename=%s.csv' % slugify(
+                    self.context.collection.name,
+                    default='collection-%d' % self.context.collection.id)))
             exporter.export(response.body_file)
             return response
         return dict(

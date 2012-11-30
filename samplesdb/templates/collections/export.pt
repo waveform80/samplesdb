@@ -21,28 +21,81 @@
       </div>
     </div>
 
+    <div class="row">
+      <div class="twelve columns">
+        <p>Drag and drop columns to re-order them in the output. If you wish to
+        exclude a column from the output, uncheck it.</p>
+      </div>
+    </div>
+
     ${form.begin()}
 
     <div class="row">
-      <div class="five columns sortable">
-        <label tal:repeat="column exporter.columns" for="column_${column}">
-          <input type="checkbox" id="column_${column}" name="columns"
-          value="${column}" checked="checked" /> ${exporter.all_columns[column]}</label>
-        <label tal:repeat="column [c for c in exporter.all_columns if not c in exporter.columns]" for="column_${column}">
-          <input type="checkbox" id="column_${column}" name="columns"
-          value="${column}" /> ${exporter.all_columns[column]}</label>
+      <div class="five column">
+        <fieldset>
+          <legend>Columns</legend>
+          <div class="sortable">
+            <label tal:repeat="column exporter.columns" for="column_${column}">
+              <input type="checkbox" id="column_${column}" name="columns"
+              value="${column}" checked="checked" /> ${exporter.all_columns[column]}</label>
+            <label tal:repeat="column [c for c in exporter.all_columns if not c in exporter.columns]" for="column_${column}">
+              <input type="checkbox" id="column_${column}" name="columns"
+              value="${column}" /> ${exporter.all_columns[column]}</label>
+          </div>
+        </fieldset>
       </div>
 
       <div class="seven columns">
-        <p>Drag and drop columns to re-order them in the output. If you wish to
-        exclude a column from the output, uncheck it.</p>
+        <fieldset>
+          <legend>CSV Advanced Options</legend>
 
-        <div class="row">
-          ${form.label('format', 'Format')}
-          ${form.select('format', selected_value='csv', options=(('csv', 'CSV'), ('excel', 'Excel')))}
-        </div>
+          <p>The defaults below are suitable for use with Microsoft Excel,
+          OpenOffice and LibreOffice. Most people can ignore the settings in
+          this section.</p>
+
+          <div class="row">
+            ${form.label('delimiter', 'Column Delimiter', cols=4)}
+            ${form.select('delimiter', cols=8, options=(
+              ('comma', 'Comma (,)'),
+              ('semi-colon', 'Semi-colon (;)'),
+              ('space', 'Space ( )'),
+              ('tab', 'Tab'),
+              ))}
+          </div>
+
+          <div class="row">
+            ${form.label('lineterminator', 'Line Breaks', cols=4)}
+            ${form.select('lineterminator', cols=8, options=(
+              ('dos', 'DOS (CRLF)'),
+              ('unix', 'UNIX (LF)'),
+              ('mac', 'MacOS (CR)'),
+              ))}
+          </div>
+
+          <div class="row">
+            ${form.label('quotechar', 'Quote Character', cols=4)}
+            ${form.select('quotechar', cols=8, options=(
+              ('double', 'Double Quotes (")'),
+              ('single', "Single Quotes (')"),
+              ))}
+          </div>
+
+          <div class="row">
+            ${form.label('quoting', 'Quoting Behaviour', cols=4)}
+            ${form.select('quoting', cols=8, options=(
+              ('all', 'Quote everything'),
+              ('minimal', 'Quote minimally'),
+              ('non-numeric', 'Quote non-numeric values'),
+              ('none', 'Quote nothing'),
+              ))}
+          </div>
+
+          <div class="row">
+            ${form.label('dateformat', 'Timestamp Format', cols=4)}
+            ${form.text('dateformat', cols=8)}
+          </div>
+        </fieldset>
       </div>
-
     </div>
 
     <div class="row">
