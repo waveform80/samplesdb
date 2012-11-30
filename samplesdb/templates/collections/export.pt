@@ -99,7 +99,7 @@
     </div>
 
     <div class="row">
-      ${form.submit(value='Download', cancel=False, class_='small', cols=12)}
+      ${form.submit(value='Download', class_='small', cols=12)}
     </div>
 
     ${form.end()}
