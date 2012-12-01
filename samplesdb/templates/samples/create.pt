@@ -51,13 +51,9 @@
         </div>
 
         <div class="row">
-          <div class="two columns">&nbsp;</div>
-          <p class="ten columns"><a href="#" class="secondary small button" id="add-button">Add Codes</a></p>
-        </div>
-
-        <div class="row">
-          ${form.label('attachments', 'Attachments')}
-          ${form.file('attachments', multiple='multiple')}
+          <div class="ten columns offset-by-two">
+            <a href="#" class="secondary small button" id="add-button">Add Codes</a>
+          </div>
         </div>
 
         <hr />
@@ -72,6 +68,13 @@
         <div class="row">
           ${form.label('notes', 'Notes')}
           ${form.textarea('notes', class_='mono', rows=10)}
+        </div>
+
+        <hr />
+
+        <div class="row">
+          ${form.label('attachments', 'Attachments')}
+          ${form.file('attachments', multiple='multiple')}
         </div>
 
         <div class="row">
