@@ -427,178 +427,189 @@ class CollectionsViewUnitTests(UnitFixture):
         assert result['display'] in ('grid', 'table')
         assert 'samples' in result
 
-    
+
 class SiteFunctionalTest(FunctionalFixture):
-    def test(self):
-        from webtest import Text
-        from pyramid_mailer.message import Message
-        import DNS
-        # Visit the home page and FAQ
-        res = self.test.get('/')
-        res = res.click(href='/faq')
-        # Attempt to login with bogus credentials
-        res = res.click(href='/login')
+    def last_verify_url(self):
+        # Returns the last verification URL "sent" to a user
+        url = None
+        for line in self.mailer.send.call_args[0][0].body.splitlines():
+            if line.startswith('http:'):
+                url = line
+                break
+        return url
+
+    def sub_login(self, username, password):
+        res = self.test.get('/login')
         assert 'Login' in res
-        res.form['username'] = 'foo@bar.org'
-        res.form['password'] = 'baz'
-        res = res.form.submit()
-        assert 'Invalid login' in res
-        # Attempt to login with the built-in admin account
+        res.form['username'] = username
+        res.form['password'] = password
+        return res.form.submit()
+
+    def sub_create(self, salutation, given_name, surname, organization,
+            limits, email, email_confirm, password, password_confirm):
+        res = self.test.get('/signup')
+        res.form['salutation'] = salutation
+        res.form['given_name'] = given_name
+        res.form['surname'] = surname
+        res.form['organization'] = organization
+        res.form['limits'] = limits
+        res.form['email'] = email
+        res.form['email_confirm'] = email_confirm
+        res.form['password'] = password
+        res.form['password_confirm'] = password_confirm
+        return res.form.submit()
+
+    def sub_make_user(self, name):
+        self.sub_create(
+            salutation='Mr.',
+            given_name='Dave',
+            surname=name.title(),
+            organization='University of Quux',
+            limits='academic',
+            email='%s@quux.edu' % name,
+            email_confirm='%s@quux.edu' % name,
+            password=name,
+            password_confirm=name,
+            ).follow()
+        self.test.get(self.last_verify_url())
+
+    def sub_get_user(self, name):
+        return User.by_email('%s@quux.edu' % name)
+
+    def sub_login_user(self, name):
+        return self.sub_login('%s@quux.edu' % name, name).follow()
+
+    def sub_logout_user(self):
+        return self.test.get('/logout').follow()
+
+    def test_root(self):
+        # Retrieve the root page and test we can get to the FAQ
+        res = self.test.get('/')
+        res.click(href='/faq')
+
+    def test_csrf(self):
+        res = self.test.get('/login')
+        assert 'Login' in res
         res.form['username'] = 'admin@example.com'
         res.form['password'] = 'adminpass'
-        save_csrf = res.form['_csrf'].value
         res.form['_csrf'] = 'foo'
         # XXX Why isn't this failing with HTTPForbidden?!
-        new_res = res.form.submit()
-        res.form['_csrf'] = save_csrf
         res = res.form.submit()
-        res = res.follow()
-        assert 'My Collections' in res
-        # Visit the account page
-        res = res.click(href='/account')
-        assert 'My Account' in res
-        # Attempt to logout
-        res = res.click(href='/logout')
-        res = res.follow()
-        # Go to the sign-up page and create a new account
-        res = res.click(href='/signup')
-        res.form['salutation'] = 'Mr.'
-        res.form['given_name'] = 'Dave'
-        res.form['surname'] = 'Foo'
-        res.form['organization'] = 'University of Quux'
-        res.form['limits'] = 'academic'
-        res.form['email'] = 'foo@quux.edu'
-        res.form['email_confirm'] = 'foo@quux.edu'
-        res.form['password'] = 'quux'
-        # ... with an incorrect password confirmation
-        res.form['password_confirm'] = 'foo'
-        res = res.form.submit()
-        assert DNS.DnsRequest.called # XXX check manchester.ac.uk in call args
+
+    def test_login_bad(self):
+        res = self.sub_login('foo@bar.org', 'baz')
+        assert 'Invalid login' in res
+
+    def test_login_good(self):
+        return self.sub_login('admin@example.com', 'adminpass').follow()
+
+    def test_logout(self):
+        self.test_login_good()
+        return self.test.get('/logout').follow()
+
+    def test_account_create_bad(self):
+        res = self.sub_create(
+            salutation='Mr.',
+            given_name='Dave',
+            surname='Foo',
+            organization='University of Quux',
+            limits='academic',
+            email='foo@quux.edu',
+            email_confirm='foo@quux.edu',
+            password='quux',
+            password_confirm='foo',
+            )
         assert 'Fields do not match' in res
-        # ... correct the password and make sure an e-mail verification is sent
-        res.form['password_confirm'] = 'quux'
-        res = res.form.submit()
+
+    def test_account_create_good(self):
+        from pyramid_mailer.message import Message
+        import DNS
+        res = self.sub_create(
+            salutation='Mr.',
+            given_name='Dave',
+            surname='Foo',
+            organization='University of Quux',
+            limits='academic',
+            email='foo@quux.edu',
+            email_confirm='foo@quux.edu',
+            password='quux',
+            password_confirm='quux',
+            )
+        # Check a DNS request was attempted
+        assert DNS.DnsRequest.called # XXX check quux.edu in call args
         res = res.follow()
         assert 'Verification Sent' in res
+        # Check for the verification request in the database
         verifications = DBSession.query(EmailVerification).all()
         assert len(verifications) == 1
         assert self.mailer.send.call_count == 1
         assert isinstance(self.mailer.send.call_args[0][0], Message)
         # Make sure the verification code appears in the email
         assert verifications[0].id in self.mailer.send.call_args[0][0].body
-        url = None
-        for line in self.mailer.send.call_args[0][0].body.splitlines():
-            if line.startswith('http:'):
-                url = line
-                break
-        assert url
+
+    def test_account_verify_bad(self):
+        self.test_account_create_good()
+        url = self.last_verify_url()
         # Test a deliberately corrupted verification URL
         res = self.test.get(url + 'foo', status=404)
+
+    def test_account_verify_good(self):
+        self.test_account_create_good()
+        url = self.last_verify_url()
+        # Test the correct verification URL
         res = self.test.get(url)
         verifications = DBSession.query(EmailVerification).all()
         assert len(verifications) == 0
         address = EmailAddress.by_email('foo@quux.edu')
         assert address.verified
         # Login with the newly verified account from the confirmation page
-        res = res.click(href='/login', index=1)
-        assert 'Login' in res
-        res.form['username'] = 'foo@quux.edu'
-        res.form['password'] = 'quux'
-        res = res.form.submit()
+        res = self.sub_login('foo@quux.edu', 'quux')
         res = res.follow()
         assert 'My Collections' in res
-        res = res.click(href='/account')
-        assert 'My Account' in res
-        # Attempt to change surname
-        res = res.click(href='/account/edit')
+
+    def test_account_edit(self):
+        self.test_account_verify_good()
+        # Attempt to change given name
+        res = self.test.get('/account/edit')
         res.form['given_name'] = 'Adrian'
         res = res.form.submit()
         res = res.follow()
-        assert User.by_email('foo@quux.edu').given_name == 'Adrian'
+        user = User.by_email('foo@quux.edu')
+        # Assert change affected given name and nothing else
+        assert user.salutation == 'Mr.'
+        assert user.given_name == 'Adrian'
+        assert user.surname == 'Foo'
+        assert user.organization == 'University of Quux'
+        assert user.limits_id == 'academic'
         # Ensure the edit didn't change our password
-        res = res.click(href='/logout')
-        res = res.follow()
-        assert 'Home' in res
-        res.form['username'] = 'foo@quux.edu'
-        res.form['password'] = 'quux'
-        res = res.form.submit()
-        res = res.follow()
-        assert 'My Collections' in res
-        res = res.click(href='/account')
-        assert 'My Account' in res
+        res.click(href='/logout').follow()
+        self.sub_login('foo@quux.edu', 'quux').follow()
         # Attempt to change password
-        res = res.click(href='/account/edit')
+        res = self.test.get('/account/edit')
         assert 'Edit Account' in res
         res.form['password_new'] = 'foo'
         res.form['password_new_confirm'] = 'foo'
-        res = res.form.submit()
-        res = res.follow()
+        res = res.form.submit().follow()
         # Check the change worked
-        res = res.click(href='/logout')
-        res = res.follow()
-        assert 'Home' in res
-        res.form['username'] = 'foo@quux.edu'
-        res.form['password'] = 'foo'
-        res = res.form.submit()
-        res = res.follow()
-        assert 'Login' not in res
-        # Logout and create two new uesrs: Mr. Bar and Mr. Baz
-        res = res.click(href='/logout')
-        res = res.follow()
-        res = self.test.get('/signup')
-        res.form['salutation'] = 'Mr.'
-        res.form['given_name'] = 'Dave'
-        res.form['surname'] = 'Bar'
-        res.form['organization'] = 'University of Quux'
-        res.form['limits'] = 'academic'
-        res.form['email'] = 'bar@quux.edu'
-        res.form['email_confirm'] = 'bar@quux.edu'
-        res.form['password'] = 'bar'
-        res.form['password_confirm'] = 'bar'
-        res = res.form.submit()
-        res = res.follow()
-        url = None
-        for line in self.mailer.send.call_args[0][0].body.splitlines():
-            if line.startswith('http:'):
-                url = line
-                break
-        res = self.test.get(url)
-        res = self.test.get('/signup')
-        res.form['salutation'] = 'Mr.'
-        res.form['given_name'] = 'Dave'
-        res.form['surname'] = 'Baz'
-        res.form['organization'] = 'University of Quux'
-        res.form['limits'] = 'academic'
-        res.form['email'] = 'baz@quux.edu'
-        res.form['email_confirm'] = 'baz@quux.edu'
-        res.form['password'] = 'baz'
-        res.form['password_confirm'] = 'baz'
-        res = res.form.submit()
-        res = res.follow()
-        url = None
-        for line in self.mailer.send.call_args[0][0].body.splitlines():
-            if line.startswith('http:'):
-                url = line
-                break
-        res = self.test.get(url)
-        res = res.click(href='/login', index=1)
-        # Login as Mr. Foo again
-        res.form['username'] = 'foo@quux.edu'
-        res.form['password'] = 'foo'
-        res = res.form.submit()
-        res = res.follow()
-        # Create a new collection
-        res = res.click(href='/collections/new')
+        res.click(href='/logout').follow()
+        self.sub_login('foo@quux.edu', 'foo').follow()
+
+    def test_collection_create(self):
+        self.test_login_good()
+        res = self.test.get('/collections/new')
         res.form['name'] = 'Foo'
-        res = res.form.submit()
-        res = res.follow()
+        res = res.form.submit().follow()
         collection = DBSession.query(Collection).filter(Collection.name=='Foo').first()
         assert collection is not None
         assert 'Foo Collection' in res
-        # Go back to My Collections and create a new collection, this time
-        # shared with Mr. Bar
-        res = res.click('My Collections')
-        res = res.click('New Collection')
+        return res
+
+    def test_collection_create_shared(self):
+        from webtest import Text
+        self.sub_make_user('foo')
+        self.sub_make_user('bar')
+        self.sub_login_user('foo')
+        res = self.test.get('/collections/new')
         res.form['name'] = 'FooBar'
         res.form.fields.setdefault('users-0.user', []).append(
             Text(res.form, tag='input', name='users-0.user', pos=0))
@@ -610,9 +621,21 @@ class SiteFunctionalTest(FunctionalFixture):
         res = res.follow()
         collection = DBSession.query(Collection).filter(Collection.name=='FooBar').first()
         assert collection is not None
-        assert collection.users[User.by_email('foo@quux.edu')] == Role.by_id('owner')
-        assert collection.users[User.by_email('bar@quux.edu')] == Role.by_id('editor')
+        foo = self.sub_get_user('foo')
+        bar = self.sub_get_user('bar')
+        assert foo in collection.users
+        assert bar in collection.users
+        assert collection.users[foo] == Role.by_id('owner')
+        assert collection.users[bar] == Role.by_id('editor')
         assert 'FooBar Collection' in res
+        return res
+
+    def test_collection_edit(self):
+        from webtest import Text
+        self.test_collection_create_shared()
+        self.sub_logout()
+        self.sub_make_user('baz')
+        self.sub_login_user('foo')
         # Edit the collection, rename it, and add in Mr. Baz as a viewer
         res = res.click('Edit Collection')
         res.form['name'] = 'FooBarBaz'
@@ -626,7 +649,15 @@ class SiteFunctionalTest(FunctionalFixture):
         res = res.follow()
         collection = DBSession.query(Collection).filter(Collection.name=='FooBarBaz').first()
         assert collection is not None
-        assert collection.users[User.by_email('foo@quux.edu')] == Role.by_id('owner')
-        assert collection.users[User.by_email('bar@quux.edu')] == Role.by_id('editor')
-        assert collection.users[User.by_email('baz@quux.edu')] == Role.by_id('viewer')
+        foo = self.sub_get_user('foo')
+        bar = self.sub_get_user('bar')
+        baz = self.sub_get_user('baz')
+        assert foo in collection.users
+        assert bar in collection.users
+        assert baz in collection.users
+        assert collection.users[foo] == Role.by_id('owner')
+        assert collection.users[bar] == Role.by_id('editor')
+        assert collection.users[baz] == Role.by_id('viewer')
         assert 'FooBarBaz Collection' in res
+        return res
+
