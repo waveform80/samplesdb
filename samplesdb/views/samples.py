@@ -42,6 +42,8 @@ from samplesdb.validators import (
     ValidSampleDescription,
     ValidSampleLocation,
     ValidSampleNotes,
+    ValidSampleAliquots,
+    ValidSampleAliquant,
     ValidLogMessage,
     ValidCodeName,
     ValidCodeValue,
@@ -88,6 +90,13 @@ class SampleEditSchema(SampleSchema):
     pass
 
 
+class SampleSplitSchema(FormSchema):
+    collection = ValidCollection()
+    location = ValidSampleLocation()
+    aliquots = ValidSampleAliquots()
+    aliquant = ValidSampleAliquant()
+
+
 class SamplesView(BaseView):
     """Handlers for sample related views"""
 
@@ -106,6 +115,8 @@ class SamplesView(BaseView):
             variable_decode=True,
             multipart=True)
         if form.validate():
+            # XXX Check for EDIT_COLLECTION on selected collection
+            # XXX Should be using form collection below
             new_sample = form.bind(
                 Sample.create(self.request.user, self.context.collection))
             DBSession.add(new_sample)
@@ -130,7 +141,33 @@ class SamplesView(BaseView):
             obj=sample,
             variable_decode=True)
         if form.validate():
+            # XXX Check for EDIT_COLLECTION on new collection
             form.bind(sample)
+            return HTTPFound(
+                location=self.request.route_url(
+                    'samples_view', sample_id=sample.id))
+        return dict(form=FormRenderer(form))
+
+    @view_config(
+        route_name='samples_split',
+        renderer='../templates/samples/split.pt',
+        permission=EDIT_COLLECTION)
+    def split(self):
+        sample = self.context.sample
+        form = Form(
+            self.request,
+            schema=SampleSplitSchema,
+            obj=sample,
+            defaults=dict(aliquots=2),
+            variable_decode=True)
+        if form.validate():
+            # XXX Check for EDIT_COLLECTION on new collection
+            aliquots = sample.split(
+                self.request.user, form.data['collection'],
+                form.data['aliquots'], form.data['aliquant'],
+                location=form.data['location'])
+            for aliquot in aliquots:
+                DBSession.add(aliquot)
             return HTTPFound(
                 location=self.request.route_url(
                     'samples_view', sample_id=sample.id))

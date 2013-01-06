@@ -204,6 +204,16 @@ class ValidSampleLocation(validators.UnicodeString):
             not_empty=False, max=Sample.__table__.c.location.type.length)
 
 
+class ValidSampleAliquots(validators.Int):
+    def __init__(self):
+        super(ValidSampleAliquots, self).__init__(
+            not_empty=True, min=2, max=1000)
+
+
+class ValidSampleAliquant(validators.Bool):
+    pass
+
+
 class ValidSampleNotes(validators.UnicodeString):
     def __init__(self):
         super(ValidSampleNotes, self).__init__(not_empty=False)

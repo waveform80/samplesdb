@@ -25,7 +25,7 @@
             | <a href="#">Mark Destroyed</a>
           </span>
           <span tal:omit-tag="True" tal:condition="not context.sample.destroyed">
-            | <a href="#">Create Aliquots</a>
+            | <a href="${request.route_url('samples_split', sample_id=context.sample.id)}">Create Aliquots</a>
           </span>
         </p>
       </div>

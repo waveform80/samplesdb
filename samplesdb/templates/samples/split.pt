@@ -1,0 +1,59 @@
+<!doctype html>
+<!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
+<!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
+<!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!--> <div metal:use-macro="view.layout">
+  <div tal:omit-tag="True" metal:fill-slot="title">Creating Aliquots of Sample #${context.sample.id}</div>
+  <div tal:omit-tag="True" metal:fill-slot="content">
+    <div metal:use-macro="view.top_bar"></div>
+
+    <div class="row"><h1 class="twelve columns">Creating Aliquots of Sample #${context.sample.id}</h1></div>
+
+    <div class="row">
+      <div class="twelve columns">
+
+        <div metal:use-macro="view.flashes"></div>
+
+        ${form.begin()}
+
+        <div class="row">
+          ${form.label('collection', 'Collection')}
+          ${form.select('collection',
+            options=((c.id, c.name) for c in request.user.editable_collections),
+            inner_cols=6)}
+        </div>
+
+        <hr />
+
+        <div class="row">
+          ${form.label('location', 'Location')}
+          ${form.text('location',
+            placeholder='Sample Location', inner_cols=6)}
+        </div>
+
+        <div class="row">
+          ${form.label('aliquots', 'Aliquots')}
+          ${form.number('aliquots', inner_cols=4)}
+        </div>
+
+        <div class="row">
+          ${form.label('aliquant', 'Aliquant')}
+          <div class="ten columns">
+            ${form.checkbox('aliquant', label='Create an aliquant (remainder) sample')}
+            ${form.errorlist('aliquant')}
+          </div>
+        </div>
+
+        <div class="row">
+          ${form.label('submit', '')}
+          ${form.submit('submit', class_='small')}
+        </div>
+
+        ${form.end()}
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
