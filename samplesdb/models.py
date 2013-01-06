@@ -119,6 +119,14 @@ class ResetError(Exception):
     "Base class for password reset errors"
 
 
+class SampleError(Exception):
+    "Base class for sample errors"
+
+
+class SampleDestroyed(SampleError):
+    "Error raised when a destroyed sample is modified"
+
+
 class EmailVerification(Base):
     __tablename__ = 'email_verifications'
 
@@ -971,7 +979,8 @@ class Sample(Base):
 
     def destroy(self, destroyer):
         """Mark the sample as destroyed"""
-        assert not self.destroyed
+        if self.destroyed:
+            raise SampleDestroyed('Sample %d is already destroyed' % self.id)
         self.log.append(SampleLogEntry(
             creator_id=destroyer.id,
             event='destroy', message='Sample destroyed'))
@@ -983,6 +992,8 @@ class Sample(Base):
         sample = cls.create(
             creator, collection, **kwargs)
         for aliquot in aliquots:
+            if aliquot.destroyed:
+                raise SampleDestroyed('Sample %d is already destroyed' % self.id)
             aliquot.log.append(SampleLogEntry(
                 creator_id=creator.id,
                 event='change', message='Sample combined into new sample'))
@@ -990,9 +1001,12 @@ class Sample(Base):
             sample.parents.append(aliquot)
         return sample
 
-    def split(self, creator, aliquots, aliquant=False, **kwargs):
+    def split(self, creator, collection, aliquots, aliquant=False, **kwargs):
         """Split this sample into several aliquots"""
-        assert aliquots > 0
+        if aliquots < 1:
+            raise ValueError('Cannot split a sample into less than 1 aliquot')
+        if self.destroyed:
+            raise SampleDestroyed('Sample %d is already destroyed' % self.id)
         self.log.append(SampleLogEntry(
             creator_id=creator.id,
             event='change', message='Sample split into %d' % aliquots))
@@ -1002,7 +1016,7 @@ class Sample(Base):
         if not 'location' in aliargs:
             aliargs['location'] = self.location
         aliquots = [
-            Sample.create(creator, self.collection, **aliargs)
+            Sample.create(creator, collection, **aliargs)
             for i in range(aliquots)
             ]
         for aliquot in aliquots:
@@ -1013,7 +1027,7 @@ class Sample(Base):
                 aliargs['description'] = 'Aliquant of sample %d' % self.id
             if not 'location' in aliargs:
                 aliargs['location'] = self.location
-            aliquant = Sample.create(creator, self.collection, **aliargs)
+            aliquant = Sample.create(creator, collection, **aliargs)
             aliquant.parents.append(self)
             aliquots.append(aliquant)
         self.destroy(creator)
