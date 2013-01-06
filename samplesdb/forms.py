@@ -456,7 +456,6 @@ class FormRenderer(object):
         label = label if label is not None else name.capitalize()
         if inner_cols:
             attrs = css_add_class(attrs, COL_NAMES[inner_cols])
-        attrs = css_add_class(attrs, 'inline')
         result = HTML.tag('label', label, **attrs)
         if cols:
             return self.column(name, result, cols, inner_cols, errors=False)
@@ -498,6 +497,23 @@ class FormRenderer(object):
         """
         if 'type' not in attrs:
             attrs['type'] = 'email'
+        return self.text(name, value, id, cols, inner_cols, errors, **attrs)
+
+    def number(
+            self, name, value=None, id=None,
+            cols=10, inner_cols=None, errors=True, **attrs):
+        """
+        Outputs a number-spinbox input.
+        """
+        if 'type' not in attrs:
+            attrs['type'] = 'number'
+        if name in self.form.schema.fields:
+            validator = self.form.schema.fields[name]
+            if isinstance(validator, validators.RangeValidator):
+                if validator.min is not None and not 'min' in attrs:
+                    attrs['min'] = validator.min
+                if validator.max is not None and not 'max' in attrs:
+                    attrs['max'] = validator.max
         return self.text(name, value, id, cols, inner_cols, errors, **attrs)
 
     def file(
