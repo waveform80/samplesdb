@@ -610,15 +610,16 @@ class SiteFunctionalTest(FunctionalFixture):
         self.sub_make_user('bar')
         self.sub_login_user('foo')
         res = self.test.get('/collections/new')
+        user_field = Text(res.form, tag='input', name='users-0.user', pos=0)
+        role_field = Text(res.form, tag='input', name='users-0.role', pos=0)
+        res.form.fields.setdefault(user_field.name, []).append(user_field)
+        res.form.fields.setdefault(role_field.name, []).append(role_field)
+        res.form.field_order.append((user_field.name, user_field))
+        res.form.field_order.append((role_field.name, role_field))
         res.form['name'] = 'FooBar'
-        res.form.fields.setdefault('users-0.user', []).append(
-            Text(res.form, tag='input', name='users-0.user', pos=0))
-        res.form.fields.setdefault('users-0.role', []).append(
-            Text(res.form, tag='input', name='users-0.role', pos=0))
-        res.form['users-0.user'] = 'bar@quux.edu'
-        res.form['users-0.role'] = 'editor'
-        res = res.form.submit()
-        res = res.follow()
+        res.form[user_field.name] = 'bar@quux.edu'
+        res.form[role_field.name] = 'editor'
+        res = res.form.submit().follow()
         collection = DBSession.query(Collection).filter(Collection.name=='FooBar').first()
         assert collection is not None
         foo = self.sub_get_user('foo')
@@ -633,20 +634,22 @@ class SiteFunctionalTest(FunctionalFixture):
     def test_collection_edit(self):
         from webtest import Text
         self.test_collection_create_shared()
-        self.sub_logout()
+        self.sub_logout_user()
         self.sub_make_user('baz')
-        self.sub_login_user('foo')
+        res = self.sub_login_user('foo')
         # Edit the collection, rename it, and add in Mr. Baz as a viewer
+        res = res.click('FooBar')
         res = res.click('Edit Collection')
+        user_field = Text(res.form, tag='input', name='users-2.user', pos=0)
+        role_field = Text(res.form, tag='input', name='users-2.role', pos=0)
+        res.form.fields.setdefault(user_field.name, []).append(user_field)
+        res.form.fields.setdefault(role_field.name, []).append(role_field)
+        res.form.field_order.append((user_field.name, user_field))
+        res.form.field_order.append((role_field.name, role_field))
         res.form['name'] = 'FooBarBaz'
-        res.form.fields.setdefault('users-2.user', []).append(
-            Text(res.form, tag='input', name='users-2.user', pos=0))
-        res.form.fields.setdefault('users-2.role', []).append(
-            Text(res.form, tag='input', name='users-2.role', pos=0))
-        res.form['users-2.user'] = 'baz@quux.edu'
-        res.form['users-2.role'] = 'viewer'
-        res = res.form.submit()
-        res = res.follow()
+        res.form[user_field.name] = 'baz@quux.edu'
+        res.form[role_field.name] = 'viewer'
+        res = res.form.submit().follow()
         collection = DBSession.query(Collection).filter(Collection.name=='FooBarBaz').first()
         assert collection is not None
         foo = self.sub_get_user('foo')
