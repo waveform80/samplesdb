@@ -27,7 +27,6 @@ from __future__ import (
 from pyramid.view import view_config
 from pyramid.decorator import reify
 from pyramid.httpexceptions import HTTPFound
-from pyramid.security import has_permission, authenticated_userid, unauthenticated_userid
 
 from samplesdb.helpers import slugify
 from samplesdb.views import BaseView
@@ -231,6 +230,5 @@ class CollectionsView(BaseView):
         return dict(
             filter=filter,
             display=display,
-            samples=samples,
-            has_permission=has_permission)
+            samples=samples)
 

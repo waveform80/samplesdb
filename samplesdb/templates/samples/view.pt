@@ -18,14 +18,13 @@
             collection_id=context.sample.collection.id)}">${context.sample.collection.name}
             Collection</a>
           <span tal:omit-tag="True"
-            tal:condition="has_permission('edit_collection', context, request)">
+            tal:condition="view.has_permission('edit_collection')">
             | <a href="${request.route_url('samples_edit', sample_id=context.sample.id)}">Edit Details</a>
-          </span>
-          <span tal:omit-tag="True" tal:condition="not context.sample.destroyed">
-            | <a href="#">Mark Destroyed</a>
-          </span>
-          <span tal:omit-tag="True" tal:condition="not context.sample.destroyed">
-            | <a href="${request.route_url('samples_split', sample_id=context.sample.id)}">Create Aliquots</a>
+            <span tal:omit-tag="True"
+              tal:condition="not context.sample.destroyed">
+              | <a href="#">Mark Destroyed</a>
+              | <a href="${request.route_url('samples_split', sample_id=context.sample.id)}">Create Aliquots</a>
+            </span>
           </span>
         </p>
       </div>

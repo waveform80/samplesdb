@@ -22,18 +22,18 @@
         </span>
         <span
           tal:omit-tag="True"
-          tal:condition="has_permission('edit_collection', context, request)">
+          tal:condition="view.has_permission('edit_collection')">
           <a href="${request.route_url('samples_create',
             collection_id=context.collection.id)}">New Sample</a> |
         </span>
         <span
           tal:omit-tag="True"
-          tal:condition="has_permission('audit_collection', context, request)">
+          tal:condition="view.has_permission('audit_collection')">
           <a href="#">Print Labels</a> |
         </span>
         <span
           tal:omit-tag="True"
-          tal:condition="has_permission('manage_collection', context, request)">
+          tal:condition="view.has_permission('manage_collection')">
           <a href="${request.route_url('collections_edit',
             collection_id=context.collection.id)}">Edit Collection</a> |
         </span>

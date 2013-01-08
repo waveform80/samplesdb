@@ -30,10 +30,12 @@ import pytz
 import bleach
 import webhelpers
 import webhelpers.date
+import webhelpers.number
 import webhelpers.html.builder
 import webhelpers.html.converters
 from pyramid.decorator import reify
 from pyramid.renderers import get_renderer
+from pyramid.security import has_permission
 
 
 MARKUP_LANGUAGES = {
@@ -181,6 +183,9 @@ class BaseView(object):
     @reify
     def site_title(self):
         return self.request.registry.settings['site_title']
+
+    def has_permission(self, permission):
+        return has_permission(permission, self.context, self.request)
 
     def literal(self, *args):
         "Indicates that the content is literal markup"
