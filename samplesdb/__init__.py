@@ -46,7 +46,6 @@ from samplesdb.security import (
     group_finder,
     RootContextFactory,
     CollectionContextFactory,
-    OpenCollectionContextFactory,
     SampleContextFactory,
     )
 
@@ -76,7 +75,6 @@ ROUTES = {
     'collections_edit':            r'/collections/{collection_id:\d+}/edit',
     'collections_export':          r'/collections/{collection_id:\d+}/export',
     'collections_destroy':         r'/collections/{collection_id:\d+}/destroy',
-    'open_collections_view':       r'/open_collections/{open_collection_id:\d+}',
     'samples_create':              r'/collections/{collection_id:\d+}/new',
     'samples_view':                r'/samples/{sample_id:\d+}',
     'samples_edit':                r'/samples/{sample_id:\d+}/edit',
@@ -112,24 +110,30 @@ def main(global_config, **settings):
     mailer_factory = mailer_factory_from_settings(settings)
     licenses_factory = licenses_factory_from_settings(settings)
     engine = engine_from_config(settings, 'sqlalchemy.')
-    authn_policy = AuthTktAuthenticationPolicy('secret', callback=group_finder)
+    authn_policy = AuthTktAuthenticationPolicy(
+        'secret', callback=group_finder,
+        # XXX For 1.4:
+        #hashalg='sha512'
+        )
     authz_policy = ACLAuthorizationPolicy()
     DBSession.configure(bind=engine)
 
     config = Configurator(
-        settings=settings, root_factory=RootContextFactory)
-    config.set_authentication_policy(authn_policy)
-    config.set_authorization_policy(authz_policy)
-    config.set_session_factory(session_factory)
+        settings=settings,
+        root_factory=RootContextFactory,
+        authentication_policy=authn_policy,
+        authorization_policy=authz_policy,
+        session_factory=session_factory)
     config.registry['mailer'] = mailer_factory
     config.registry['licenses'] = licenses_factory
+    # XXX Deprecated in 1.4
     config.set_request_property(get_user, b'user', reify=True)
+    # XXX For 1.4:
+    #config.add_request_method(get_user, b'user', reify=True)
     config.add_static_view('static', 'static', cache_max_age=3600)
     for name, url in ROUTES.items():
         if '{collection_id:' in url:
             factory = CollectionContextFactory
-        elif '{open_collection_id:' in url:
-            factory = OpenCollectionContextFactory
         elif '{sample_id:' in url:
             factory = SampleContextFactory
         else:

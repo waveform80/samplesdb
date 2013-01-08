@@ -51,7 +51,7 @@
         <li class="collection" tal:repeat="collection view.open_collections">
         <a
           class="th"
-          href="${request.route_url('open_collections_view', open_collection_id=collection.id)}">
+          href="${request.route_url('collections_view', collection_id=collection.id)}">
           <img
             src="${request.static_url('samplesdb:static/empty_collection_optimized.svg')}"
             alt="Empty Collection" />

@@ -27,7 +27,7 @@ from __future__ import (
 from pyramid.view import view_config
 from pyramid.decorator import reify
 from pyramid.httpexceptions import HTTPFound
-from pyramid.security import has_permission
+from pyramid.security import has_permission, authenticated_userid, unauthenticated_userid
 
 from samplesdb.helpers import slugify
 from samplesdb.views import BaseView
@@ -233,24 +233,4 @@ class CollectionsView(BaseView):
             display=display,
             samples=samples,
             has_permission=has_permission)
-
-    @view_config(
-        route_name='open_collections_view',
-        renderer='../templates/collections/view.pt')
-    def open_view(self):
-        filter = self.request.params.get('filter', 'existing')
-        display = self.request.params.get('display', 'grid')
-        # XXX Construct a query instead (better performance than retrieving
-        # everything and doing filtering in Python)
-        samples = [
-            sample
-            for sample in self.context.collection.all_samples
-            if filter == 'all'
-            or (filter == 'existing' and not sample.destroyed)
-            or (filter == 'destroyed' and sample.destroyed)]
-        return dict(
-            filter=filter,
-            display=display,
-            samples=samples,
-            has_permission=lambda permission, context, request: False)
 

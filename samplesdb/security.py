@@ -109,6 +109,7 @@ def get_user(request):
 
 def group_finder(email_address, request):
     "Returns the set of principals for a user in the current context"
+    print('GROUP_FINDER CALLED')
     user = request.user
     principals = []
     if user is not None:
@@ -159,15 +160,11 @@ class CollectionContextFactory(RootContextFactory):
         super(CollectionContextFactory, self).__init__(request)
         self.collection = DBSession.query(Collection).\
             filter_by(id=request.matchdict['collection_id']).one()
-
-
-class OpenCollectionContextFactory(RootContextFactory):
-    def __init__(self, request):
-        super(OpenCollectionContextFactory, self).__init__(request)
-        self.collection = DBSession.query(Collection).\
-            filter_by(id=request.matchdict['open_collection_id']).one()
-        if not self.collection.license.is_open:
-            raise ValueError('collection license does not permit open access')
+        # If the collection has an open-license grant view permission to anyone
+        if self.collection.license.is_open:
+            self.__acl__.append(
+                (Allow, Everyone, (VIEW_COLLECTION,))
+                )
 
 
 class SampleContextFactory(RootContextFactory):
@@ -176,3 +173,9 @@ class SampleContextFactory(RootContextFactory):
         self.sample = DBSession.query(Sample).\
             filter_by(id=request.matchdict['sample_id']).one()
         self.collection = self.sample.collection
+        # If the collection has an open-license grant view permission to anyone
+        if self.collection.license.is_open:
+            self.__acl__.append(
+                (Allow, Everyone, (VIEW_COLLECTION,))
+                )
+
