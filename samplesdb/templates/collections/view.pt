@@ -89,7 +89,7 @@
               <td>${sample.status}</td>
               <td>${sample.description}</td>
               <td>${sample.location}</td>
-              <td>${sample.created.astimezone(request.user.timezone).strftime('%H:%M on %a, %d %b %Y')}</td>
+              <td>${view.as_local(sample.created).strftime('%H:%M on %a, %d %b %Y')}</td>
             </tr>
           </tbody>
         </table>
