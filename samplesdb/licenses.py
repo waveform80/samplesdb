@@ -141,6 +141,8 @@ class LicensesFactory(object):
                     if not data:
                         break
                     target.write(data)
+
+        # XXX Should validate the new cache file here
         # Renames within the same file-system are atomic, i.e. everything that
         # attempts to read the cache before this gets the old file and
         # everything afterwards gets the new cache - no process gets a
