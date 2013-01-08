@@ -1011,14 +1011,15 @@ class Sample(Base):
         if self.destroyed:
             raise SampleDestroyed('Sample #%d is already destroyed' % self.id)
         aliargs = kwargs.copy()
-        if not 'description' in aliargs:
-            aliargs['description'] = 'Aliquot of sample #%d' % self.id
         if not 'location' in aliargs:
             aliargs['location'] = self.location
         reason = 'Sample destroyed to create %d aliquots%s' % (
             aliquots, ' and an aliquant' if aliquant else '')
         aliquots = [
-            Sample.create(creator, collection, **aliargs)
+            Sample.create(
+                creator, collection,
+                description='Aliquot %d of sample #%d' % (i + 1, self.id),
+                **aliargs)
             for i in range(aliquots)
             ]
         for aliquot in aliquots:

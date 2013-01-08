@@ -109,7 +109,6 @@ def get_user(request):
 
 def group_finder(email_address, request):
     "Returns the set of principals for a user in the current context"
-    print('GROUP_FINDER CALLED')
     user = request.user
     principals = []
     if user is not None:
