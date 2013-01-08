@@ -38,7 +38,7 @@ from formencode.compound import CompoundValidator
 from formencode.foreach import ForEach
 from pyramid.threadlocal import get_current_registry
 
-from samplesdb.helpers import MARKUP_LANGUAGES
+from samplesdb.views import MARKUP_LANGUAGES
 from samplesdb.models import (
     EmailAddress,
     UserLimit,

@@ -43,12 +43,12 @@
 
     <dl class="row">
       <dt class="three mobile-one columns">Password Changed</dt>
-      <dd class="nine mobile-three columns">${view.helpers.time_ago_in_words(request.user.password_changed, granularity='day')} ago</dd>
+      <dd class="nine mobile-three columns">${view.time_ago_in_words(request.user.password_changed, granularity='day')} ago</dd>
     </dl>
 
     <dl class="row">
       <dt class="three mobile-one columns">Account Created</dt>
-      <dd class="nine mobile-three columns">${view.helpers.time_ago_in_words(request.user.created, granularity='day')} ago</dd>
+      <dd class="nine mobile-three columns">${view.time_ago_in_words(request.user.created, granularity='day')} ago</dd>
     </dl>
 
     <dl class="row">
@@ -85,8 +85,8 @@
       <dt class="three mobile-one columns">Attachment Storage</dt>
       <dd class="nine mobile-three columns">
       <div class="progress eight"><span class="meter" style="width: ${request.user.storage_used * 100 / request.user.limits.storage_limit}%"></span></div>
-      ${view.helpers.format_data_size(request.user.storage_used, 'B')} /
-      ${view.helpers.format_data_size(request.user.limits.storage_limit, 'B')}</dd>
+      ${view.format_data_size(request.user.storage_used, 'B')} /
+      ${view.format_data_size(request.user.limits.storage_limit, 'B')}</dd>
     </dl>
 
   </div>

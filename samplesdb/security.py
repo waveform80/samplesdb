@@ -118,10 +118,6 @@ def group_finder(email_address, request):
     if (
             isinstance(request.context, CollectionContextFactory) or
             isinstance(request.context, SampleContextFactory)):
-        if request.context.collection.license.is_open:
-            # If the collection is open-access, then the viewer principal is
-            # added regardless of user authentication
-            principals.append(VIEWER_PRINCIPAL)
         if user is not None:
             # The role the user holds in the current context's collection is
             # added as a principal

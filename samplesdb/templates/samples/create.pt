@@ -61,7 +61,7 @@
         <div class="row">
           ${form.label('notes_markup', 'Markup')}
           ${form.select('notes_markup',
-            options=sorted(view.helpers.MARKUP_LANGUAGES.items()),
+            options=sorted(view.markup_languages.items()),
             selected_value='text', inner_cols=6)}
         </div>
 

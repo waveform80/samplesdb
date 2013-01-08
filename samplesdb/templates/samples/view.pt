@@ -62,14 +62,14 @@
 
           <dl class="row">
             <dt class="three mobile-one columns">Logged</dt>
-            <dd class="nine mobile-three columns">${context.sample.created.astimezone(request.user.timezone).strftime('%H:%M on %A, %d %B %Y')}
-                (${view.helpers.time_ago_in_words(context.sample.created, granularity='day')} ago)</dd>
+            <dd class="nine mobile-three columns">${view.as_local(context.sample.created).strftime('%H:%M on %A, %d %B %Y')}
+                (${view.time_ago_in_words(context.sample.created, granularity='day')} ago)</dd>
           </dl>
 
           <dl class="row" tal:condition="context.sample.destroyed">
             <dt class="three mobile-one columns">Destroyed</dt>
-            <dd class="nine mobile-three columns">${context.sample.destroyed.astimezone(request.user.timezone).strftime('%H:%M on %A, %d %B %Y')}
-                (${view.helpers.time_ago_in_words(context.sample.destroyed, granularity='day')} ago)</dd>
+            <dd class="nine mobile-three columns">${view.as_local(context.sample.destroyed).strftime('%H:%M on %A, %d %B %Y')}
+                (${view.time_ago_in_words(context.sample.destroyed, granularity='day')} ago)</dd>
           </dl>
 
           <dl class="row">
@@ -92,7 +92,7 @@
           <div class="row"><h4 class="twelve columns subheader">Notes</h4></div>
           <div class="row">
             <div class="twelve columns">
-              ${view.helpers.render_markup(context.sample.notes_markup, context.sample.notes)}
+              ${view.render_markup(context.sample.notes_markup, context.sample.notes)}
             </div>
           </div>
 
@@ -103,7 +103,7 @@
             <thead><tr><th>Timestamp</th><th>Message</th></tr></thead>
             <tbody>
               <tr tal:repeat="entry context.sample.log">
-                <td>${entry.created.astimezone(request.user.timezone).strftime('%Y-%m-%d %H:%M')}</td>
+                <td>${view.as_local(entry.created).strftime('%Y-%m-%d %H:%M')}</td>
                 <td>${entry.message}</td>
               </tr>
             </tbody>
@@ -152,7 +152,7 @@
                       ${attachment}
                   </a>
                 </td>
-                <td>${view.helpers.format_data_size(context.sample.attachments.size(attachment), 'B')}</td>
+                <td>${view.format_data_size(context.sample.attachments.size(attachment), 'B')}</td>
                 <td>
                   <a href="${request.route_url(
                     'samples_remove_attachment',

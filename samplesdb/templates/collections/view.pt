@@ -17,7 +17,7 @@
         <p>
         <span
           tal:omit-tag="True"
-          tal:condition="not has_permission('view_collection', context, request)">
+          tal:condition="not request.user">
           <a href="${request.route_url('collections_index')}">Open Collections</a> |
         </span>
         <span

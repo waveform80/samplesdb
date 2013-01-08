@@ -72,7 +72,6 @@ from zope.sqlalchemy import ZopeTransactionExtension
 from pyramid.threadlocal import get_current_registry
 
 from samplesdb.image import can_resize, make_thumbnail
-from samplesdb.helpers import utcnow
 from samplesdb.licenses import License
 
 
@@ -101,6 +100,11 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
     cursor = dbapi_connection.cursor()
     cursor.execute('PRAGMA foreign_keys=ON')
     cursor.close()
+
+
+def utcnow():
+    "Returns the current UTC timestamp with a UTC timezone"
+    return pytz.utc.localize(datetime.utcnow())
 
 
 class VerificationError(Exception):
