@@ -241,7 +241,7 @@ class Form(object):
         """
         assert self.schema or self.validators
         if self.is_validated:
-            return not(self.errors)
+            return not bool(self.errors)
         if self.method and self.method != self.request.method:
             return False
         if self.method == 'POST':
@@ -271,7 +271,7 @@ class Form(object):
         # XXX This is a tad dirty - how do we know the field is called _came_from here?
         self.came_from = self.data.get('_came_from', self.came_from)
         self.is_validated = True
-        return not(self.errors)
+        return not bool(self.errors)
 
     def bind(self, obj, include=None, exclude=None):
         """
