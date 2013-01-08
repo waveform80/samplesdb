@@ -89,6 +89,9 @@ class SampleEditSchema(SampleSchema):
     pass
 
 
+class SampleDestroySchema(FormSchema):
+    reason = ValidLogMessage()
+
 class SampleSplitSchema(FormSchema):
     collection = ValidCollection()
     location = ValidSampleLocation()
@@ -118,14 +121,28 @@ class SamplesView(BaseView):
             # XXX Should be using form collection below
             new_sample = form.bind(
                 Sample.create(self.request.user, self.context.collection))
-            DBSession.add(new_sample)
-            DBSession.flush()
             for storage in self.request.POST.getall('attachments'):
                 if storage:
                     new_sample.attachments.create(storage.filename, storage.file)
             return HTTPFound(
                 location=self.request.route_url(
                     'samples_view', sample_id=new_sample.id))
+        return dict(form=FormRenderer(form))
+
+    @view_config(
+        route_name='samples_destroy',
+        renderer='../templates/samples/destroy.pt',
+        permission=EDIT_COLLECTION)
+    def destroy(self):
+        form = Form(
+            self.request,
+            defaults=dict(reason='Sample destroyed'),
+            schema=SampleDestroySchema)
+        if form.validate():
+            self.context.sample.destroy(self.request.user, form.data['reason'])
+            return HTTPFound(
+                location=self.request.route_url(
+                    'samples_view', sample_id=self.context.sample.id))
         return dict(form=FormRenderer(form))
 
     @view_config(

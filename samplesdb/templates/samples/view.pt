@@ -22,7 +22,7 @@
             | <a href="${request.route_url('samples_edit', sample_id=context.sample.id)}">Edit Details</a>
             <span tal:omit-tag="True"
               tal:condition="not context.sample.destroyed">
-              | <a href="#">Mark Destroyed</a>
+              | <a href="${request.route_url('samples_destroy', sample_id=context.sample.id)}">Mark Destroyed</a>
               | <a href="${request.route_url('samples_split', sample_id=context.sample.id)}">Create Aliquots</a>
             </span>
           </span>
@@ -76,7 +76,7 @@
             <dd class="nine mobile-three columns">${context.sample.description}</dd>
           </dl>
 
-          <dl class="row">
+          <dl class="row" tal:condition="not context.sample.destroyed">
             <dt class="three mobile-one columns">Location</dt>
             <dd class="nine mobile-three columns">${context.sample.location}</dd>
           </dl>

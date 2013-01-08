@@ -1,0 +1,37 @@
+<!doctype html>
+<!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
+<!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
+<!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!--> <div metal:use-macro="view.layout">
+  <div tal:omit-tag="True" metal:fill-slot="title">Confirm Destruction of Sample #${context.sample.id}</div>
+  <div tal:omit-tag="True" metal:fill-slot="content">
+    <div metal:use-macro="view.top_bar"></div>
+
+    <div class="row"><h1 class="twelve columns">Confirm Destruction of Sample #${context.sample.id}</h1></div>
+
+    <div class="row">
+      <div class="twelve columns">
+
+        <div metal:use-macro="view.flashes"></div>
+
+        ${form.begin()}
+
+        <div class="row">
+          ${form.label('reason', 'Log Message')}
+          ${form.text('reason')}
+        </div>
+
+        <div class="row">
+          ${form.label('submit', '')}
+          ${form.submit('submit', class_='small')}
+        </div>
+
+        ${form.end()}
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+

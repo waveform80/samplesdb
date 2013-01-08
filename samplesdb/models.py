@@ -976,18 +976,20 @@ class Sample(Base):
         """Create a new sample"""
         assert collection.users[creator].id in ('owner', 'editor')
         sample = cls(collection_id=collection.id, **kwargs)
+        DBSession.add(sample)
+        DBSession.flush() # to generate sample.id
         sample.log.append(SampleLogEntry(
             creator_id=creator.id,
             event='create', message='Sample created'))
         return sample
 
-    def destroy(self, destroyer):
+    def destroy(self, destroyer, reason):
         """Mark the sample as destroyed"""
         if self.destroyed:
-            raise SampleDestroyed('Sample %d is already destroyed' % self.id)
+            raise SampleDestroyed('Sample #%d is already destroyed' % self.id)
         self.log.append(SampleLogEntry(
             creator_id=destroyer.id,
-            event='destroy', message='Sample destroyed'))
+            event='destroy', message=reason))
         self.destroyed = utcnow()
 
     @classmethod
@@ -997,11 +999,8 @@ class Sample(Base):
             creator, collection, **kwargs)
         for aliquot in aliquots:
             if aliquot.destroyed:
-                raise SampleDestroyed('Sample %d is already destroyed' % self.id)
-            aliquot.log.append(SampleLogEntry(
-                creator_id=creator.id,
-                event='change', message='Sample combined into new sample'))
-            aliquot.destroy(creator)
+                raise SampleDestroyed('Sample #%d is already destroyed' % self.id)
+            aliquot.destroy(creator, 'Sample combined into sample #%d' % sample.id)
             sample.parents.append(aliquot)
         return sample
 
@@ -1010,31 +1009,38 @@ class Sample(Base):
         if aliquots < 1:
             raise ValueError('Cannot split a sample into less than 1 aliquot')
         if self.destroyed:
-            raise SampleDestroyed('Sample %d is already destroyed' % self.id)
-        self.log.append(SampleLogEntry(
-            creator_id=creator.id,
-            event='change', message='Sample split into %d' % aliquots))
+            raise SampleDestroyed('Sample #%d is already destroyed' % self.id)
         aliargs = kwargs.copy()
         if not 'description' in aliargs:
-            aliargs['description'] = 'Aliquot of sample %d' % self.id
+            aliargs['description'] = 'Aliquot of sample #%d' % self.id
         if not 'location' in aliargs:
             aliargs['location'] = self.location
+        reason = 'Sample destroyed to create %d aliquots%s' % (
+            aliquots, ' and an aliquant' if aliquant else '')
         aliquots = [
             Sample.create(creator, collection, **aliargs)
             for i in range(aliquots)
             ]
         for aliquot in aliquots:
             aliquot.parents.append(self)
+            self.log.append(SampleLogEntry(
+                creator_id=creator.id,
+                event='change',
+                message='Created aliquot #%d from sample' % aliquot.id))
         if aliquant:
             aliargs = kwargs.copy()
             if not 'description' in aliargs:
-                aliargs['description'] = 'Aliquant of sample %d' % self.id
+                aliargs['description'] = 'Aliquant of sample #%d' % self.id
             if not 'location' in aliargs:
                 aliargs['location'] = self.location
             aliquant = Sample.create(creator, collection, **aliargs)
             aliquant.parents.append(self)
+            self.log.append(SampleLogEntry(
+                creator_id=creator.id,
+                event='change',
+                message='Created aliquant #%d from sample' % aliquant.id))
             aliquots.append(aliquant)
-        self.destroy(creator)
+        self.destroy(creator, reason)
         return aliquots
 
 def add_sample_attachments_on_init(target, args, kwargs):
