@@ -17,7 +17,8 @@
 # You should have received a copy of the GNU General Public License along with
 # samplesdb.  If not, see <http://www.gnu.org/licenses/>.
 
-"""The root of the samplesdb package
+"""
+The root of the samplesdb package
 
 This module creates the SQLAlchemy engine, the Pyramid configurator object
 (which handles routing), and the WSGI application itself.
@@ -33,7 +34,6 @@ from __future__ import (
 import mimetypes
 
 from pyramid.config import Configurator
-from pyramid.authentication import AuthTktAuthenticationPolicy
 from pyramid.authorization import ACLAuthorizationPolicy
 from pyramid_beaker import session_factory_from_settings
 from pyramid_mailer import mailer_factory_from_settings
@@ -106,17 +106,23 @@ ROUTES = {
 
 def main(global_config, **settings):
     """Returns the Pyramid WSGI application"""
+    # Ensure that the production configuration has been updated with "real"
+    # values (at least where required for security)
+    for key in ('authtkt.secret', 'session.secret'):
+        if settings[key] == 'CHANGEME':
+            raise ValueError('You must specify a new value for %s' % key)
     mimetypes.init()
     session_factory = session_factory_from_settings(settings)
     mailer_factory = mailer_factory_from_settings(settings)
     licenses_factory = licenses_factory_from_settings(settings)
-    engine = engine_from_config(settings, 'sqlalchemy.')
+    authn_policy = authn_policy_from_settings(settings)
     authn_policy = AuthTktAuthenticationPolicy(
-        'secret', callback=group_finder,
+        settings['authtkt.secret'], callback=group_finder,
         # XXX For 1.4:
         #hashalg='sha512'
         )
     authz_policy = ACLAuthorizationPolicy()
+    engine = engine_from_config(settings, 'sqlalchemy.')
     DBSession.configure(bind=engine)
 
     config = Configurator(
