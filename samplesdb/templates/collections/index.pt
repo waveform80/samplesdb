@@ -7,48 +7,20 @@
   <div tal:omit-tag="True" metal:fill-slot="content">
     <div metal:use-macro="view.top_bar"></div>
 
-    <div tal:omit-tag="True" tal:condition="request.user">
-      <div class="row"><h1 class="twelve columns">My Collections</h1></div>
+    <div class="row"><h1 class="twelve columns">${title}</h1></div>
 
-      <div class="row">
-        <p class="twelve columns"><a href="${request.route_url('collections_create')}">New Collection</a></p>
-      </div>
-
-      <div class="row">
-
-        <p class="twelve columns" tal:condition="not request.user.collections">
-          You have no collections at this time.
-        </p>
-
-        <ul class="block-grid four-up mobile-two-up" tal:condition="request.user.collections">
-          <li class="collection" tal:repeat="collection request.user.collections">
-          <a
-            class="th"
-            href="${request.route_url('collections_view', collection_id=collection.id)}">
-            <img
-              src="${request.static_url('samplesdb:static/empty_collection_optimized.svg')}"
-              alt="Empty Collection" />
-            ${collection.name}<br />
-          </a>
-          (${len(collection.existing_samples)} samples)
-          </li>
-        </ul>
-      </div>
-
-      <div class="row"><hr /></div>
-
+    <div class="row" tal:condition="view.has_permission('create_collection')">
+      <p class="twelve columns"><a href="${request.route_url('collections_create')}">New Collection</a></p>
     </div>
-
-    <div class="row"><h1 class="twelve columns">Open Collections</h1></div>
 
     <div class="row">
 
-      <p class="twelve columns" tal:condition="not view.open_collections">
-        There are no available open collections at this time.
+      <p class="twelve columns" tal:condition="not collections">
+        There are no available collections at this time.
       </p>
 
-      <ul class="block-grid four-up mobile-two-up" tal:condition="view.open_collections">
-        <li class="collection" tal:repeat="collection view.open_collections">
+      <ul class="block-grid four-up mobile-two-up" tal:condition="collections">
+        <li class="collection" tal:repeat="collection collections">
         <a
           class="th"
           href="${request.route_url('collections_view', collection_id=collection.id)}">

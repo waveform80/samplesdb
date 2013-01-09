@@ -70,6 +70,7 @@ ROUTES = {
     'account_reset_complete':      r'/reset/{code:[a-fA-F0-9]+}',
     # views.collections
     'collections_index':           r'/collections',
+    'collections_open':            r'/collections/open',
     'collections_create':          r'/collections/new',
     'collections_view':            r'/collections/{collection_id:\d+}',
     'collections_edit':            r'/collections/{collection_id:\d+}/edit',

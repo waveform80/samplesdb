@@ -17,11 +17,6 @@
         <p>
         <span
           tal:omit-tag="True"
-          tal:condition="not request.user">
-          <a href="${request.route_url('collections_index')}">Open Collections</a> |
-        </span>
-        <span
-          tal:omit-tag="True"
           tal:condition="view.has_permission('edit_collection')">
           <a href="${request.route_url('samples_create',
             collection_id=context.collection.id)}">New Sample</a> |

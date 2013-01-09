@@ -144,7 +144,20 @@ class CollectionsView(BaseView):
         renderer='../templates/collections/index.pt',
         permission=VIEW_COLLECTIONS)
     def index(self):
-        return {}
+        return dict(
+            title='My Collections',
+            collections=self.request.user.collections,
+            )
+
+    @view_config(
+        route_name='collections_open',
+        renderer='../templates/collections/index.pt',
+        permission=VIEW_COLLECTIONS)
+    def open(self):
+        return dict(
+            title='Open Collections',
+            collections=self.open_collections,
+            )
 
     @view_config(
         route_name='collections_create',

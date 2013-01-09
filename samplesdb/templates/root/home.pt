@@ -49,7 +49,7 @@
                   /></a>Open Collections</h5>
               <p>The collections that scientists have chosen to publish under an
               <a href="http://opendefinition.org/">Open License</a> can be found
-              under <a href="${request.route_url('collections_index')}">Open
+              under <a href="${request.route_url('collections_open')}">Open
                 Collections</a>.</p>
             </div>
           </div>
