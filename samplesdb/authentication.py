@@ -29,7 +29,15 @@ from __future__ import (
     )
 
 from pyramid.settings import asbool
-from pyramid.authentication import AuthTktAuthenticationPolicy
+from pyramid.authentication import (
+    AuthTktAuthenticationPolicy,
+    RemoteUserAuthenticationPolicy,
+    SessionAuthenticationPolicy,
+    RepozeWho1AuthenticationPolicy,
+    )
+
+from samplesdb.security import group_finder
+
 
 def asint(v):
     try:
@@ -37,7 +45,7 @@ def asint(v):
     except ValueError:
         return 0
 
-def authn_policy_from_settings(settings):
+def authentication_policy_from_settings(settings):
     """
     Return a Pyramid authentication policy using settings supplied from
     a Paste configuration file
@@ -49,6 +57,24 @@ def authn_policy_from_settings(settings):
         for prefix in prefixes:
             if k.startswith(prefix):
                 option_name = k[len(prefix):]
-                if option_name == 'timeout':
+                if option_name in ('reissue_time', 'max_age', 'timeout'):
                     v = int(v)
+                elif option_name in (
+                        'secure', 'include_ip', 'http_only',
+                        'wild_domain', 'debug'):
+                    v = asbool(v)
                 options[option_name] = v
+
+    policy_type = options.pop('type', 'authtkt').lower()
+    if 'timeout' in options:
+        if not 'reissue_time' in options:
+            options['reissue_time'] = options['timeout'] / 10
+        if not 'max_age' in options:
+            options['max_age'] = options['timeout'] * 2
+    options['callback'] = group_finder
+    return {
+        'authtkt':    AuthTktAuthenticationPolicy,
+        'remoteuser': RemoteUserAuthenticationPolicy,
+        'session':    SessionAuthenticationPolicy,
+        'repozewho1': RepozeWho1AuthenticationPolicy,
+        }[policy_type](**options)

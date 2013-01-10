@@ -41,6 +41,7 @@ from sqlalchemy import engine_from_config
 
 from samplesdb.models import DBSession
 from samplesdb.licenses import licenses_factory_from_settings
+from samplesdb.authentication import authentication_policy_from_settings
 from samplesdb.security import (
     get_user,
     group_finder,
@@ -108,19 +109,14 @@ def main(global_config, **settings):
     """Returns the Pyramid WSGI application"""
     # Ensure that the production configuration has been updated with "real"
     # values (at least where required for security)
-    for key in ('authtkt.secret', 'session.secret'):
-        if settings[key] == 'CHANGEME':
+    for key in ('authn.secret', 'session.secret'):
+        if settings.get(key) == 'CHANGEME':
             raise ValueError('You must specify a new value for %s' % key)
     mimetypes.init()
     session_factory = session_factory_from_settings(settings)
     mailer_factory = mailer_factory_from_settings(settings)
     licenses_factory = licenses_factory_from_settings(settings)
-    authn_policy = authn_policy_from_settings(settings)
-    authn_policy = AuthTktAuthenticationPolicy(
-        settings['authtkt.secret'], callback=group_finder,
-        # XXX For 1.4:
-        #hashalg='sha512'
-        )
+    authn_policy = authentication_policy_from_settings(settings)
     authz_policy = ACLAuthorizationPolicy()
     engine = engine_from_config(settings, 'sqlalchemy.')
     DBSession.configure(bind=engine)
