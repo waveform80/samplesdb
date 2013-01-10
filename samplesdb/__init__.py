@@ -18,10 +18,11 @@
 # samplesdb.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-The root of the samplesdb package
+The main module of the samplesdb application.
 
-This module creates the SQLAlchemy engine, the Pyramid configurator object
-(which handles routing), and the WSGI application itself.
+This module creates the Pyramid configurator object which in turn is used to
+create the WSGI application itself. The main() routine is referenced by the
+INI file passed to pserve.
 """
 
 from __future__ import (

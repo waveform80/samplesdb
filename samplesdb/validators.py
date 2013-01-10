@@ -17,6 +17,14 @@
 # You should have received a copy of the GNU General Public License along with
 # samplesdb.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+Defines form-field validators for the samplesdb application.
+
+Each form field has a corresponding validator, usually based upon that field's
+representation in the database model. Validators are defined centrally here
+to reduce duplication of code across modules.
+"""
+
 from __future__ import (
     unicode_literals,
     print_function,

@@ -17,6 +17,15 @@
 # You should have received a copy of the GNU General Public License along with
 # samplesdb.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+Provides a refreshable license repository.
+
+License information is sourced from opendefinition.org in JSON format. A
+routine is provided for construction a license factory from Paste style
+settings, and the resulting object can be refreshed from opendefinition.org at
+any time.  The license data is cached and only re-read weekly.
+"""
+
 from __future__ import (
     unicode_literals,
     print_function,

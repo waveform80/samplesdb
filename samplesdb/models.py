@@ -17,7 +17,12 @@
 # You should have received a copy of the GNU General Public License along with
 # samplesdb.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Declares the database model for the samplesdb application."""
+"""
+Declares the database model for the samplesdb application.
+
+Use the initialize_samplesdb_db script with a Paste configuration file to
+perform first-time setup on your database.
+"""
 
 from __future__ import (
     unicode_literals,

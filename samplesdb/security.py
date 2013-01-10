@@ -17,6 +17,15 @@
 # You should have received a copy of the GNU General Public License along with
 # samplesdb.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+Defines ACLs for the samplesdb application.
+
+ACLs in samplesdb are based upon request context, hence the definition of
+sample and collection related contexts at the end of the unit. This module
+also defines the routines used for determining the principals associated with
+an authenticated request (group_finder).
+"""
+
 from __future__ import (
     unicode_literals,
     print_function,

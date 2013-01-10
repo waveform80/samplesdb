@@ -17,6 +17,10 @@
 # You should have received a copy of the GNU General Public License along with
 # samplesdb.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+Defines the view handlers for sample-related views in samplesdb.
+"""
+
 from __future__ import (
     unicode_literals,
     print_function,

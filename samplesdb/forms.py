@@ -17,7 +17,8 @@
 # You should have received a copy of the GNU General Public License along with
 # samplesdb.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Implements an extended version of pyramid_simpleform.
+"""
+Implements an extended version of pyramid_simpleform.
 
 This module extends the pyramid_simpleform package to support bi-directional
 transcoding of values with formencode's validators (using from_python as well
