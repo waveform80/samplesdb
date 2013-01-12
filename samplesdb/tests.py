@@ -617,7 +617,10 @@ class SiteFunctionalTest(FunctionalFixture):
         res.click(href='/logout').follow()
         self.sub_login('foo@quux.edu', 'foo').follow()
 
-    def test_collection_create(self):
+    def test_collection_create_bad(self):
+        pass
+
+    def test_collection_create_good(self):
         self.test_login_good()
         res = self.test.get('/collections/new')
         res.form['name'] = 'Foo'
@@ -654,7 +657,10 @@ class SiteFunctionalTest(FunctionalFixture):
         assert 'FooBar Collection' in res
         return res
 
-    def test_collection_edit(self):
+    def test_collection_edit_bad(self):
+        pass
+
+    def test_collection_edit_good(self):
         from webtest import Text
         self.test_collection_create_shared()
         self.sub_logout_user()
@@ -686,4 +692,38 @@ class SiteFunctionalTest(FunctionalFixture):
         assert collection.users[baz] == Role.by_id('viewer')
         assert 'FooBarBaz Collection' in res
         return res
+
+    def test_sample_create_bad(self):
+        pass
+
+    def test_sample_create_good(self):
+        pass
+
+    def test_sample_edit_bad(self):
+        pass
+
+    def test_sample_edit_good(self):
+        pass
+
+    def test_sample_attach_bad(self):
+        pass
+
+    def test_sample_attach_malicious(self):
+        # XXX Test shell-based penetration here
+        pass
+
+    def test_sample_attach_good(self):
+        pass
+
+    def test_sample_split_bad(self):
+        pass
+
+    def test_sample_split_good(self):
+        pass
+
+    def test_sample_combine_bad(self):
+        pass
+
+    def test_sample_combine_good(self):
+        pass
 
