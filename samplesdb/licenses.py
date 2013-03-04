@@ -91,7 +91,7 @@ class LicensesFactory(object):
     def __init__(self, cache_dir):
         self._cache_dir = cache_dir
         if not os.path.exists(self._cache_dir):
-            os.mkdir(self._cache_dir)
+            os.makedirs(self._cache_dir)
 
     @property
     def _cache_file(self):
