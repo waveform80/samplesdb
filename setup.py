@@ -55,8 +55,8 @@ CLASSIFIERS = [
     ]
 
 REQUIRES = [
-    'pyramid<1.4dev',
-    'SQLAlchemy<0.8dev',
+    'pyramid<1.5dev',
+    'SQLAlchemy<0.9dev',
     'transaction',
     'pyramid_tm',
     'pyramid_debugtoolbar',

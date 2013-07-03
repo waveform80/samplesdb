@@ -193,7 +193,7 @@ class BaseView(object):
 
     def format_data_size(
             self, size, unit, precision=1, binary=False, full_name=False):
-        "Formats a data-size with a Greek size-prefix"
+        "Formats a data-size with a Greek size-suffix"
         return webhelpers.number.format_data_size(
             size, unit, precision, binary, full_name)
 

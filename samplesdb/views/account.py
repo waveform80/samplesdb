@@ -32,7 +32,7 @@ from pyramid.view import view_config, forbidden_view_config
 from pyramid.decorator import reify
 from pyramid.security import remember, forget
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
-from pyramid.chameleon_text import render_template
+from pyramid.renderers import render
 from pyramid_mailer.message import Message
 from formencode import validators
 
@@ -206,10 +206,14 @@ class AccountView(BaseView):
         message = Message(
             recipients=[email],
             subject='%s email verification' % self.request.registry.settings['site_title'],
-            body=render_template('../templates/account/verify_email.txt',
-                view=self,
-                request=self.request,
-                verification=verification))
+            body=render(
+                renderer_name='../templates/account/verify_email.txt',
+                value=dict(
+                    view=self,
+                    request=self.request,
+                    verification=verification
+                    ),
+                request=self.request))
         mailer.send(message)
         return dict(verification=verification)
 
