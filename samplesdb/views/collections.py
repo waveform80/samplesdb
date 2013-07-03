@@ -135,14 +135,6 @@ class CollectionsView(BaseView):
             )
         return licenses
 
-    @reify
-    def open_collections(self):
-        return [
-            collection
-            for collection in DBSession.query(Collection).all()
-            if collection.license.is_open
-            ]
-
     @view_config(
         route_name='collections_index',
         renderer='../templates/collections/index.pt',
@@ -160,7 +152,11 @@ class CollectionsView(BaseView):
     def open(self):
         return dict(
             title='Open Collections',
-            collections=self.open_collections,
+            # XXX Perform the open filter with a query
+            collections=[
+                collection for collection in DBSession.query(Collection)
+                if collection.license.is_open
+                ]
             )
 
     @view_config(
