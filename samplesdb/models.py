@@ -998,7 +998,7 @@ class Sample(Base):
         self.destroyed = utcnow()
 
     @classmethod
-    def combine(cls, creator, collection, *aliquots, **kwargs):
+    def combine(cls, creator, collection, aliquots, **kwargs):
         """Generate a new sample out of several aliquots"""
         sample = cls.create(
             creator, collection, **kwargs)

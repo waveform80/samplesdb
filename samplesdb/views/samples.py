@@ -39,9 +39,11 @@ from samplesdb.forms import (
 from samplesdb.validators import (
     FormSchema,
     SubFormSchema,
+    ForEach,
     ForEachDict,
     ValidCollection,
     ValidMarkupLanguage,
+    ValidSample,
     ValidSampleDescription,
     ValidSampleLocation,
     ValidSampleNotes,
@@ -96,11 +98,18 @@ class SampleEditSchema(SampleSchema):
 class SampleDestroySchema(FormSchema):
     reason = ValidLogMessage()
 
+
 class SampleSplitSchema(FormSchema):
     collection = ValidCollection()
     location = ValidSampleLocation()
     aliquots = ValidSampleAliquots()
     aliquant = ValidSampleAliquant()
+
+
+class SampleCombineSchema(FormSchema):
+    collection = ValidCollection()
+    location = ValidSampleLocation()
+    samples = ForEach(ValidSample())
 
 
 class SamplesView(BaseView):
@@ -132,6 +141,30 @@ class SamplesView(BaseView):
                 location=self.request.route_url(
                     'samples_view', sample_id=new_sample.id))
         return dict(form=FormRenderer(form))
+
+    @view_config(
+        route_name='samples_combine',
+        renderer='../templates/samples/combine.pt',
+        permission=EDIT_COLLECTION)
+    def combine(self):
+        form = Form(
+            self.request,
+            schema=SampleCombineSchema,
+            variable_decode=True)
+        if form.validate():
+            new_sample = Sample.combine(
+                self.request.user,
+                form.data['collection'],
+                form.data['aliquots'])
+            return HTTPFound(
+                location=self.request.route_url(
+                    'samples_view', sample_id=new_sample.id))
+        return dict(
+            form=FormRenderer(form),
+            samples=DBSession.query(Sample).\
+                filter(Sample.collection==self.context.collection).\
+                filter(Sample.destroyed==None),
+            )
 
     @view_config(
         route_name='samples_destroy',
