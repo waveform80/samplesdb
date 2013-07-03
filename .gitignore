@@ -1,5 +1,8 @@
-*.py[co]
+*.db
+*.py[cdo]
+*.vim
 *.swp
+tags
 
 # Packages
 *.egg
