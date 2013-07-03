@@ -47,6 +47,15 @@ label:last-of-type {
   margin-bottom: 12px;
 }
 
+table label {
+  line-height: 1;
+  margin: 0;
+}
+
+table label:last-of-type {
+  margin-bottom: 0;
+}
+
 .sortable label {
   line-height: 1;
   background: #c9de96;
