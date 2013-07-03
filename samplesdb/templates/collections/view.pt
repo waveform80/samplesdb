@@ -20,6 +20,8 @@
           tal:condition="view.has_permission('edit_collection')">
           <a href="${request.route_url('samples_create',
             collection_id=context.collection.id)}">New Sample</a> |
+          <a href="${request.route_url('samples_combine',
+            collection_id=context.collection.id)}">Combine Samples</a> |
         </span>
         <span
           tal:omit-tag="True"
@@ -80,9 +82,9 @@
           </thead>
           <tbody>
             <tr tal:repeat="sample samples">
-              <td><a href="${request.route_url('samples_view', sample_id=sample.id)}">${sample.id}</a></td>
+              <td>${sample.id}</td>
               <td>${sample.status}</td>
-              <td>${sample.description}</td>
+              <td><a href="${request.route_url('samples_view', sample_id=sample.id)}">${sample.description}</a></td>
               <td>${sample.location}</td>
               <td>${view.as_local(sample.created).strftime('%H:%M on %a, %d %b %Y')}</td>
             </tr>
