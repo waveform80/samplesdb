@@ -1,19 +1,17 @@
-<!doctype html>
-<!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
-<!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
-<!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
-<!--[if gt IE 8]><!--> <div metal:use-macro="view.layout">
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en"><![endif]-->
+<!--[if gt IE 8]><!--><div metal:use-macro="view.layout">
   <div tal:omit-tag="True" metal:fill-slot="title">My Account</div>
   <div tal:omit-tag="True" metal:fill-slot="content">
     <div metal:use-macro="view.top_bar"></div>
 
-    <div class="row"><h1 class="twelve columns">My Account</h1></div>
+    <div class="row"><h1 class="small-12 columns">My Account</h1></div>
 
-    <div class="row"><h3 class="twelve columns subheader">Details</h3></div>
+    <div class="row"><h3 class="small-12 columns subheader">Details</h3></div>
 
     <dl class="row">
-      <dt class="three mobile-one columns">E-mail Address(es)</dt>
-      <dd class="nine mobile-three columns">
+      <dt class="small-3 columns">E-mail Address(es)</dt>
+      <dd class="small-9 columns">
         <ul class="no-bullet">
           <li tal:repeat="email request.user.emails">${email.email}
             <span class="round alert label" tal:condition="not email.verified">unverified</span>
@@ -27,64 +25,64 @@
     <br />
 
     <dl class="row">
-      <dt class="three mobile-one columns">Name</dt>
-      <dd class="nine mobile-three columns">${request.user.salutation} ${request.user.given_name} ${request.user.surname}</dd>
+      <dt class="small-3 columns">Name</dt>
+      <dd class="small-9 columns">${request.user.salutation} ${request.user.given_name} ${request.user.surname}</dd>
     </dl>
 
     <dl class="row">
-      <dt class="three mobile-one columns">Organization</dt>
-      <dd class="nine mobile-three columns">${request.user.organization}&nbsp;</dd>
+      <dt class="small-3 columns">Organization</dt>
+      <dd class="small-9 columns">${request.user.organization}&nbsp;</dd>
     </dl>
 
     <dl class="row">
-      <dt class="three mobile-one columns">Timezone</dt>
-      <dd class="nine mobile-three columns">${request.user.timezone_name.replace('_', ' ')}</dd>
+      <dt class="small-3 columns">Timezone</dt>
+      <dd class="small-9 columns">${request.user.timezone_name.replace('_', ' ')}</dd>
     </dl>
 
     <dl class="row">
-      <dt class="three mobile-one columns">Password Changed</dt>
-      <dd class="nine mobile-three columns">${view.time_ago_in_words(request.user.password_changed, granularity='day')} ago</dd>
+      <dt class="small-3 columns">Password Changed</dt>
+      <dd class="small-9 columns">${view.time_ago_in_words(request.user.password_changed, granularity='day')} ago</dd>
     </dl>
 
     <dl class="row">
-      <dt class="three mobile-one columns">Account Created</dt>
-      <dd class="nine mobile-three columns">${view.time_ago_in_words(request.user.created, granularity='day')} ago</dd>
+      <dt class="small-3 columns">Account Created</dt>
+      <dd class="small-9 columns">${view.time_ago_in_words(request.user.created, granularity='day')} ago</dd>
     </dl>
 
     <dl class="row">
-      <p class="twelve columns"><a href="${request.route_url('account_edit')}">Edit Account Details</a></p>
+      <p class="small-12 columns"><a href="${request.route_url('account_edit')}">Edit Account Details</a></p>
     </dl>
 
-    <div class="row"><h3 class="twelve columns subheader">Limits</h3></div>
+    <div class="row"><h3 class="small-12 columns subheader">Limits</h3></div>
 
     <dl class="row">
-      <dt class="three mobile-one columns">Collections</dt>
-      <dd class="nine mobile-three columns">
-      <div class="progress eight"><span class="meter" style="width: ${len(request.user.collections) * 100 / request.user.limits.collections_limit}%"></span></div>
+      <dt class="small-3 columns">Collections</dt>
+      <dd class="small-9 columns">
+      <div class="progress small-8"><span class="meter" style="width: ${len(request.user.collections) * 100 / request.user.limits.collections_limit}%"></span></div>
       ${len(request.user.collections)} /
       ${request.user.limits.collections_limit}</dd>
     </dl>
 
     <dl class="row">
-      <dt class="three mobile-one columns">Samples</dt>
-      <dd class="nine mobile-three columns">
-      <div class="progress eight"><span class="meter" style="width: ${len(list(request.user.owned_samples)) * 100 / request.user.limits.samples_limit}%"></span></div>
+      <dt class="small-3 columns">Samples</dt>
+      <dd class="small-9 columns">
+      <div class="progress small-8"><span class="meter" style="width: ${len(list(request.user.owned_samples)) * 100 / request.user.limits.samples_limit}%"></span></div>
       ${len(list(request.user.owned_samples))} /
       ${request.user.limits.samples_limit}</dd>
     </dl>
 
     <dl class="row">
-      <dt class="three mobile-one columns">Templates</dt>
-      <dd class="nine mobile-three columns">
-      <div class="progress eight"><span class="meter" style="width: ${len(request.user.templates) * 100 / request.user.limits.templates_limit}%"></span></div>
+      <dt class="small-3 columns">Templates</dt>
+      <dd class="small-9 columns">
+      <div class="progress small-8"><span class="meter" style="width: ${len(request.user.templates) * 100 / request.user.limits.templates_limit}%"></span></div>
       ${len(request.user.templates)} /
       ${request.user.limits.templates_limit}</dd>
     </dl>
 
     <dl class="row">
-      <dt class="three mobile-one columns">Attachment Storage</dt>
-      <dd class="nine mobile-three columns">
-      <div class="progress eight"><span class="meter" style="width: ${request.user.storage_used * 100 / request.user.limits.storage_limit}%"></span></div>
+      <dt class="small-3 columns">Attachment Storage</dt>
+      <dd class="small-9 columns">
+      <div class="progress small-8"><span class="meter" style="width: ${request.user.storage_used * 100 / request.user.limits.storage_limit}%"></span></div>
       ${view.format_data_size(request.user.storage_used, 'B')} /
       ${view.format_data_size(request.user.limits.storage_limit, 'B')}</dd>
     </dl>

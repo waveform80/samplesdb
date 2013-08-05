@@ -1,15 +1,13 @@
-<!doctype html>
-<!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
-<!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
-<!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
-<!--[if gt IE 8]><!--> <div metal:use-macro="view.layout">
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en"><![endif]-->
+<!--[if gt IE 8]><!--><div metal:use-macro="view.layout">
   <div tal:omit-tag="True" metal:fill-slot="title">Sample #${context.sample.id}</div>
   <div tal:omit-tag="True" metal:fill-slot="content">
     <div metal:use-macro="view.top_bar"></div>
 
     <div class="row">
 
-      <div class="ten columns">
+      <div class="small-10 columns">
         <h1>Sample #${context.sample.id}</h1>
         <p metal:use-macro="view.collection_license"></p>
 
@@ -29,7 +27,7 @@
         </p>
       </div>
 
-      <div class="two columns">
+      <div class="small-2 columns">
         <div class="th">
           <img tal:condition="context.sample.default_attachment"
             src="${request.route_url('samples_attachment_thumb',
@@ -43,7 +41,7 @@
     </div>
 
     <div class="row">
-      <div class="twelve columns">
+      <div class="small-12 columns">
         <dl class="tabs">
           <dd class="active"><a href="#overview">Details</a></dd>
           <dd><a href="#log">Log</a></dd>
@@ -55,42 +53,42 @@
           <li class="active" id="overviewTab">
 
           <dl class="row">
-            <dt class="three mobile-one columns">Status</dt>
-            <dd class="nine mobile-three columns">${context.sample.status}</dd>
+            <dt class="small-3 columns">Status</dt>
+            <dd class="small-9 columns">${context.sample.status}</dd>
           </dl>
 
           <dl class="row">
-            <dt class="three mobile-one columns">Logged</dt>
-            <dd class="nine mobile-three columns">${view.as_local(context.sample.created).strftime('%H:%M on %A, %d %B %Y')}
+            <dt class="small-3 one columns">Logged</dt>
+            <dd class="small-9 columns">${view.as_local(context.sample.created).strftime('%H:%M on %A, %d %B %Y')}
                 (${view.time_ago_in_words(context.sample.created, granularity='day')} ago)</dd>
           </dl>
 
           <dl class="row" tal:condition="context.sample.destroyed">
-            <dt class="three mobile-one columns">Destroyed</dt>
-            <dd class="nine mobile-three columns">${view.as_local(context.sample.destroyed).strftime('%H:%M on %A, %d %B %Y')}
+            <dt class="small-3 columns">Destroyed</dt>
+            <dd class="small-9 columns">${view.as_local(context.sample.destroyed).strftime('%H:%M on %A, %d %B %Y')}
                 (${view.time_ago_in_words(context.sample.destroyed, granularity='day')} ago)</dd>
           </dl>
 
           <dl class="row">
-            <dt class="three mobile-one columns">Description</dt>
-            <dd class="nine mobile-three columns">${context.sample.description}</dd>
+            <dt class="small-3 columns">Description</dt>
+            <dd class="small-9 columns">${context.sample.description}</dd>
           </dl>
 
           <dl class="row" tal:condition="not context.sample.destroyed">
-            <dt class="three mobile-one columns">Location</dt>
-            <dd class="nine mobile-three columns">${context.sample.location}</dd>
+            <dt class="small-3 columns">Location</dt>
+            <dd class="small-9 columns">${context.sample.location}</dd>
           </dl>
 
           <dl class="row" tal:repeat="code context.sample.codes.items()">
-            <dt class="three mobile-one columns">${code[0]}</dt>
-            <dd class="nine mobile-three columns">${code[1]}</dd>
+            <dt class="small-3 columns">${code[0]}</dt>
+            <dd class="small-9 columns">${code[1]}</dd>
           </dl>
 
           <hr />
 
-          <div class="row"><h4 class="twelve columns subheader">Notes</h4></div>
+          <div class="row"><h4 class="small-12 columns subheader">Notes</h4></div>
           <div class="row">
-            <div class="twelve columns">
+            <div class="small-12 columns">
               ${view.render_markup(context.sample.notes_markup, context.sample.notes)}
             </div>
           </div>
@@ -126,7 +124,7 @@
           <li id="attachmentsTab">
 
           <div class="row" tal:condition="not context.sample.attachments">
-            <p class="twelve columns">This sample currently has no attachments</p>
+            <p class="small-12 columns">This sample currently has no attachments</p>
           </div>
 
           <table tal:condition="context.sample.attachments">
@@ -183,7 +181,7 @@
           </div>
 
           <div class="row">
-            <div class="two columns">&nbsp;</div>
+            <div class="small-2 columns">&nbsp;</div>
             ${attachment_form.submit(class_='small', cols=10, cancel=False)}
           </div>
 

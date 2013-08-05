@@ -1,16 +1,14 @@
-<!doctype html>
-<!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
-<!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
-<!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
-<!--[if gt IE 8]><!--> <div metal:use-macro="view.layout">
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en"><![endif]-->
+<!--[if gt IE 8]><!--><div metal:use-macro="view.layout">
   <div tal:omit-tag="True" metal:fill-slot="title">New User</div>
   <div tal:omit-tag="True" metal:fill-slot="content">
     <div metal:use-macro="view.top_bar"></div>
 
-    <div class="row"><h1 class="twelve columns">New User</h1></div>
+    <div class="row"><h1 class="small-12 columns">New User</h1></div>
 
     <div class="row">
-      <div class="twelve columns">
+      <div class="small-12 columns">
         <p>Please make sure you fill out your e-mail address accurately. We'll
         send you a confirmation e-mail with a link to activate your account when
         you submit the form.</p>
@@ -48,7 +46,7 @@
 
         <div class="row">
           ${form.label('limits', 'Account Type')}
-          <div class="ten columns">
+          <div class="small-10 columns">
             ${form.radio('limits', 'free', label='Free', checked='checked')}
             ${form.radio('limits', 'academic', label='Academic (for educational institutions only)')}
             ${form.radio('limits', 'commercial', label='Commercial (not currently available)', disabled='disabled')}

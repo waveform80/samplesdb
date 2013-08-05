@@ -1,16 +1,14 @@
-<!doctype html>
-<!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
-<!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
-<!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
-<!--[if gt IE 8]><!--> <div metal:use-macro="view.layout">
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en"><![endif]-->
+<!--[if gt IE 8]><!--><div metal:use-macro="view.layout">
   <div tal:omit-tag="True" metal:fill-slot="title">New Collection</div>
   <div tal:omit-tag="True" metal:fill-slot="content">
     <div metal:use-macro="view.top_bar"></div>
 
-    <div class="row"><h1 class="twelve columns">New Collection</h1></div>
+    <div class="row"><h1 class="small-12 columns">New Collection</h1></div>
 
     <div class="row">
-      <div class="twelve columns">
+      <div class="small-12 columns">
         ${form.begin()}
 
         <div class="row">
@@ -32,7 +30,7 @@
         </div>
 
         <div class="row">
-          <div class="twelve columns">
+          <div class="small-12 columns">
             <div metal:use-macro="view.open_licenses_panel"></div>
           </div>
         </div>
@@ -41,10 +39,11 @@
           <legend>Authorizations</legend>
 
           <div class="row">
-            <label class="one columns">E-mail</label>
-            <span class="six columns">${request.user.emails[0].email}</span>
-            <label class="one columns">Role</label>
-            <span class="two columns end">Owner</span>
+            <label class="small-1 columns">E-mail</label>
+            <span class="small-6 columns">${request.user.emails[0].email}</span>
+            <label class="small-1 columns">Role</label>
+            <span class="small-2 columns">Owner</span>
+            <span class="small-2 columns">&nbsp;</span>
           </div>
 
           <hr />
@@ -54,7 +53,7 @@
             ${form.email('users-%d.user' % repeat.item.index, value=item['user'], placeholder='someone@somewhere.edu', cols=6)}
             ${form.label('users-%d.role' % repeat.item.index, 'Role', cols=1)}
             ${form.select('users-%d.role' % repeat.item.index, selected_value=item['role'], options=view.roles, cols=2)}
-            <div class="two columns">
+            <div class="small-2 columns">
               <a href="#" class="secondary small button right remove-button">Remove</a>
             </div>
           </div>
@@ -74,7 +73,7 @@
           ${form.email('user', placeholder='someone@somewhere.edu', cols=6)}
           ${form.label('role', 'Role', cols=1)}
           ${form.select('role', options=view.roles, selected_value='owner', cols=2)}
-          <div class="two columns">
+          <div class="small-2 columns">
             <a href="#" class="secondary small button right remove-button">Remove</a>
           </div>
         </div>

@@ -1,25 +1,23 @@
-<!doctype html>
-<!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
-<!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
-<!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
-<!--[if gt IE 8]><!--> <div metal:use-macro="view.layout">
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en"><![endif]-->
+<!--[if gt IE 8]><!--><div metal:use-macro="view.layout">
   <div tal:omit-tag="True" metal:fill-slot="title">My Collections</div>
   <div tal:omit-tag="True" metal:fill-slot="content">
     <div metal:use-macro="view.top_bar"></div>
 
-    <div class="row"><h1 class="twelve columns">${title}</h1></div>
+    <div class="row"><h1 class="small-12 columns">${title}</h1></div>
 
     <div class="row" tal:condition="view.has_permission('create_collection')">
-      <p class="twelve columns"><a href="${request.route_url('collections_create')}">New Collection</a></p>
+      <p class="small-12 columns"><a href="${request.route_url('collections_create')}">New Collection</a></p>
     </div>
 
     <div class="row">
 
-      <p class="twelve columns" tal:condition="not collections">
+      <p class="small-12 columns" tal:condition="not collections">
         There are no available collections at this time.
       </p>
 
-      <ul class="block-grid four-up mobile-two-up" tal:condition="collections">
+      <ul class="small-block-grid-2 large-block-grid-4" tal:condition="collections">
         <li class="collection" tal:repeat="collection collections">
         <a
           class="th"

@@ -1,21 +1,19 @@
-<!doctype html>
-<!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
-<!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
-<!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
-<!--[if gt IE 8]><!--> <div metal:use-macro="view.layout">
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en"><![endif]-->
+<!--[if gt IE 8]><!--><div metal:use-macro="view.layout">
   <div tal:omit-tag="True" metal:fill-slot="title">Home</div>
   <div tal:omit-tag="True" metal:fill-slot="content">
     <div metal:use-macro="view.top_banner"></div>
 
     <div class="row">
-      <div class="five columns" tal:condition="not request.user">
+      <div class="small-5 columns" tal:condition="not request.user">
         <div metal:use-macro="view.flashes"></div>
 
         ${form.begin(request.route_url('account_login'))}
         ${form.errorlist()}
 
         <div class="row">
-          <div class="twelve columns">
+          <div class="small-12 columns">
             <h5>Login</h5>
           </div>
         </div>
@@ -29,11 +27,11 @@
         </div>
 
         <div class="row">
-          <div class="ten mobile-three columns">
+          <div class="small-9 large-10 columns">
             <a href="${request.route_url('account_create')}">New user</a> |
             <a href="${request.route_url('account_reset_password', email='')}">Forgotten password</a>
           </div>
-          <div class="two mobile-one columns">
+          <div class="small-3 large-2 columns">
             ${form.submit('submit', value='Login', class_='tiny right button', cols=None, cancel=False)}
           </div>
         </div>
@@ -41,7 +39,7 @@
         ${form.end()}
 
         <div class="row">
-          <div class="twelve columns">
+          <div class="small-12 columns">
             <div class="panel radius">
               <h5><a href="http://opendefinition.org/"><img alt="This material
                   is Open Data" class="right"
@@ -57,7 +55,7 @@
 
       </div>
 
-      <div class="five columns" tal:condition="request.user">
+      <div class="small-5 columns" tal:condition="request.user">
 
         <p><a class="expand button" href="${request.route_url('collections_index')}">My Collections</a></p>
         <p><a class="expand button" href="${request.route_url('account_index')}">My Account</a></p>
@@ -73,7 +71,7 @@
         </div>
       </div>
 
-      <div class="seven columns">
+      <div class="small-7 columns">
         <h5>Welcome</h5>
 
         <p>Welcome to the <strong>${view.site_title}</strong> project. This is

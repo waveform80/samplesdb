@@ -1,16 +1,14 @@
-<!doctype html>
-<!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
-<!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
-<!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
-<!--[if gt IE 8]><!--> <div metal:use-macro="view.layout">
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en"><![endif]-->
+<!--[if gt IE 8]><!--><div metal:use-macro="view.layout">
   <div tal:omit-tag="True" metal:fill-slot="title">Creating Aliquots of Sample #${context.sample.id}</div>
   <div tal:omit-tag="True" metal:fill-slot="content">
     <div metal:use-macro="view.top_bar"></div>
 
-    <div class="row"><h1 class="twelve columns">Creating Aliquots of Sample #${context.sample.id}</h1></div>
+    <div class="row"><h1 class="small-12 columns">Creating Aliquots of Sample #${context.sample.id}</h1></div>
 
     <div class="row">
-      <div class="twelve columns">
+      <div class="small-12 columns">
 
         <div metal:use-macro="view.flashes"></div>
 
@@ -38,7 +36,7 @@
 
         <div class="row">
           ${form.label('aliquant', 'Aliquant')}
-          <div class="ten columns">
+          <div class="small-10 columns">
             ${form.checkbox('aliquant', label='Create an aliquant (remainder) sample')}
             ${form.errorlist('aliquant')}
           </div>

@@ -1,16 +1,14 @@
-<!doctype html>
-<!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
-<!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
-<!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
-<!--[if gt IE 8]><!--> <div metal:use-macro="view.layout">
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en"><![endif]-->
+<!--[if gt IE 8]><!--><div metal:use-macro="view.layout">
   <div tal:omit-tag="True" metal:fill-slot="title">Collection ${context.collection.name}</div>
   <div tal:omit-tag="True" metal:fill-slot="content">
     <div metal:use-macro="view.top_bar"></div>
 
-    <div class="row"><h1 class="twelve columns">Export ${context.collection.name} Collection</h1></div>
+    <div class="row"><h1 class="small-12 columns">Export ${context.collection.name} Collection</h1></div>
 
     <div class="row">
-      <div class="twelve columns">
+      <div class="small-12 columns">
         <p metal:use-macro="view.collection_license"></p>
 
         <p>
@@ -22,7 +20,7 @@
     </div>
 
     <div class="row">
-      <div class="twelve columns">
+      <div class="small-12 columns">
         <p>Drag and drop columns to re-order them in the output. If you wish to
         exclude a column from the output, uncheck it.</p>
       </div>
@@ -31,7 +29,7 @@
     ${form.begin()}
 
     <div class="row">
-      <div class="five column">
+      <div class="small-5 columns">
         <fieldset>
           <legend>Columns</legend>
           <div class="sortable">
@@ -45,7 +43,7 @@
         </fieldset>
       </div>
 
-      <div class="seven columns">
+      <div class="small-7 columns">
         <fieldset>
           <legend>CSV Advanced Options</legend>
 

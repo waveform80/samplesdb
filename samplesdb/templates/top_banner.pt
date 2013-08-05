@@ -1,5 +1,5 @@
 <div class="row" metal:define-macro="top_banner">
-  <div id="header" class="twelve columns">
+  <div id="header" class="small-12 columns">
     <a href="${request.route_url('home')}"><img src="${request.static_url('samplesdb:static/logo_large_optimized.svg')}" /></a>
   </div>
 </div>

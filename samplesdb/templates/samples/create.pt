@@ -1,16 +1,14 @@
-<!doctype html>
-<!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
-<!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
-<!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
-<!--[if gt IE 8]><!--> <div metal:use-macro="view.layout">
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en"><![endif]-->
+<!--[if gt IE 8]><!--><div metal:use-macro="view.layout">
   <div tal:omit-tag="True" metal:fill-slot="title">New Sample</div>
   <div tal:omit-tag="True" metal:fill-slot="content">
     <div metal:use-macro="view.top_bar"></div>
 
-    <div class="row"><h1 class="twelve columns">New Sample</h1></div>
+    <div class="row"><h1 class="small-12 columns">New Sample</h1></div>
 
     <div class="row">
-      <div class="twelve columns">
+      <div class="small-12 columns">
 
         <div metal:use-macro="view.flashes"></div>
 
@@ -22,7 +20,7 @@
             options=((c.id, c.name) for c in request.user.editable_collections),
             selected_value=context.collection.id,
             cols=6)}
-          <div class="four columns">&nbsp;</div>
+          <div class="small-4 columns">&nbsp;</div>
         </div>
 
         <hr />
@@ -39,19 +37,19 @@
           ${form.text('location',
             placeholder='Sample Location',
             cols=6)}
-          <div class="four columns">&nbsp;</div>
+          <div class="small-4 columns">&nbsp;</div>
         </div>
 
         <div class="row form-template" tal:repeat="item form.data_raw.get('codes', [])">
           ${form.text('codes-%d.name' % repeat.item.index, value=item['name'], placeholder='Name', required='required', maxlength=20, cols=2)}
           ${form.text('codes-%d.value' % repeat.item.index, value=item['value'], placeholder='Value', required='required', maxlength=200, cols=6)}
-          <div class="four columns">
+          <div class="small-4 columns">
             <a href="#" class="secondary small button remove-button">Remove</a>
           </div>
         </div>
 
         <div class="row">
-          <div class="ten columns offset-by-two">
+          <div class="small-10 small-offset-2 columns">
             <a href="#" class="secondary small button" id="add-button">Add Codes</a>
           </div>
         </div>
@@ -87,7 +85,7 @@
         <div class="row" id="form-template" style="display: none">
           ${form.text('name', placeholder='Name', required='required', cols=2)}
           ${form.text('value', placeholder='Value', required='required', cols=6)}
-          <div class="four columns">
+          <div class="small-4 columns">
             <a href="#" class="secondary small button remove-button">Remove</a>
           </div>
         </div>

@@ -1,13 +1,11 @@
 <nav class="top-bar" metal:define-macro="top-bar">
-<ul>
+<ul class="title-area">
   <li class="name">
-    <a href="${request.route_url('home')}">
-      <img src="${request.static_url('samplesdb:static/logo_small.svg')}" alt="${view.site_title}" />
-    </a>
+  <h1><a href="${request.route_url('home')}">${view.site_title}</a></h1>
   </li>
   <li class="toggle-topbar"><a href="#"></a></li>
 </ul>
-<section>
+<section class="top-bar-section">
 <ul class="right" tal:condition="not request.user">
   <li><a tal:attributes="class 'active' if request.current_route_url() == request.route_url('collections_open') else None" href="${request.route_url('collections_open')}">Open Collections</a></li>
   <li><a href="${request.route_url('account_login')}">Login</a></li>
