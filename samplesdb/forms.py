@@ -375,8 +375,8 @@ class FormRenderer(object):
             error_content = self.error_small(name, cols=inner_cols)
         return HTML.tag(
             'div', tags.literal(content), error_content,
-            class_='%s columns %s' % (
-                COL_NAMES[cols], 'error' if error_content else ''))
+            class_='small-%d columns %s' % (
+                cols, 'error' if error_content else ''))
 
     def begin(self, url=None, **attrs):
         """
@@ -456,7 +456,7 @@ class FormRenderer(object):
             attrs['for_'] = name
         label = label if label is not None else name.capitalize()
         if inner_cols:
-            attrs = css_add_class(attrs, COL_NAMES[inner_cols])
+            attrs = css_add_class(attrs, 'small-%d' % inner_cols)
         result = HTML.tag('label', label, **attrs)
         if cols:
             return self.column(name, result, cols, inner_cols, errors=False)
@@ -483,7 +483,7 @@ class FormRenderer(object):
                     not 'maxlength' in attrs):
                 attrs['maxlength'] = validator.max
         if inner_cols:
-            attrs = css_add_class(attrs, COL_NAMES[inner_cols])
+            attrs = css_add_class(attrs, 'small-%d' % inner_cols)
         result = tags.text(name, self.value(name, value), id, **attrs)
         if cols:
             return self.column(name, result, cols, inner_cols, errors)
@@ -525,7 +525,7 @@ class FormRenderer(object):
         """
         id = id or name
         if inner_cols:
-            attrs = css_add_class(attrs, COL_NAMES[inner_cols])
+            attrs = css_add_class(attrs, 'small-%d' % inner_cols)
         result = tags.file(name, self.value(name, value), id, **attrs)
         if cols:
             return self.column(name, result, cols, inner_cols, errors)
@@ -540,7 +540,7 @@ class FormRenderer(object):
         """
         id = id or name
         if inner_cols:
-            attrs = css_add_class(attrs, COL_NAMES[inner_cols])
+            attrs = css_add_class(attrs, 'small-%d' % inner_cols)
         result = tags.password(name, self.value(name, value), id, **attrs)
         if cols:
             return self.column(name, result, cols, inner_cols, errors)
@@ -555,7 +555,7 @@ class FormRenderer(object):
         """
         id = id or name
         if inner_cols:
-            attrs = css_add_class(attrs, COL_NAMES[inner_cols])
+            attrs = css_add_class(attrs, 'small-%d' % inner_cols)
         result = tags.textarea(name, self.value(name, content), id, **attrs)
         if cols:
             return self.column(name, result, cols, inner_cols, errors=False)
@@ -574,7 +574,7 @@ class FormRenderer(object):
             assert isinstance(validator, validators.OneOf)
             options = validator.list
         if inner_cols:
-            attrs = css_add_class(attrs, COL_NAMES[inner_cols])
+            attrs = css_add_class(attrs, 'small-%d' % inner_cols)
         result = tags.select(
             name, self.value(name, selected_value), options, id, **attrs)
         if cols:
@@ -606,7 +606,7 @@ class FormRenderer(object):
         id = id or name
         attrs = css_add_class(attrs, 'button')
         if inner_cols:
-            attrs = css_add_class(attrs, COL_NAMES[inner_cols])
+            attrs = css_add_class(attrs, 'small-%d' % inner_cols)
         result = tags.submit(name, self.value(name, value), id, **attrs)
         if cancel and self.form.came_from:
             cancel_attrs = attrs.copy()
@@ -675,6 +675,6 @@ class FormRenderer(object):
         content = content[:-1]
         attrs = css_add_class(attrs, 'error')
         if cols:
-            attrs = css_add_class(attrs, COL_NAMES[cols])
+            attrs = css_add_class(attrs, 'small-%d' % cols)
         return HTML.tag('small', *content, **attrs)
 
