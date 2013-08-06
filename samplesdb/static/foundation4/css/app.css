@@ -1,0 +1,17 @@
+#header {
+    background: #398235; /* Old browsers */
+    margin-bottom: 2em;
+    padding: 0;
+}
+
+#footer {
+    color: #fff;
+    background: #298235;
+    padding: 1em;
+    font-size: 9pt;
+    margin: 2em 0 0 0;
+}
+
+.top-bar { background: #298235; }
+.top-bar .top-bar-section ul li a { background: #298235; }
+

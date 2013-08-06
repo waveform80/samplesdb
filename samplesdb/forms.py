@@ -51,22 +51,6 @@ from pyramid.events import NewRequest, subscriber
 from pyramid.httpexceptions import HTTPForbidden
 
 
-COL_NAMES = {
-    1:  'one',
-    2:  'two',
-    3:  'three',
-    4:  'four',
-    5:  'five',
-    6:  'six',
-    7:  'seven',
-    8:  'eight',
-    9:  'nine',
-    10: 'ten',
-    11: 'eleven',
-    12: 'twelve',
-}
-
-
 def css_add_class(attrs, cls):
     "Add CSS class ``cls'' to element attributes ``attrs''"
     css_classes = set(attrs.get('class_', '').split())
