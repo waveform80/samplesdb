@@ -11,7 +11,11 @@
       </div>
     </div>
 
-    <div class="row"><h3 class="small-12 columns subheader">Details</h3></div>
+    <div class="row">
+      <div class="small-12 columns">
+        <h3 class="subheader">Details</h3>
+      </div>
+    </div>
 
     <dl class="row">
       <dt class="small-3 columns">E-mail Address(es)</dt>
@@ -57,7 +61,11 @@
       <p class="small-12 columns"><a href="${request.route_url('account_edit')}">Edit Account Details</a></p>
     </dl>
 
-    <div class="row"><h3 class="small-12 columns subheader">Limits</h3></div>
+    <div class="row">
+      <div class="small-12 columns">
+        <h3 class="subheader">Limits</h3>
+      </div>
+    </div>
 
     <dl class="row">
       <dt class="small-3 columns">Collections</dt>

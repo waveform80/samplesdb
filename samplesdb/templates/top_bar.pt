@@ -1,9 +1,11 @@
 <nav class="top-bar" metal:define-macro="top-bar">
 <ul class="title-area">
   <li class="name">
-  <h1><a href="${request.route_url('home')}">${view.site_title}</a></h1>
+    <h1><a href="${request.route_url('home')}">${view.site_title}</a></h1>
   </li>
-  <li class="toggle-topbar"><a href="#"></a></li>
+  <li class="toggle-topbar menu-icon">
+    <a href="#"><span>Menu</span></a>
+  </li>
 </ul>
 <section class="top-bar-section">
 <ul class="right" tal:condition="not request.user">

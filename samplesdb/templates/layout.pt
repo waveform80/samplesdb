@@ -30,13 +30,13 @@
   </footer>
 
   <script>
-  document.write('<script src="' +
-    ('__proto__' in {} ?
-    '${request.static_url("samplesdb:static/foundation4/js/vendor/zepto.js")}' :
-    '${request.static_url("samplesdb:static/foundation4/js/vendor/jquery.js")}') +
-  "'><\/script>')
+  document.write("<script src=\"" +
+    ("__proto__" in {} ?
+    "${request.static_url('samplesdb:static/foundation4/js/vendor/zepto.js')}" :
+    "${request.static_url('samplesdb:static/foundation4/js/vendor/jquery.js')}") +
+  "\"><\/script>")
   </script>
-  <script src="js/foundation.min.js"></script>
+  <script src="${request.static_url('samplesdb:static/foundation4/js/foundation.min.js')}"></script>
   <script>
     $(document).foundation();
   </script>
