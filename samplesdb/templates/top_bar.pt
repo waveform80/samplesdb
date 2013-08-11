@@ -7,13 +7,19 @@
 </ul>
 <section class="top-bar-section">
 <ul class="right" tal:condition="not request.user">
+  <li class="divider"></li>
   <li><a tal:attributes="class 'active' if request.current_route_url() == request.route_url('collections_open') else None" href="${request.route_url('collections_open')}">Open Collections</a></li>
+  <li class="divider"></li>
   <li><a href="${request.route_url('account_login')}">Login</a></li>
 </ul>
 <ul class="right" tal:condition="request.user">
+  <li class="divider"></li>
   <li><a tal:attributes="class 'active' if request.current_route_url() == request.route_url('collections_open') else None" href="${request.route_url('collections_open')}">Open Collections</a></li>
+  <li class="divider"></li>
   <li><a tal:attributes="class 'active' if request.current_route_url() == request.route_url('collections_index') else None" href="${request.route_url('collections_index')}">My Collections</a></li>
+  <li class="divider"></li>
   <li><a tal:attributes="class 'active' if request.current_route_url() == request.route_url('account_index') else None" href="${request.route_url('account_index')}">My Account</a></li>
+  <li class="divider"></li>
   <li><a href="${request.route_url('account_logout')}">Logout</a></li>
 </ul>
 </section>

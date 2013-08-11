@@ -13,5 +13,12 @@
 }
 
 .top-bar { background: #298235; }
+.top-bar .top-bar-section ul { background: #298235; }
 .top-bar .top-bar-section ul li a { background: #298235; }
+.top-bar .top-bar-section ul li.divider {
+	border-left-color: #20682a;
+	border-right-color: #319b3f;
+}
 
+.row .columns ul li,
+.row .columns ol li { margin-left: 1.5em; }
