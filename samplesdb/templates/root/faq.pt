@@ -5,32 +5,36 @@
   <div tal:omit-tag="True" metal:fill-slot="content">
     <div metal:use-macro="view.top_bar"></div>
 
-    <div class="row"><h1 class="small-12 columns">FAQ</h1></div>
-
     <div class="row">
       <div class="small-12 columns">
-        <h3 class="subheader">The sign-up complains my e-mail address isn't valid</h3>
-
-        <p>Currently, the system is limited to academic users. This means that
-        all e-mail addresses used during sign-up must end with <tt>.edu</tt> or
-        <tt>.ac.<em>country</em></tt> (where country is something like
-        <tt>uk</tt> or <tt>fr</tt>, etc.)</p>
-
-        <p>Once the system is out of beta, we will extend it to permit paying
-        users to sign-up with any e-mail address. For academic users, the
-        system will always remain free.</p>
+        <h1 class="header">FAQ</h1>
+        <h4 class="subheader">Frequently Asked Questions</h4>
       </div>
     </div>
 
     <div class="row">
       <div class="small-12 columns">
-        <h3 class="subheader">Why can't I remove my e-mail address</h3>
+        <dl>
+          <dt>The sign-up complains my e-mail address isn't valid</dt>
+          <dd>
+            <p>Currently, the system is limited to academic users. This means
+            that all e-mail addresses used during sign-up must end with
+            <tt>.edu</tt> or <tt>.ac.<em>country</em></tt> (where country is
+            something like <tt>uk</tt> or <tt>fr</tt>, etc.)</p>
 
-        <p>The <a href="${request.route_url('account_edit')}">edit account
-          details</a> page will only let you remove an e-mail address if there
-        is more than one <em>verified</em> address associated with your
-        account. All accounts must have at least one verified address at all
-        times (otherwise you wouldn't be able to login).</p>
+            <p>Once the system is out of beta, we will extend it to permit
+            paying users to sign-up with any e-mail address. For academic
+            users, the system will always remain free.</p>
+          </dd>
+          <dt>Why can't I remove my e-mail address</dt>
+          <dd>
+            <p>The <a href="${request.route_url('account_edit')}">edit account
+              details</a> page will only let you remove an e-mail address if
+            there is more than one <em>verified</em> address associated with
+            your account. All accounts must have at least one verified address
+            at all times (otherwise you wouldn't be able to login).</p>
+          </dd>
+        </dl>
       </div>
     </div>
 

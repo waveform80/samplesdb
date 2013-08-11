@@ -1,10 +1,10 @@
-#header {
+header {
     background: #398235; /* Old browsers */
     margin-bottom: 2em;
     padding: 0;
 }
 
-#footer {
+footer {
     color: #fff;
     background: #298235;
     padding: 1em;

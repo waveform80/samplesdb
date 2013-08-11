@@ -8,7 +8,7 @@
     <div class="row">
 
       <div class="small-10 columns">
-        <h1>Sample #${context.sample.id}</h1>
+        <h1 class="header">Sample #${context.sample.id}</h1>
         <p metal:use-macro="view.collection_license"></p>
 
         <p>

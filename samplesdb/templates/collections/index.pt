@@ -5,7 +5,11 @@
   <div tal:omit-tag="True" metal:fill-slot="content">
     <div metal:use-macro="view.top_bar"></div>
 
-    <div class="row"><h1 class="small-12 columns">${title}</h1></div>
+    <div class="row">
+      <div class="small-12 columns">
+        <h1 class="header">${title}</h1>
+      </div>
+    </div>
 
     <div class="row" tal:condition="view.has_permission('create_collection')">
       <p class="small-12 columns"><a href="${request.route_url('collections_create')}">New Collection</a></p>

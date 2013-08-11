@@ -5,7 +5,11 @@
   <div tal:omit-tag="True" metal:fill-slot="content">
     <div metal:use-macro="view.top_bar"></div>
 
-    <div class="row"><h1 class="small-12 columns">Export ${context.collection.name} Collection</h1></div>
+    <div class="row">
+      <div class="small-12 columns">
+        <h1 class="header">Export ${context.collection.name} Collection</h1>
+      </div>
+    </div>
 
     <div class="row">
       <div class="small-12 columns">

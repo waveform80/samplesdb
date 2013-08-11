@@ -17,8 +17,9 @@
 <body>
   <div metal:define-slot="content"></div>
 
+  <footer>
   <div class="row">
-    <div id="footer" class="small-12 columns">
+    <div class="small-12 columns">
       Site design and source code, copyright &copy; <a
         href="mailto:dave@waveform.org.uk">Dave Hughes</a> 2012.
       <a href="https://github.com/waveform80/samplesdb">Source
@@ -26,6 +27,7 @@
       the <a href="http://www.gnu.org/licenses/gpl-3.0.html">GNU GPL v3</a>.
     </div>
   </div>
+  </footer>
 
   <script>
   document.write('<script src="' +
