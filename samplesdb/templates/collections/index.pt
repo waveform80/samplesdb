@@ -7,12 +7,16 @@
 
     <div class="row">
       <div class="small-12 columns">
-        <h1 class="header">${title}</h1>
+        <h3 class="header">${title}</h3>
       </div>
     </div>
 
-    <div class="row" tal:condition="view.has_permission('create_collection')">
-      <p class="small-12 columns"><a class="small button radius" href="${request.route_url('collections_create')}">New Collection</a></p>
+    <div class="row">
+      <div class="small-12 columns">
+        <a class="small button radius" href="${request.route_url('collections_create')}"
+          tal:condition="view.has_permission('create_collection')">New Collection</a>
+        <hr />
+      </div>
     </div>
 
     <div class="row" tal:condition="not collections">

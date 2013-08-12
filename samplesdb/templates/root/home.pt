@@ -6,32 +6,7 @@
     <div metal:use-macro="view.top_banner"></div>
 
     <div class="row">
-      <div class="small-7 columns">
-        <h5>Welcome!</h5>
-
-        <p>The <strong>${view.site_title}</strong> project is an open-source
-        project designed to provide a flexible web-based database to lab
-        technicians wishing to keep track of their samples. The system includes
-        organization of samples by collection, auditing capabilities, sample
-        histories, and a variety of data interfaces.</p>
-
-        <div class="panel radius">
-          <h5>Testing!</h5>
-
-          <p><em>Please note this is currently an alpha-testing system</em>. We
-          currently make no guarantees about data persistence or system uptime.
-          In other words, though we have nightly backup procedures in place we
-          cannot guarantee that functional changes to the system won't completely
-          destroy existing data.</p>
-
-          <p>In other words, feel free to play with the system but please don't
-          use it as your only sample log!</p>
-        </div>
-
-        <p>If you have any questions, please peruse our <a
-          href="${request.route_url('faq')}">FAQ</a>.</p>
-      </div>
-      <div class="small-5 columns" tal:condition="not request.user">
+      <div class="large-5 push-7 columns" tal:condition="not request.user">
         <div metal:use-macro="view.flashes"></div>
 
         ${form.begin(request.route_url('account_login'))}
@@ -56,11 +31,11 @@
         </div>
 
         <div class="row">
-          <div class="small-9 large-10 columns">
+          <div class="small-10 columns">
             <a href="${request.route_url('account_create')}">Sign up</a> |
             <a href="${request.route_url('account_reset_password', email='')}">Forgotten password</a>
           </div>
-          <div class="small-3 large-2 columns">
+          <div class="small-2 columns">
             ${form.submit('submit', value='Login', class_='tiny right button', cols=None, cancel=False)}
           </div>
         </div>
@@ -84,8 +59,7 @@
 
       </div>
 
-      <div class="small-5 columns" tal:condition="request.user">
-
+      <div class="large-5 push-7 columns" tal:condition="request.user">
         <p><a class="expand radius button" href="${request.route_url('collections_index')}">My Collections</a><br />
         <a class="expand radius button" href="${request.route_url('account_index')}">My Account</a><br />
         <a class="expand radius button" href="${request.route_url('account_logout')}">Logout</a></p>
@@ -100,6 +74,31 @@
         </div>
       </div>
 
+      <div class="large-7 pull-5 columns">
+        <h5>Welcome!</h5>
+
+        <p>The <strong>${view.site_title}</strong> project is an open-source
+        project designed to provide a flexible web-based database to lab
+        technicians wishing to keep track of their samples. The system includes
+        organization of samples by collection, auditing capabilities, sample
+        histories, and a variety of data interfaces.</p>
+
+        <div class="panel radius">
+          <h5>Testing!</h5>
+
+          <p><em>Please note this is currently an alpha-testing system</em>. We
+          currently make no guarantees about data persistence or system uptime.
+          In other words, though we have nightly backup procedures in place we
+          cannot guarantee that functional changes to the system won't completely
+          destroy existing data.</p>
+
+          <p>In other words, feel free to play with the system but please don't
+          use it as your only sample log!</p>
+        </div>
+
+        <p>If you have any questions, please peruse our <a
+          href="${request.route_url('faq')}">FAQ</a>.</p>
+      </div>
     </div>
   </div>
 </div>

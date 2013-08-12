@@ -7,7 +7,7 @@
 
     <div class="row">
       <div class="small-12 columns">
-        <h1 class="header">Editing Sample #${context.sample.id}</h1>
+        <h3 class="header">Editing Sample #${context.sample.id}</h3>
       </div>
     </div>
 
@@ -44,13 +44,13 @@
           ${form.text('codes-%d.name' % repeat.item.index, value=item['name'], placeholder='Name', required='required', maxlength=20, cols=2)}
           ${form.text('codes-%d.value' % repeat.item.index, value=item['value'], placeholder='Value', required='required', maxlength=200, cols=6)}
           <div class="small-4 columns">
-            <a href="#" class="secondary small button remove-button">Remove</a>
+            <a href="#" class="secondary small button radius remove-button">Remove</a>
           </div>
         </div>
 
         <div class="row">
           <div class="small-10 small-offset-2 columns">
-            <a href="#" class="secondary small button" id="add-button">Add Codes</a>
+            <a href="#" class="secondary small button radius" id="add-button">Add Fields</a>
           </div>
         </div>
 
@@ -79,7 +79,7 @@
           ${form.text('name', placeholder='Name', required='required', cols=2)}
           ${form.text('value', placeholder='Value', required='required', cols=6)}
           <div class="small-4 columns">
-            <a href="#" class="secondary small button remove-button">Remove</a>
+            <a href="#" class="secondary small button radius remove-button">Remove</a>
           </div>
         </div>
 

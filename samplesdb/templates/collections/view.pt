@@ -6,14 +6,16 @@
     <div metal:use-macro="view.top_bar"></div>
 
     <div class="row">
-      <div class="small-9 columns">
-        <h1 class="header">${context.collection.name} Collection</h1>
+      <div class="small-12 columns">
+        <h3 class="header">${context.collection.name} Collection</h3>
       </div>
     </div>
 
     <div class="row">
 
-      <div class="small-8 columns">
+      <div class="large-8 columns">
+        <p metal:use-macro="view.collection_license"></p>
+
         <span
           tal:omit-tag="True"
           tal:condition="view.has_permission('manage_collection')">
@@ -21,58 +23,62 @@
             collection_id=context.collection.id)}">Edit Collection</a>
         </span>
 
-        <p metal:use-macro="view.collection_license"></p>
-
         <ul class="button-group radius">
           <span
             tal:omit-tag="True"
             tal:condition="view.has_permission('edit_collection')">
             <li><a class="small button" href="${request.route_url('samples_create',
-              collection_id=context.collection.id)}">New Sample</a></li>
+              collection_id=context.collection.id)}">New <span class="show-for-medium-up">Sample</span></a></li>
             <li><a class="small button" href="${request.route_url('samples_combine',
-              collection_id=context.collection.id)}">Combine Samples</a></li>
+              collection_id=context.collection.id)}">Combine <span class="show-for-medium-up">Samples</span></a></li>
           </span>
           <span
             tal:omit-tag="True"
             tal:condition="view.has_permission('audit_collection')">
-            <li><a class="small button" href="#">Print Samples</a></li>
+            <li><a class="small button" href="#">Print <span class="show-for-medium-up">Samples</span></a></li>
           </span>
           <li><a class="small button" href="${request.route_url('collections_export',
-            collection_id=context.collection.id)}">Export Samples</a></li>
+            collection_id=context.collection.id)}">Export <span class="show-for-medium-up">Samples</span></a></li>
         </ul>
       </div>
 
-      <div class="small-4 columns">
-        <dl class="sub-nav">
-          <dt>Filter</dt>
-          <dd
-          class="${'active' if filter == 'all' else None}"><a 
-            href="${request.current_route_url(_query={'filter': 'all', 'display': display})}">All</a></dd>
-          <dd
-          class="${'active' if filter == 'existing' else None}"><a
-            href="${request.current_route_url(_query={'filter': 'existing', 'display': display})}">Existing</a></dd>
-          <dd
-          class="${'active' if filter == 'destroyed' else None}"><a
-            href="${request.current_route_url(_query={'filter': 'destroyed', 'display': display})}">Destroyed</a></dd>
-        </dl>
-        <dl class="sub-nav">
-          <dt>Display</dt>
-          <dd class="${'active' if display == 'grid' else None}"><a
-            href="${request.current_route_url(_query={'filter': filter, 'display': 'grid'})}">Grid</a></dd>
-          <dd class="${'active' if display == 'table' else None}"><a
-            href="${request.current_route_url(_query={'filter': filter, 'display': 'table'})}">Table</a></dd>
-        </dl>
+      <div class="large-4 columns">
+        <div class="panel radius">
+          <dl class="sub-nav">
+            <dt>Filter</dt>
+            <dd
+            class="${'active' if filter == 'all' else None}"><a 
+              href="${request.current_route_url(_query={'filter': 'all', 'display': display})}">All</a></dd>
+            <dd
+            class="${'active' if filter == 'existing' else None}"><a
+              href="${request.current_route_url(_query={'filter': 'existing', 'display': display})}">Existing</a></dd>
+            <dd
+            class="${'active' if filter == 'destroyed' else None}"><a
+              href="${request.current_route_url(_query={'filter': 'destroyed', 'display': display})}">Destroyed</a></dd>
+          </dl>
+          <dl class="sub-nav">
+            <dt>Display</dt>
+            <dd class="${'active' if display == 'grid' else None}"><a
+              href="${request.current_route_url(_query={'filter': filter, 'display': 'grid'})}">Grid</a></dd>
+            <dd class="${'active' if display == 'table' else None}"><a
+              href="${request.current_route_url(_query={'filter': filter, 'display': 'table'})}">Table</a></dd>
+          </dl>
+        </div>
       </div>
 
     </div>
 
     <div class="row">
+      <div class="small-12 columns">
+        <hr />
+      </div>
 
-      <p class="twelve columns" tal:condition="not samples">
-      This collection has no samples<span tal:omit-tag="True" tal:condition="filter!='all'"> for the selected filter</span>.
-      </p>
+      <div class="small-12 columns" tal:condition="not samples">
+        <p>This collection has no samples<span tal:omit-tag="True"
+          tal:condition="filter!='all'"> for the selected filter</span>.</p>
+      </div>
 
-      <div class="twelve columns">
+      <div class="small-12 columns">
         <table tal:condition="display=='table' and samples">
           <thead>
             <tr>
@@ -106,8 +112,8 @@
             <img tal:condition="not sample.default_attachment"
               src="${request.static_url('samplesdb:static/unknown_mime_type_optimized.svg')}"
               alt="" />
-            ${sample.description}<br />
-          </a>
+          </a><br />
+          ${sample.description}
         </li>
       </ul>
 
