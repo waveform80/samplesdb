@@ -11,19 +11,9 @@
 
         <p>The <strong>${view.site_title}</strong> project is an open-source
         project designed to provide a flexible web-based database to lab
-        technicians wishing to keep track of their samples.  Features of the
-        system include:</p>
-
-        <ul class="disc">
-          <li>Multiple sample collections per user, including multiple images
-          per sample</li>
-          <li>Provenance of samples &ndash; visual history of splits and
-          combinations</li>
-          <li>Auditing of samples (optional) including e-mailed reminders</li>
-          <li>Downloadable copies of your collections in multiple formats (PDFs
-          for labelling, Excel files for offline copies of your database,
-          etc.)</li>
-        </ul>
+        technicians wishing to keep track of their samples. The system includes
+        organization of samples by collection, auditing capabilities, sample
+        histories, and a variety of data interfaces.</p>
 
         <div class="panel radius">
           <h5>Testing!</h5>

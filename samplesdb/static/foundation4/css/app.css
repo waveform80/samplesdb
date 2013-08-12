@@ -13,14 +13,18 @@ footer {
 }
 
 .top-bar { background: #298235; }
+.top-bar.expanded .title-area { background: #14411a; }
 .top-bar .top-bar-section ul { background: #298235; }
 .top-bar .top-bar-section ul li a { background: #298235; }
 .top-bar .top-bar-section ul li.divider {
-  border-left-color: #20682a;
-  border-right-color: #319b3f;
+  border-color: #20682a #319b3f #319b3f #20682a;
 }
 
-.row .columns ul li,
-.row .columns ol li { margin-left: 1.5em; }
+.th img {
+  margin: 4px auto;
+  max-width: 150px;
+  max-height: 150px;
+}
 
-.row .columns ul.no-bullet li { margin-left: 0; }
+ul li.collection { text-align: center; }
+

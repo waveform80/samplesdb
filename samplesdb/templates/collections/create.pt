@@ -58,11 +58,11 @@
             ${form.label('users-%d.role' % repeat.item.index, 'Role', cols=1)}
             ${form.select('users-%d.role' % repeat.item.index, selected_value=item['role'], options=view.roles, cols=2)}
             <div class="small-2 columns">
-              <a href="#" class="secondary small button right remove-button">Remove</a>
+              <a href="#" class="secondary small button radius right remove-button">Remove</a>
             </div>
           </div>
 
-          <a href="#" class="secondary small button right" id="add-button">Add</a>
+          <a href="#" class="secondary small button radius right" id="add-button">Add</a>
         </fieldset>
 
         <div class="row">
@@ -78,7 +78,7 @@
           ${form.label('role', 'Role', cols=1)}
           ${form.select('role', options=view.roles, selected_value='owner', cols=2)}
           <div class="small-2 columns">
-            <a href="#" class="secondary small button right remove-button">Remove</a>
+            <a href="#" class="secondary small button radius right remove-button">Remove</a>
           </div>
         </div>
 
@@ -107,7 +107,7 @@
             clone = source.clone(true);
 
         clone.removeAttr('id').addClass('form-template');
-        clone.insertBefore(this);
+        clone.insertBefore(this).slideDown('fast');
         make_form_ids();
         return false;
     });

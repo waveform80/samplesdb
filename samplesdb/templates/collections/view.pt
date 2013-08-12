@@ -6,7 +6,7 @@
     <div metal:use-macro="view.top_bar"></div>
 
     <div class="row">
-      <div class="small-12 columns">
+      <div class="small-9 columns">
         <h1 class="header">${context.collection.name} Collection</h1>
       </div>
     </div>
@@ -14,31 +14,32 @@
     <div class="row">
 
       <div class="small-8 columns">
-        <p metal:use-macro="view.collection_license"></p>
-
-        <p>
-        <span
-          tal:omit-tag="True"
-          tal:condition="view.has_permission('edit_collection')">
-          <a href="${request.route_url('samples_create',
-            collection_id=context.collection.id)}">New Sample</a> |
-          <a href="${request.route_url('samples_combine',
-            collection_id=context.collection.id)}">Combine Samples</a> |
-        </span>
-        <span
-          tal:omit-tag="True"
-          tal:condition="view.has_permission('audit_collection')">
-          <a href="#">Print Labels</a> |
-        </span>
         <span
           tal:omit-tag="True"
           tal:condition="view.has_permission('manage_collection')">
-          <a href="${request.route_url('collections_edit',
-            collection_id=context.collection.id)}">Edit Collection</a> |
+          <a class="small button radius" href="${request.route_url('collections_edit',
+            collection_id=context.collection.id)}">Edit Collection</a>
         </span>
-        <a href="${request.route_url('collections_export',
-          collection_id=context.collection.id)}">Export List</a>
-        </p>
+
+        <p metal:use-macro="view.collection_license"></p>
+
+        <ul class="button-group radius">
+          <span
+            tal:omit-tag="True"
+            tal:condition="view.has_permission('edit_collection')">
+            <li><a class="small button" href="${request.route_url('samples_create',
+              collection_id=context.collection.id)}">New Sample</a></li>
+            <li><a class="small button" href="${request.route_url('samples_combine',
+              collection_id=context.collection.id)}">Combine Samples</a></li>
+          </span>
+          <span
+            tal:omit-tag="True"
+            tal:condition="view.has_permission('audit_collection')">
+            <li><a class="small button" href="#">Print Samples</a></li>
+          </span>
+          <li><a class="small button" href="${request.route_url('collections_export',
+            collection_id=context.collection.id)}">Export Samples</a></li>
+        </ul>
       </div>
 
       <div class="small-4 columns">
@@ -94,23 +95,21 @@
         </table>
       </div>
 
-      <div class="twelve columns">
-        <ul class="block-grid four-up mobile-two-up" tal:condition="display=='grid' and samples">
-          <li class="collection" tal:repeat="sample samples">
-            <a class="th" href="${request.route_url('samples_view', sample_id=sample.id)}">
-              <img tal:condition="sample.default_attachment"
-                src="${request.route_url(
-                  'samples_attachment_thumb',
-                  sample_id=sample.id,
-                  attachment=sample.default_attachment)}" alt="" />
-              <img tal:condition="not sample.default_attachment"
-                src="${request.static_url('samplesdb:static/unknown_mime_type_optimized.svg')}"
-                alt="" />
-              ${sample.description}<br />
-            </a>
-          </li>
-        </ul>
-      </div>
+      <ul class="small-block-grid-2 large-block-grid-4" tal:condition="display=='grid' and samples">
+        <li class="collection" tal:repeat="sample samples">
+          <a class="th" href="${request.route_url('samples_view', sample_id=sample.id)}">
+            <img tal:condition="sample.default_attachment"
+              src="${request.route_url(
+                'samples_attachment_thumb',
+                sample_id=sample.id,
+                attachment=sample.default_attachment)}" alt="" />
+            <img tal:condition="not sample.default_attachment"
+              src="${request.static_url('samplesdb:static/unknown_mime_type_optimized.svg')}"
+              alt="" />
+            ${sample.description}<br />
+          </a>
+        </li>
+      </ul>
 
     </div>
 

@@ -589,6 +589,7 @@ class FormRenderer(object):
         """
         id = id or name
         attrs = css_add_class(attrs, 'button')
+        attrs = css_add_class(attrs, 'radius')
         if inner_cols:
             attrs = css_add_class(attrs, 'small-%d' % inner_cols)
         result = tags.submit(name, self.value(name, value), id, **attrs)
