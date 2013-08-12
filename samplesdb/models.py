@@ -981,8 +981,6 @@ class Sample(Base):
         """Create a new sample"""
         assert collection.users[creator].id in ('owner', 'editor')
         sample = cls(collection_id=collection.id, **kwargs)
-        DBSession.add(sample)
-        DBSession.flush() # to generate sample.id
         sample.log.append(SampleLogEntry(
             creator_id=creator.id,
             event='create', message='Sample created'))

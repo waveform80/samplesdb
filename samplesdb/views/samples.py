@@ -134,6 +134,8 @@ class SamplesView(BaseView):
             # XXX Should be using form collection below
             new_sample = form.bind(
                 Sample.create(self.request.user, self.context.collection))
+            DBSession.add(new_sample)
+            DBSession.flush() # to generate sample.id
             for storage in self.request.POST.getall('attachments'):
                 if storage:
                     new_sample.attachments.create(storage.filename, storage.file)
