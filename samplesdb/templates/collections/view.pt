@@ -113,7 +113,7 @@
               src="${request.static_url('samplesdb:static/unknown_mime_type_optimized.svg')}"
               alt="" />
           </a><br />
-          ${sample.description}
+          <a href="${request.route_url('samples_view', sample_id=sample.id)}">${sample.description}</a>
         </li>
       </ul>
 

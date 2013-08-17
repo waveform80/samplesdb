@@ -34,8 +34,8 @@
           src="${request.static_url('samplesdb:static/empty_collection_optimized.svg')}"
           alt="Empty Collection" />
       </a><br />
-      ${collection.name}
-      (${len(collection.existing_samples)} samples)
+      <a href="${request.route_url('collections_view', collection_id=collection.id)}">${collection.name}
+      (${len(collection.existing_samples)} samples)</a>
       </li>
     </ul>
 
