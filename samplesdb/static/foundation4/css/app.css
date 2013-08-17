@@ -1,15 +1,15 @@
 header {
-  background: #398235; /* Old browsers */
-  margin-bottom: 2em;
-  padding: 0;
+    background: #398235;
+    margin-bottom: 2em;
+    padding: 0;
 }
 
 footer {
-  color: #fff;
-  background: #298235;
-  padding: 1em;
-  font-size: 9pt;
-  margin: 2em 0 0 0;
+    color: #fff;
+    background: #298235;
+    padding: 1em;
+    font-size: 9pt;
+    margin: 2em 0 0 0;
 }
 
 .top-bar { background: #298235; }
@@ -17,14 +17,34 @@ footer {
 .top-bar .top-bar-section ul { background: #298235; }
 .top-bar .top-bar-section ul li a { background: #298235; }
 .top-bar .top-bar-section ul li.divider {
-  border-color: #20682a #319b3f #319b3f #20682a;
+    border-color: #20682a #319b3f #319b3f #20682a;
 }
 
 .th img {
-  margin: 4px auto;
-  max-width: 150px;
-  max-height: 150px;
+    margin: 4px auto;
+    max-width: 150px;
+    max-height: 150px;
 }
 
 ul li.collection { text-align: center; }
+
+.sortable label {
+    line-height: 1;
+    background: #c9de96;
+    border: 1px solid #8ab66b;
+    border-radius: 4px;
+    color: #222;
+    padding: 2px 8px;
+    margin: 4px 0;
+}
+
+.sortable label input {
+    margin: 2px 0;
+}
+
+.sortable label.placeholder {
+    background: white;
+    border: 1px solid #ddd;
+    height: 25px;
+}
 

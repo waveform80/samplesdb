@@ -1027,10 +1027,6 @@ class Sample(Base):
             ]
         for aliquot in aliquots:
             aliquot.parents.append(self)
-            self.log.append(SampleLogEntry(
-                creator_id=creator.id,
-                event='change',
-                message='Created aliquot #%d from sample' % aliquot.id))
         if aliquant:
             aliargs = kwargs.copy()
             if not 'description' in aliargs:
@@ -1039,10 +1035,6 @@ class Sample(Base):
                 aliargs['location'] = self.location
             aliquant = Sample.create(creator, collection, **aliargs)
             aliquant.parents.append(self)
-            self.log.append(SampleLogEntry(
-                creator_id=creator.id,
-                event='change',
-                message='Created aliquant #%d from sample' % aliquant.id))
             aliquots.append(aliquant)
         self.destroy(creator, reason)
         return aliquots

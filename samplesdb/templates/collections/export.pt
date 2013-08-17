@@ -7,12 +7,10 @@
 
     <div class="row">
       <div class="small-12 columns">
-        <h3 class="header">Export ${context.collection.name} Collection</h3>
-      </div>
-    </div>
-
-    <div class="row">
-      <div class="small-12 columns">
+        <h3 class="header">
+          <a href="${request.route_url('collections_view',
+            collection_id=context.collection.id)}">${context.collection.name}
+            Collection</a> / Export</h3>
         <p metal:use-macro="view.collection_license"></p>
       </div>
     </div>
